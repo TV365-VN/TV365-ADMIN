@@ -258,6 +258,50 @@ button:disabled{opacity:.5;cursor:not-allowed}
     font-weight:bold;
 }
 
+/* NOTIFICATION CONTROL */
+.notification-control-panel{
+    margin:0 0 22px;
+    padding:14px;
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    border-radius:12px;
+}
+.notification-control-title{
+    margin:0 0 12px;
+    font-size:16px;
+    font-weight:bold;
+    color:#334155;
+}
+.notification-control-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+}
+.notification-control-btn{
+    min-height:54px;
+    font-size:15px;
+    transition:.15s;
+}
+.notification-mobile-btn{background:#2563eb}
+.notification-tv-btn{background:#7c3aed}
+.notification-control-btn.is-on{
+    background:#dc2626!important;
+    box-shadow:0 0 0 3px rgba(220,38,38,.14);
+}
+.notification-control-status{
+    margin-top:10px;
+    padding:10px 12px;
+    border-radius:8px;
+    background:#f1f5f9;
+    color:#475569;
+    font-size:13px;
+}
+.notification-control-status.on{
+    background:#dbeafe;
+    color:#1e40af;
+    font-weight:bold;
+}
+
 .list-panel{
     margin-top:18px;
     border:1px solid #e2e8f0;
@@ -449,6 +493,32 @@ button:disabled{opacity:.5;cursor:not-allowed}
         <!-- =====================================================
              FREE CONTROL
         ====================================================== -->
+        <div class="notification-control-panel">
+            <div class="notification-control-title">🔔 QUẢN LÝ THÔNG BÁO ỨNG DỤNG</div>
+
+            <div class="notification-control-grid">
+                <button
+                    type="button"
+                    id="notificationMobileButton"
+                    class="notification-control-btn notification-mobile-btn"
+                    onclick="toggleNotification('mobile')">
+                    📱 BẬT THÔNG BÁO MOBILE
+                </button>
+
+                <button
+                    type="button"
+                    id="notificationTVButton"
+                    class="notification-control-btn notification-tv-btn"
+                    onclick="toggleNotification('tv')">
+                    📺 BẬT THÔNG BÁO TIVI
+                </button>
+            </div>
+
+            <div class="notification-control-status" id="notificationControlStatus">
+                Đang đọc trạng thái thông báo...
+            </div>
+        </div>
+
         <div class="free-control-panel">
             <div class="free-control-title">🎁 QUẢN LÝ MỞ FREE</div>
 
@@ -762,6 +832,16 @@ let freeConfig = {
     freeBackupPremiumTV: null
 };
 
+/*
+ * Trạng thái thông báo.
+ * Admin chỉ bật/tắt quyền hiển thị.
+ * Nội dung thông báo vẫn do App tải từ GitHub.
+ */
+let notificationConfig = {
+    notificationMobile: "OFF",
+    notificationTV: "OFF"
+};
+
 /* =========================================================
    LOGIN
 ========================================================= */
@@ -915,6 +995,7 @@ function showAdminPanel(user){
 
     loadDashboard();
     loadFreeConfig();
+    loadNotificationConfig();
 }
 
 function logout(){
@@ -1369,6 +1450,252 @@ async function toggleFree(platform){
         );
 
         await loadFreeConfig();
+    }
+}
+
+
+/* =========================================================
+   NOTIFICATION CONTROL
+   GHI TRỰC TIẾP VÀO premium_config/system
+   ========================================================= */
+
+function updateNotificationButton(
+    buttonId,
+    isOn,
+    onText,
+    offText
+){
+    const button =
+        document.getElementById(buttonId);
+
+    if(!button) return;
+
+    button.classList.toggle("is-on",isOn);
+
+    button.innerText =
+        isOn ? offText : onText;
+}
+
+function updateNotificationControlUI(){
+
+    const mobileOn =
+        notificationConfig.notificationMobile === "ON";
+
+    const tvOn =
+        notificationConfig.notificationTV === "ON";
+
+    updateNotificationButton(
+        "notificationMobileButton",
+        mobileOn,
+        "📱 BẬT THÔNG BÁO MOBILE",
+        "📱 TẮT THÔNG BÁO MOBILE"
+    );
+
+    updateNotificationButton(
+        "notificationTVButton",
+        tvOn,
+        "📺 BẬT THÔNG BÁO TIVI",
+        "📺 TẮT THÔNG BÁO TIVI"
+    );
+
+    const status =
+        document.getElementById(
+            "notificationControlStatus"
+        );
+
+    if(!status) return;
+
+    const active = [];
+
+    if(mobileOn) active.push("Mobile");
+    if(tvOn) active.push("Tivi");
+
+    if(active.length){
+
+        status.className =
+            "notification-control-status on";
+
+        status.innerText =
+            "🔔 ĐANG BẬT THÔNG BÁO: " +
+            active.join(" + ") +
+            ". Nội dung được App tải từ GitHub.";
+
+    }else{
+
+        status.className =
+            "notification-control-status";
+
+        status.innerText =
+            "🔕 Thông báo đang tắt cho cả Mobile và Tivi.";
+    }
+}
+
+async function loadNotificationConfig(){
+
+    try{
+
+        const doc =
+            await db
+                .collection("premium_config")
+                .doc("system")
+                .get();
+
+        if(!doc.exists){
+
+            notificationConfig = {
+                notificationMobile:"OFF",
+                notificationTV:"OFF"
+            };
+
+            updateNotificationControlUI();
+            return;
+        }
+
+        const data =
+            doc.data() || {};
+
+        notificationConfig = {
+
+            notificationMobile:
+                normalizeOnOff(
+                    data.notificationMobile,
+                    "OFF"
+                ),
+
+            notificationTV:
+                normalizeOnOff(
+                    data.notificationTV,
+                    "OFF"
+                )
+        };
+
+        updateNotificationControlUI();
+
+    }catch(error){
+
+        console.error(error);
+
+        const status =
+            document.getElementById(
+                "notificationControlStatus"
+            );
+
+        if(status){
+
+            status.className =
+                "notification-control-status";
+
+            status.innerText =
+                "❌ Không đọc được trạng thái thông báo: " +
+                getFirebaseError(error);
+        }
+    }
+}
+
+async function toggleNotification(platform){
+
+    const user =
+        auth.currentUser;
+
+    if(
+        !user ||
+        !user.email ||
+        user.email.toLowerCase() !==
+            ADMIN_EMAIL.toLowerCase()
+    ){
+
+        showStatus(
+            "Tài khoản không có quyền Admin.",
+            "error"
+        );
+
+        return;
+    }
+
+    const ref =
+        db
+            .collection("premium_config")
+            .doc("system");
+
+    let field;
+
+    if(platform === "mobile"){
+
+        field = "notificationMobile";
+
+    }else if(platform === "tv"){
+
+        field = "notificationTV";
+
+    }else{
+
+        return;
+    }
+
+    const current =
+        notificationConfig[field] === "ON";
+
+    const next =
+        current ? "OFF" : "ON";
+
+    try{
+
+        await ref.set({
+
+            [field]:next,
+
+            notificationUpdatedAt:
+                firebase.firestore
+                    .FieldValue
+                    .serverTimestamp(),
+
+            notificationUpdatedBy:
+                user.email
+
+        },{merge:true});
+
+        notificationConfig[field] = next;
+
+        updateNotificationControlUI();
+
+        const platformName =
+            platform === "mobile"
+                ? "Mobile"
+                : "Tivi";
+
+        if(next === "ON"){
+
+            showStatus(
+                "🔔 Đã BẬT THÔNG BÁO " +
+                platformName +
+                ".\n\n" +
+                "Ứng dụng sẽ kiểm tra trạng thái khi mở app " +
+                "và tải nội dung thông báo từ GitHub.",
+                "success"
+            );
+
+        }else{
+
+            showStatus(
+                "🔕 Đã TẮT THÔNG BÁO " +
+                platformName +
+                ".\n\n" +
+                "Ứng dụng sẽ không hiện thông báo này.",
+                "success"
+            );
+        }
+
+    }catch(error){
+
+        console.error(error);
+
+        showStatus(
+            "❌ Không thể thay đổi trạng thái thông báo:\n" +
+            getFirebaseError(error),
+            "error"
+        );
+
+        await loadNotificationConfig();
     }
 }
 
