@@ -171,7 +171,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .platform-title.tv{color:#7c3aed}
 .stats-grid{
     display:grid;
-    grid-template-columns:repeat(4,1fr);
+    grid-template-columns:repeat(5,1fr);
     gap:12px;
 }
 .stat-card{
@@ -195,6 +195,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
     font-weight:bold;
 }
 .stat-trial{background:#fef3c7;color:#92400e}
+.stat-premium-active{background:#dcfce7;color:#166534}
 .stat-trial-expired{background:#fee2e2;color:#991b1b}
 .stat-premium-expired{background:#ffedd5;color:#9a3412}
 .stat-blocked{background:#e5e7eb;color:#1f2937}
@@ -305,6 +306,9 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .badge-premium{background:#dcfce7;color:#166534}
 .badge-blocked{background:#e5e7eb;color:#1f2937}
 
+@media(max-width:1000px){
+    .stats-grid{grid-template-columns:repeat(3,1fr)}
+}
 @media(max-width:800px){
     .stats-grid{grid-template-columns:repeat(2,1fr)}
 }
@@ -402,6 +406,12 @@ button:disabled{opacity:.5;cursor:not-allowed}
                 <div class="count" id="mobileTrialCount">0</div>
             </button>
 
+            <button class="stat-card stat-premium-active" onclick="showDeviceList('mobile','premiumActive')">
+                <div class="icon">🟢</div>
+                <div class="label">ĐANG DÙNG PREMIUM</div>
+                <div class="count" id="mobilePremiumActiveCount">0</div>
+            </button>
+
             <button class="stat-card stat-trial-expired" onclick="showDeviceList('mobile','trialExpired')">
                 <div class="icon">🔴</div>
                 <div class="label">HẾT DÙNG THỬ</div>
@@ -428,6 +438,12 @@ button:disabled{opacity:.5;cursor:not-allowed}
                 <div class="icon">🟡</div>
                 <div class="label">ĐANG DÙNG THỬ</div>
                 <div class="count" id="tvTrialCount">0</div>
+            </button>
+
+            <button class="stat-card stat-premium-active" onclick="showDeviceList('tv','premiumActive')">
+                <div class="icon">🟢</div>
+                <div class="label">ĐANG DÙNG PREMIUM</div>
+                <div class="count" id="tvPremiumActiveCount">0</div>
             </button>
 
             <button class="stat-card stat-trial-expired" onclick="showDeviceList('tv','trialExpired')">
@@ -908,6 +924,9 @@ function updateCounts(){
     document.getElementById("mobileTrialCount").innerText =
         count("mobile","trial");
 
+    document.getElementById("mobilePremiumActiveCount").innerText =
+        count("mobile","premiumActive");
+
     document.getElementById("mobileTrialExpiredCount").innerText =
         count("mobile","trialExpired");
 
@@ -919,6 +938,9 @@ function updateCounts(){
 
     document.getElementById("tvTrialCount").innerText =
         count("tv","trial");
+
+    document.getElementById("tvPremiumActiveCount").innerText =
+        count("tv","premiumActive");
 
     document.getElementById("tvTrialExpiredCount").innerText =
         count("tv","trialExpired");
@@ -936,6 +958,7 @@ function updateCounts(){
 
 const categoryNames = {
     trial: "🟡 ĐANG DÙNG THỬ",
+    premiumActive: "🟢 ĐANG DÙNG PREMIUM",
     trialExpired: "🔴 HẾT DÙNG THỬ",
     premiumExpired: "🟠 PREMIUM HẾT HẠN",
     blocked: "🔒 ĐÃ KHÓA"
@@ -1015,6 +1038,8 @@ function renderDeviceList(){
 
             if(item.category === "trial"){
                 sub = "🎁 Đang dùng thử";
+            }else if(item.category === "premiumActive"){
+                sub = "🟢 Premium đang hoạt động";
             }else if(item.category === "trialExpired"){
                 sub = "🔴 Đã hết thời gian dùng thử";
             }else if(item.category === "premiumExpired"){
