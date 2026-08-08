@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TV365 ADMIN</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+            color: #222;
+        }
+
+        .header {
+            background: #111827;
+            color: white;
+            padding: 18px 25px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 3px 15px rgba(0,0,0,.08);
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        label {
+            display: block;
+            margin-top: 18px;
+            margin-bottom: 7px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #2563eb;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: .9;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+
+        @media(max-width:700px) {
+            .buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+    📺 TV365 ADMIN
+</div>
+
+<div class="container">
+
+    <div class="card">
+
+        <h2>🔐 Quản lý Premium</h2>
+
+        <label>ID thiết bị</label>
+
+        <input
+            type="text"
+            id="deviceId"
+            placeholder="Ví dụ: TV365-DT-5014A6"
+        >
+
+        <label>Thời hạn Premium</label>
+
+        <select id="duration">
+            <option value="1">1 ngày</option>
+            <option value="7">7 ngày</option>
+            <option value="30">1 tháng</option>
+            <option value="90">3 tháng</option>
+            <option value="180">6 tháng</option>
+            <option value="365">1 năm</option>
+            <option value="0">Vĩnh viễn</option>
+        </select>
+
+        <div class="buttons">
+
+            <button onclick="activate(1)">
+                1 NGÀY
+            </button>
+
+            <button onclick="activate(7)">
+                7 NGÀY
+            </button>
+
+            <button onclick="activate(30)">
+                1 THÁNG
+            </button>
+
+            <button onclick="activate(365)">
+                1 NĂM
+            </button>
+
+        </div>
+
+        <div class="status" id="status">
+            Chưa có thao tác.
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+function activate(days) {
+
+    const deviceId =
+        document.getElementById("deviceId").value.trim();
+
+    if (!deviceId) {
+        alert("Vui lòng nhập ID thiết bị!");
+        return;
+    }
+
+    const now = new Date();
+
+    let expiresText = "";
+
+    if (days === 0) {
+
+        expiresText = "Vĩnh viễn";
+
+    } else {
+
+        const expire = new Date(now);
+
+        expire.setDate(
+            expire.getDate() + days
+        );
+
+        expiresText =
+            expire.toLocaleString("vi-VN");
+    }
+
+    document.getElementById("status").innerHTML =
+        "Thiết bị: <b>" + deviceId + "</b><br>" +
+        "Thời hạn: <b>" +
+        (days === 0 ? "Vĩnh viễn" : days + " ngày") +
+        "</b><br>" +
+        "Hết hạn: <b>" +
+        expiresText +
+        "</b><br><br>" +
+        "⚠️ Đây mới là giao diện thử nghiệm.";
+
+}
+
+</script>
+
+</body>
+</html>
