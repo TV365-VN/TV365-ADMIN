@@ -368,6 +368,14 @@ button:disabled{opacity:.5;cursor:not-allowed}
     <label>Mật khẩu</label>
     <input type="password" id="password" placeholder="Mật khẩu">
 
+    <button
+        type="button"
+        onclick="forgotPassword()"
+        style="width:100%;margin-top:12px;background:#64748b;"
+        id="forgotPasswordButton">
+        🔑 QUÊN MẬT KHẨU?
+    </button>
+
     <button class="login-btn" onclick="login()" id="loginButton">
         ĐĂNG NHẬP
     </button>
@@ -712,6 +720,78 @@ function login(){
             button.disabled = false;
             button.innerText = "ĐĂNG NHẬP";
         });
+}
+
+async function forgotPassword(){
+
+    const emailInput =
+        document.getElementById("email");
+
+    const email =
+        emailInput.value.trim();
+
+    if(!email){
+
+        showLoginStatus(
+            "Vui lòng nhập email Admin trước.",
+            "error"
+        );
+
+        emailInput.focus();
+        return;
+    }
+
+    const button =
+        document.getElementById("forgotPasswordButton");
+
+    button.disabled = true;
+    button.innerText = "ĐANG GỬI EMAIL...";
+
+    try{
+
+        // Chỉ cho phép gửi yêu cầu khôi phục
+        // cho đúng tài khoản Admin TV365.
+        if(email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()){
+
+            throw {
+                code: "auth/admin-email-only"
+            };
+        }
+
+        await auth.sendPasswordResetEmail(email);
+
+        showLoginStatus(
+            "✅ Đã gửi email khôi phục mật khẩu đến:\n" +
+            email +
+            "\n\nVui lòng mở Gmail, kiểm tra cả mục Spam/Thư rác và bấm vào liên kết để đặt mật khẩu mới.",
+            "success"
+        );
+
+    }catch(error){
+
+        console.error(error);
+
+        let message;
+
+        if(error.code === "auth/admin-email-only"){
+            message =
+                "Email này không phải email Admin TV365.";
+        }else{
+            message =
+                "Không thể gửi email khôi phục:\n" +
+                getFirebaseError(error);
+        }
+
+        showLoginStatus(
+            message,
+            "error"
+        );
+
+    }finally{
+
+        button.disabled = false;
+        button.innerText = "🔑 QUÊN MẬT KHẨU?";
+    }
 }
 
 function showAdminPanel(user){
@@ -1848,13 +1928,19 @@ function getFirebaseError(error){
             return "Email hoặc mật khẩu không đúng.";
 
         case "auth/user-not-found":
-            return "Không tìm thấy tài khoản.";
+            return "Không tìm thấy tài khoản Admin với email này.";
 
         case "auth/wrong-password":
             return "Mật khẩu không đúng.";
 
         case "auth/too-many-requests":
             return "Có quá nhiều lần thử. Vui lòng thử lại sau.";
+
+        case "auth/invalid-email":
+            return "Địa chỉ email không hợp lệ.";
+
+        case "auth/admin-email-only":
+            return "Chỉ email Admin TV365 mới được khôi phục mật khẩu.";
 
         case "permission-denied":
         case "PERMISSION_DENIED":
