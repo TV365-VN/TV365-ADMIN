@@ -307,6 +307,82 @@ button:disabled{opacity:.5;cursor:not-allowed}
     font-weight:bold;
 }
 
+.notification-editor-panel{
+    margin-top:14px;
+    padding:14px;
+    background:#fff;
+    border:1px solid #e2e8f0;
+    border-radius:10px;
+}
+
+.notification-editor-title{
+    margin:0 0 12px;
+    font-size:15px;
+    font-weight:bold;
+    color:#334155;
+}
+
+.notification-editor-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+}
+
+.notification-editor-box{
+    padding:12px;
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    border-radius:10px;
+}
+
+.notification-editor-box h4{
+    margin:0 0 10px;
+    font-size:15px;
+}
+
+.notification-editor-box.mobile h4{color:#2563eb}
+.notification-editor-box.tv h4{color:#7c3aed}
+
+.notification-editor-box label{
+    margin-top:10px;
+}
+
+.notification-editor-box input,
+.notification-editor-box textarea{
+    width:100%;
+    padding:11px;
+    border:1px solid #cbd5e1;
+    border-radius:8px;
+    font-size:14px;
+    font-family:Arial,sans-serif;
+}
+
+.notification-editor-box textarea{
+    min-height:105px;
+    resize:vertical;
+    line-height:1.5;
+}
+
+.notification-save-btn{
+    width:100%;
+    margin-top:12px;
+    background:#16a34a;
+}
+
+.notification-editor-status{
+    margin-top:10px;
+    padding:9px 11px;
+    border-radius:8px;
+    background:#f1f5f9;
+    color:#475569;
+    font-size:13px;
+    white-space:pre-line;
+}
+
+@media(max-width:700px){
+    .notification-editor-grid{grid-template-columns:1fr}
+}
+
 .list-panel{
     margin-top:18px;
     border:1px solid #e2e8f0;
@@ -521,6 +597,86 @@ button:disabled{opacity:.5;cursor:not-allowed}
 
             <div class="notification-control-status" id="notificationControlStatus">
                 Đang đọc trạng thái thông báo...
+            </div>
+
+            <div class="notification-editor-panel">
+                <div class="notification-editor-title">
+                    ✏️ SỬA NỘI DUNG THÔNG BÁO
+                </div>
+
+                <div class="notification-editor-grid">
+
+                    <div class="notification-editor-box mobile">
+                        <h4>📱 THÔNG BÁO MOBILE</h4>
+
+                        <label for="notificationMobileTitle">
+                            Tiêu đề
+                        </label>
+                        <input
+                            type="text"
+                            id="notificationMobileTitle"
+                            placeholder="Nhập tiêu đề thông báo Mobile"
+                        >
+
+                        <label for="notificationMobileMessage">
+                            Nội dung
+                        </label>
+                        <textarea
+                            id="notificationMobileMessage"
+                            placeholder="Nhập nội dung thông báo Mobile"
+                        ></textarea>
+
+                        <button
+                            type="button"
+                            class="notification-save-btn"
+                            id="saveNotificationMobileButton"
+                            onclick="saveNotificationContent('mobile')">
+                            💾 LƯU THÔNG BÁO MOBILE
+                        </button>
+
+                        <div
+                            class="notification-editor-status"
+                            id="notificationMobileEditStatus">
+                            Chưa có thay đổi.
+                        </div>
+                    </div>
+
+                    <div class="notification-editor-box tv">
+                        <h4>📺 THÔNG BÁO TIVI</h4>
+
+                        <label for="notificationTVTitle">
+                            Tiêu đề
+                        </label>
+                        <input
+                            type="text"
+                            id="notificationTVTitle"
+                            placeholder="Nhập tiêu đề thông báo Tivi"
+                        >
+
+                        <label for="notificationTVMessage">
+                            Nội dung
+                        </label>
+                        <textarea
+                            id="notificationTVMessage"
+                            placeholder="Nhập nội dung thông báo Tivi"
+                        ></textarea>
+
+                        <button
+                            type="button"
+                            class="notification-save-btn"
+                            id="saveNotificationTVButton"
+                            onclick="saveNotificationContent('tv')">
+                            💾 LƯU THÔNG BÁO TIVI
+                        </button>
+
+                        <div
+                            class="notification-editor-status"
+                            id="notificationTVEditStatus">
+                            Chưa có thay đổi.
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
 
@@ -839,12 +995,16 @@ let freeConfig = {
 
 /*
  * Trạng thái thông báo.
- * Admin chỉ bật/tắt quyền hiển thị.
- * Nội dung thông báo vẫn do App tải từ GitHub.
+ * Admin bật/tắt quyền hiển thị và có thể sửa trực tiếp
+ * tiêu đề + nội dung thông báo trong premium_config/system.
  */
 let notificationConfig = {
     notificationMobile: "OFF",
-    notificationTV: "OFF"
+    notificationTV: "OFF",
+    notificationMobileTitle: "",
+    notificationMobileMessage: "",
+    notificationTVTitle: "",
+    notificationTVMessage: ""
 };
 
 let controlWriteBusy = false;
@@ -1567,7 +1727,7 @@ function updateNotificationControlUI(){
         status.innerText =
             "🔔 ĐANG BẬT THÔNG BÁO: " +
             active.join(" + ") +
-            ". Nội dung được App tải từ GitHub.";
+            ". Nội dung được lưu trên Firebase."; 
 
     }else{
 
@@ -1593,9 +1753,14 @@ async function loadNotificationConfig(){
 
             notificationConfig = {
                 notificationMobile:"OFF",
-                notificationTV:"OFF"
+                notificationTV:"OFF",
+                notificationMobileTitle:"",
+                notificationMobileMessage:"",
+                notificationTVTitle:"",
+                notificationTVMessage:""
             };
 
+            fillNotificationEditor();
             updateNotificationControlUI();
             return;
         }
@@ -1615,9 +1780,22 @@ async function loadNotificationConfig(){
                 normalizeOnOff(
                     data.notificationTV,
                     "OFF"
-                )
+                ),
+
+            notificationMobileTitle:
+                String(data.notificationMobileTitle ?? ""),
+
+            notificationMobileMessage:
+                String(data.notificationMobileMessage ?? ""),
+
+            notificationTVTitle:
+                String(data.notificationTVTitle ?? ""),
+
+            notificationTVMessage:
+                String(data.notificationTVMessage ?? "")
         };
 
+        fillNotificationEditor();
         updateNotificationControlUI();
 
     }catch(error){
@@ -1638,6 +1816,248 @@ async function loadNotificationConfig(){
                 "❌ Không đọc được trạng thái thông báo: " +
                 getFirebaseError(error);
         }
+
+        setNotificationEditorStatus(
+            "mobile",
+            "❌ Không đọc được nội dung thông báo.",
+            true
+        );
+
+        setNotificationEditorStatus(
+            "tv",
+            "❌ Không đọc được nội dung thông báo.",
+            true
+        );
+    }
+}
+
+
+function fillNotificationEditor(){
+
+    const mobileTitle =
+        document.getElementById("notificationMobileTitle");
+
+    const mobileMessage =
+        document.getElementById("notificationMobileMessage");
+
+    const tvTitle =
+        document.getElementById("notificationTVTitle");
+
+    const tvMessage =
+        document.getElementById("notificationTVMessage");
+
+    if(mobileTitle){
+        mobileTitle.value =
+            notificationConfig.notificationMobileTitle || "";
+    }
+
+    if(mobileMessage){
+        mobileMessage.value =
+            notificationConfig.notificationMobileMessage || "";
+    }
+
+    if(tvTitle){
+        tvTitle.value =
+            notificationConfig.notificationTVTitle || "";
+    }
+
+    if(tvMessage){
+        tvMessage.value =
+            notificationConfig.notificationTVMessage || "";
+    }
+}
+
+function setNotificationEditorStatus(
+    platform,
+    message,
+    isError = false
+){
+
+    const id =
+        platform === "mobile"
+            ? "notificationMobileEditStatus"
+            : "notificationTVEditStatus";
+
+    const el = document.getElementById(id);
+
+    if(!el) return;
+
+    el.style.background =
+        isError ? "#fee2e2" : "#dcfce7";
+
+    el.style.color =
+        isError ? "#991b1b" : "#166534";
+
+    el.innerText = message;
+}
+
+async function saveNotificationContent(platform){
+
+    if(controlWriteBusy) return;
+    controlWriteBusy = true;
+
+    const user = auth.currentUser;
+
+    if(
+        !user ||
+        !user.email ||
+        user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()
+    ){
+
+        showStatus(
+            "Tài khoản không có quyền Admin.",
+            "error"
+        );
+
+        controlWriteBusy = false;
+        return;
+    }
+
+    let titleId;
+    let messageId;
+    let titleField;
+    let messageField;
+    let platformName;
+
+    if(platform === "mobile"){
+
+        titleId = "notificationMobileTitle";
+        messageId = "notificationMobileMessage";
+
+        titleField = "notificationMobileTitle";
+        messageField = "notificationMobileMessage";
+
+        platformName = "Mobile";
+
+    }else if(platform === "tv"){
+
+        titleId = "notificationTVTitle";
+        messageId = "notificationTVMessage";
+
+        titleField = "notificationTVTitle";
+        messageField = "notificationTVMessage";
+
+        platformName = "Tivi";
+
+    }else{
+
+        controlWriteBusy = false;
+        return;
+    }
+
+    const title =
+        document.getElementById(titleId)?.value.trim() || "";
+
+    const message =
+        document.getElementById(messageId)?.value.trim() || "";
+
+    if(!title){
+
+        setNotificationEditorStatus(
+            platform,
+            "⚠️ Vui lòng nhập tiêu đề thông báo.",
+            true
+        );
+
+        controlWriteBusy = false;
+        return;
+    }
+
+    if(!message){
+
+        setNotificationEditorStatus(
+            platform,
+            "⚠️ Vui lòng nhập nội dung thông báo.",
+            true
+        );
+
+        controlWriteBusy = false;
+        return;
+    }
+
+    const saveButton =
+        document.getElementById(
+            platform === "mobile"
+                ? "saveNotificationMobileButton"
+                : "saveNotificationTVButton"
+        );
+
+    if(saveButton){
+        saveButton.disabled = true;
+        saveButton.innerText =
+            "💾 ĐANG LƯU " + platformName.toUpperCase() + "...";
+    }
+
+    try{
+
+        await db
+            .collection("premium_config")
+            .doc("system")
+            .set({
+
+                [titleField]: title,
+                [messageField]: message,
+
+                notificationUpdatedAt:
+                    firebase.firestore.FieldValue.serverTimestamp(),
+
+                notificationUpdatedBy:
+                    user.email
+
+            },{merge:true});
+
+        notificationConfig[titleField] = title;
+        notificationConfig[messageField] = message;
+
+        fillNotificationEditor();
+
+        setNotificationEditorStatus(
+            platform,
+            "✅ Đã lưu thông báo " +
+            platformName +
+            " vào Firebase."
+        );
+
+        showStatus(
+            "✅ Đã cập nhật thông báo " +
+            platformName +
+            ".\n\n" +
+            "Tiêu đề và nội dung đã được lưu vào premium_config/system.",
+            "success"
+        );
+
+    }catch(error){
+
+        console.error(error);
+
+        const messageError =
+            "❌ Không thể lưu thông báo " +
+            platformName +
+            ":\n" +
+            getFirebaseError(error);
+
+        setNotificationEditorStatus(
+            platform,
+            messageError,
+            true
+        );
+
+        showStatus(
+            messageError,
+            "error"
+        );
+
+    }finally{
+
+        if(saveButton){
+            saveButton.disabled = false;
+            saveButton.innerText =
+                platform === "mobile"
+                    ? "💾 LƯU THÔNG BÁO MOBILE"
+                    : "💾 LƯU THÔNG BÁO TIVI";
+        }
+
+        controlWriteBusy = false;
     }
 }
 
