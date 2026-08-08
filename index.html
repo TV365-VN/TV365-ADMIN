@@ -13,12 +13,41 @@ body{
     background:#f5f6fa;
     color:#222;
 }
+/* HEADER */
 .header{
     background:#111827;
     color:#fff;
     padding:18px 25px;
     font-size:22px;
     font-weight:bold;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+}
+
+.header-brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+}
+
+.header-brand img{
+    width:44px;
+    height:44px;
+    object-fit:contain;
+    border-radius:10px;
+    background:#fff;
+    padding:3px;
+    flex-shrink:0;
+}
+
+.header-brand span{
+    font-size:22px;
+    font-weight:800;
+    letter-spacing:.3px;
+    white-space:nowrap;
 }
 .container{
     max-width:1100px;
@@ -281,6 +310,22 @@ button:disabled{opacity:.5;cursor:not-allowed}
 }
 @media(max-width:700px){
     .container{padding:10px;margin-top:15px}
+    .header{
+        flex-wrap:wrap;
+        padding:14px 16px;
+    }
+    .header-brand{
+        width:100%;
+        justify-content:center;
+        order:3;
+    }
+    .header-brand img{
+        width:40px;
+        height:40px;
+    }
+    .header-brand span{
+        font-size:20px;
+    }
     .logout{float:none;width:100%;margin-top:15px}
     .buttons{grid-template-columns:repeat(2,1fr)}
     .custom-row{grid-template-columns:1fr}
@@ -294,7 +339,17 @@ button:disabled{opacity:.5;cursor:not-allowed}
 
 <body>
 
-<div class="header">📺 TV365 ADMIN</div>
+<div class="header">
+    <div>📺 TV365 ADMIN</div>
+
+    <div class="header-brand">
+        <img
+            src="https://raw.githubusercontent.com/TV365-VN/TV365/main/TV.png"
+            alt="TV365"
+        >
+        <span>TV365</span>
+    </div>
+</div>
 
 <div class="container">
 
