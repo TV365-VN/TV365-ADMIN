@@ -213,6 +213,51 @@ button:disabled{opacity:.5;cursor:not-allowed}
     color:#64748b;
 }
 
+/* FREE CONTROL */
+.free-control-panel{
+    margin:0 0 22px;
+    padding:14px;
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    border-radius:12px;
+}
+.free-control-title{
+    margin:0 0 12px;
+    font-size:16px;
+    font-weight:bold;
+    color:#334155;
+}
+.free-control-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+}
+.free-control-btn{
+    min-height:54px;
+    font-size:15px;
+    transition:.15s;
+}
+.free-mobile-btn{background:#2563eb}
+.free-tv-btn{background:#7c3aed}
+.free-all-btn{background:#0f766e}
+.free-control-btn.is-on{
+    background:#dc2626!important;
+    box-shadow:0 0 0 3px rgba(220,38,38,.14);
+}
+.free-control-status{
+    margin-top:10px;
+    padding:10px 12px;
+    border-radius:8px;
+    background:#f1f5f9;
+    color:#475569;
+    font-size:13px;
+}
+.free-control-status.on{
+    background:#dcfce7;
+    color:#166534;
+    font-weight:bold;
+}
+
 .list-panel{
     margin-top:18px;
     border:1px solid #e2e8f0;
@@ -337,6 +382,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
     .device-actions{width:100%}
     .device-actions button{flex:1}
     .search-row{grid-template-columns:1fr}
+    .free-control-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -400,6 +446,43 @@ button:disabled{opacity:.5;cursor:not-allowed}
          DASHBOARD
     ====================================================== -->
     <div class="card" style="padding:18px;background:#fafafa;box-shadow:none;border:1px solid #e2e8f0;">
+        <!-- =====================================================
+             FREE CONTROL
+        ====================================================== -->
+        <div class="free-control-panel">
+            <div class="free-control-title">🎁 QUẢN LÝ MỞ FREE</div>
+
+            <div class="free-control-grid">
+                <button
+                    type="button"
+                    id="freeMobileButton"
+                    class="free-control-btn free-mobile-btn"
+                    onclick="toggleFree('mobile')">
+                    📱 MỞ FREE MOBILE
+                </button>
+
+                <button
+                    type="button"
+                    id="freeTVButton"
+                    class="free-control-btn free-tv-btn"
+                    onclick="toggleFree('tv')">
+                    📺 MỞ FREE TIVI
+                </button>
+
+                <button
+                    type="button"
+                    id="freeAllButton"
+                    class="free-control-btn free-all-btn"
+                    onclick="toggleFree('all')">
+                    🌐 MỞ FREE CẢ 2
+                </button>
+            </div>
+
+            <div class="free-control-status" id="freeControlStatus">
+                Đang đọc trạng thái Free...
+            </div>
+        </div>
+
         <div class="dashboard-tools">
             <button onclick="loadDashboard()">🔄 LÀM MỚI THỐNG KÊ</button>
             <span class="last-update" id="lastUpdate">Chưa tải dữ liệu</span>
@@ -662,6 +745,23 @@ let currentListPlatform = null;
 let currentListType = null;
 let currentDetailId = null;
 
+/*
+ * Trạng thái Free được lưu trong premium_config/system.
+ *
+ * Khi mở Free, premiumMobile/premiumTV hiện tại được lưu vào
+ * freeBackupPremiumMobile/freeBackupPremiumTV để khi tắt Free
+ * có thể khôi phục đúng trạng thái trước đó.
+ */
+let freeConfig = {
+    freeAll: "OFF",
+    freeMobile: "OFF",
+    freeTV: "OFF",
+    premiumMobile: "ON",
+    premiumTV: "ON",
+    freeBackupPremiumMobile: null,
+    freeBackupPremiumTV: null
+};
+
 /* =========================================================
    LOGIN
 ========================================================= */
@@ -814,6 +914,7 @@ function showAdminPanel(user){
     );
 
     loadDashboard();
+    loadFreeConfig();
 }
 
 function logout(){
@@ -856,6 +957,421 @@ function getPlatform(deviceId){
 
     return null;
 }
+
+
+/* =========================================================
+   FREE CONTROL
+   GHI TRỰC TIẾP VÀO premium_config/system
+   ========================================================= */
+
+function normalizeOnOff(value, fallback = "ON"){
+    return String(value ?? fallback).toUpperCase() === "OFF"
+        ? "OFF"
+        : "ON";
+}
+
+function applyFreeButtonState(buttonId, isOn, onText, offText){
+    const button = document.getElementById(buttonId);
+    if(!button) return;
+
+    button.classList.toggle("is-on", isOn);
+    button.innerText = isOn ? offText : onText;
+}
+
+function updateFreeControlUI(){
+    const freeAll = freeConfig.freeAll === "ON";
+    const freeMobile = freeConfig.freeMobile === "ON" || freeAll;
+    const freeTV = freeConfig.freeTV === "ON" || freeAll;
+
+    applyFreeButtonState(
+        "freeMobileButton",
+        freeMobile,
+        "📱 MỞ FREE MOBILE",
+        "📱 TẮT FREE MOBILE"
+    );
+
+    applyFreeButtonState(
+        "freeTVButton",
+        freeTV,
+        "📺 MỞ FREE TIVI",
+        "📺 TẮT FREE TIVI"
+    );
+
+    applyFreeButtonState(
+        "freeAllButton",
+        freeAll,
+        "🌐 MỞ FREE CẢ 2",
+        "🌐 TẮT FREE CẢ 2"
+    );
+
+    const status = document.getElementById("freeControlStatus");
+    if(!status) return;
+
+    const active = [];
+
+    if(freeAll){
+        active.push("Mobile + Tivi");
+    }else{
+        if(freeMobile) active.push("Mobile");
+        if(freeTV) active.push("Tivi");
+    }
+
+    if(active.length){
+        status.className = "free-control-status on";
+        status.innerText =
+            "🟢 ĐANG MỞ FREE: " + active.join(" + ");
+    }else{
+        status.className = "free-control-status";
+        status.innerText =
+            "⚪ FREE đang tắt. Premium hoạt động theo cấu hình hiện tại.";
+    }
+}
+
+async function loadFreeConfig(){
+    try{
+        const doc = await db
+            .collection("premium_config")
+            .doc("system")
+            .get();
+
+        if(!doc.exists){
+            freeConfig = {
+                freeAll:"OFF",
+                freeMobile:"OFF",
+                freeTV:"OFF",
+                premiumMobile:"ON",
+                premiumTV:"ON",
+                freeBackupPremiumMobile:null,
+                freeBackupPremiumTV:null
+            };
+
+            updateFreeControlUI();
+            return;
+        }
+
+        const data = doc.data() || {};
+
+        freeConfig = {
+            freeAll: normalizeOnOff(data.freeAll, "OFF"),
+            freeMobile: normalizeOnOff(data.freeMobile, "OFF"),
+            freeTV: normalizeOnOff(data.freeTV, "OFF"),
+            premiumMobile: normalizeOnOff(data.premiumMobile, "ON"),
+            premiumTV: normalizeOnOff(data.premiumTV, "ON"),
+            freeBackupPremiumMobile:
+                data.freeBackupPremiumMobile !== undefined
+                    ? normalizeOnOff(data.freeBackupPremiumMobile, "ON")
+                    : null,
+            freeBackupPremiumTV:
+                data.freeBackupPremiumTV !== undefined
+                    ? normalizeOnOff(data.freeBackupPremiumTV, "ON")
+                    : null
+        };
+
+        updateFreeControlUI();
+
+    }catch(error){
+        console.error(error);
+
+        const status = document.getElementById("freeControlStatus");
+        if(status){
+            status.className = "free-control-status";
+            status.innerText =
+                "❌ Không đọc được trạng thái Free: " +
+                getFirebaseError(error);
+        }
+    }
+}
+
+async function toggleFree(platform){
+    const user = auth.currentUser;
+
+    if(!user ||
+       !user.email ||
+       user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()){
+
+        showStatus(
+            "Tài khoản không có quyền Admin.",
+            "error"
+        );
+        return;
+    }
+
+    const ref = db
+        .collection("premium_config")
+        .doc("system");
+
+    const freeAll = freeConfig.freeAll === "ON";
+    const currentMobile =
+        freeConfig.freeMobile === true || freeAll;
+    const currentTV =
+        freeConfig.freeTV === true || freeAll;
+
+    let updates = {};
+
+    try{
+
+        /* -----------------------------------------------------
+           MỞ / TẮT FREE CẢ 2
+           ----------------------------------------------------- */
+        if(platform === "all"){
+
+            if(!freeAll){
+
+                /*
+                 * Lưu trạng thái Premium hiện tại trước khi tắt.
+                 * Chỉ lưu nếu chưa có backup.
+                 */
+                const backupMobile =
+                    freeConfig.freeBackupPremiumMobile !== null
+                        ? freeConfig.freeBackupPremiumMobile
+                        : freeConfig.premiumMobile;
+
+                const backupTV =
+                    freeConfig.freeBackupPremiumTV !== null
+                        ? freeConfig.freeBackupPremiumTV
+                        : freeConfig.premiumTV;
+
+                updates = {
+                    freeAll: "ON",
+                    freeMobile: "ON",
+                    freeTV: "ON",
+
+                    freeBackupPremiumMobile: backupMobile,
+                    freeBackupPremiumTV: backupTV,
+
+                    premiumMobile: "OFF",
+                    premiumTV: "OFF",
+
+                    freeUpdatedAt:
+                        firebase.firestore.FieldValue.serverTimestamp(),
+
+                    freeUpdatedBy:
+                        user.email
+                };
+
+                await ref.set(updates,{merge:true});
+
+                showStatus(
+                    "🎁 Đã MỞ FREE CẢ 2.\n\n" +
+                    "Mobile và Tivi được xem miễn phí.\n" +
+                    "Premium Mobile/Tivi đã tạm tắt.\n" +
+                    "Khi TẮT FREE CẢ 2, trạng thái Premium trước đó sẽ tự khôi phục.",
+                    "success"
+                );
+
+            }else{
+
+                /*
+                 * Khôi phục Premium đúng trạng thái trước khi
+                 * MỞ FREE CẢ 2.
+                 */
+                const restoreMobile =
+                    freeConfig.freeBackupPremiumMobile !== null
+                        ? freeConfig.freeBackupPremiumMobile
+                        : "ON";
+
+                const restoreTV =
+                    freeConfig.freeBackupPremiumTV !== null
+                        ? freeConfig.freeBackupPremiumTV
+                        : "ON";
+
+                updates = {
+                    freeAll: "OFF",
+                    freeMobile: "OFF",
+                    freeTV: "OFF",
+
+                    premiumMobile: restoreMobile,
+                    premiumTV: restoreTV,
+
+                    freeBackupPremiumMobile:
+                        firebase.firestore.FieldValue.delete(),
+
+                    freeBackupPremiumTV:
+                        firebase.firestore.FieldValue.delete(),
+
+                    freeUpdatedAt:
+                        firebase.firestore.FieldValue.serverTimestamp(),
+
+                    freeUpdatedBy:
+                        user.email
+                };
+
+                await ref.set(updates,{merge:true});
+
+                showStatus(
+                    "✅ Đã TẮT FREE CẢ 2.\n\n" +
+                    "Mobile và Tivi đã khôi phục trạng thái Premium trước đó.",
+                    "success"
+                );
+            }
+
+        /* -----------------------------------------------------
+           MOBILE
+           ----------------------------------------------------- */
+        }else if(platform === "mobile"){
+
+            if(freeAll){
+                showStatus(
+                    "🌐 FREE CẢ 2 đang bật. Hãy dùng nút TẮT FREE CẢ 2 để khôi phục trạng thái.",
+                    "info"
+                );
+                return;
+            }
+
+            if(!currentMobile){
+
+                /*
+                 * Nếu Mobile chưa Free:
+                 * lưu premiumMobile rồi tắt Premium Mobile.
+                 */
+                const backup =
+                    freeConfig.freeBackupPremiumMobile !== null
+                        ? freeConfig.freeBackupPremiumMobile
+                        : freeConfig.premiumMobile;
+
+                updates = {
+                    freeMobile: "ON",
+                    premiumMobile: "OFF",
+                    freeBackupPremiumMobile: backup,
+
+                    freeUpdatedAt:
+                        firebase.firestore.FieldValue.serverTimestamp(),
+
+                    freeUpdatedBy:
+                        user.email
+                };
+
+                await ref.set(updates,{merge:true});
+
+                showStatus(
+                    "📱 Đã MỞ FREE MOBILE.\n\n" +
+                    "Mobile được xem miễn phí.\n" +
+                    "Trạng thái Premium Mobile trước đó đã được lưu.",
+                    "success"
+                );
+
+            }else{
+
+                /*
+                 * Nếu Mobile đang Free:
+                 * khôi phục Premium Mobile.
+                 */
+                const restore =
+                    freeConfig.freeBackupPremiumMobile !== null
+                        ? freeConfig.freeBackupPremiumMobile
+                        : "ON";
+
+                updates = {
+                    freeMobile: "OFF",
+                    premiumMobile: restore,
+
+                    freeBackupPremiumMobile:
+                        firebase.firestore.FieldValue.delete(),
+
+                    freeUpdatedAt:
+                        firebase.firestore.FieldValue.serverTimestamp(),
+
+                    freeUpdatedBy:
+                        user.email
+                };
+
+                await ref.set(updates,{merge:true});
+
+                showStatus(
+                    "✅ Đã TẮT FREE MOBILE.\n\n" +
+                    "Mobile đã khôi phục trạng thái Premium trước đó.",
+                    "success"
+                );
+            }
+
+        /* -----------------------------------------------------
+           TIVI
+           ----------------------------------------------------- */
+        }else if(platform === "tv"){
+
+            if(freeAll){
+                showStatus(
+                    "🌐 FREE CẢ 2 đang bật. Hãy dùng nút TẮT FREE CẢ 2 để khôi phục trạng thái.",
+                    "info"
+                );
+                return;
+            }
+
+            if(!currentTV){
+
+                const backup =
+                    freeConfig.freeBackupPremiumTV !== null
+                        ? freeConfig.freeBackupPremiumTV
+                        : freeConfig.premiumTV;
+
+                updates = {
+                    freeTV: "ON",
+                    premiumTV: "OFF",
+                    freeBackupPremiumTV: backup,
+
+                    freeUpdatedAt:
+                        firebase.firestore.FieldValue.serverTimestamp(),
+
+                    freeUpdatedBy:
+                        user.email
+                };
+
+                await ref.set(updates,{merge:true});
+
+                showStatus(
+                    "📺 Đã MỞ FREE TIVI.\n\n" +
+                    "Tivi được xem miễn phí.\n" +
+                    "Trạng thái Premium Tivi trước đó đã được lưu.",
+                    "success"
+                );
+
+            }else{
+
+                const restore =
+                    freeConfig.freeBackupPremiumTV !== null
+                        ? freeConfig.freeBackupPremiumTV
+                        : "ON";
+
+                updates = {
+                    freeTV: "OFF",
+                    premiumTV: restore,
+
+                    freeBackupPremiumTV:
+                        firebase.firestore.FieldValue.delete(),
+
+                    freeUpdatedAt:
+                        firebase.firestore.FieldValue.serverTimestamp(),
+
+                    freeUpdatedBy:
+                        user.email
+                };
+
+                await ref.set(updates,{merge:true});
+
+                showStatus(
+                    "✅ Đã TẮT FREE TIVI.\n\n" +
+                    "Tivi đã khôi phục trạng thái Premium trước đó.",
+                    "success"
+                );
+            }
+        }
+
+        await loadFreeConfig();
+
+    }catch(error){
+
+        console.error(error);
+
+        showStatus(
+            "❌ Không thể thay đổi trạng thái Free:\n" +
+            getFirebaseError(error),
+            "error"
+        );
+
+        await loadFreeConfig();
+    }
+}
+
 
 function getTrialDaysFromConfig(){
 
@@ -973,6 +1489,7 @@ async function loadDashboard(){
         });
 
         updateCounts();
+        await loadFreeConfig();
 
         document.getElementById("lastUpdate").innerText =
             "Cập nhật: " +
