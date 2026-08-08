@@ -288,6 +288,11 @@ button:disabled{opacity:.5;cursor:not-allowed}
     background:#dc2626!important;
     box-shadow:0 0 0 3px rgba(220,38,38,.14);
 }
+.notification-control-btn:disabled,
+.free-control-btn:disabled{
+    opacity:.65;
+    cursor:wait;
+}
 .notification-control-status{
     margin-top:10px;
     padding:10px 12px;
@@ -842,6 +847,8 @@ let notificationConfig = {
     notificationTV: "OFF"
 };
 
+let controlWriteBusy = false;
+
 /* =========================================================
    LOGIN
 ========================================================= */
@@ -1059,6 +1066,36 @@ function applyFreeButtonState(buttonId, isOn, onText, offText){
     button.innerText = isOn ? offText : onText;
 }
 
+function setControlStatus(elementId, message, isOn = false, isError = false){
+    const el = document.getElementById(elementId);
+    if(!el) return;
+
+    if(isError){
+        el.className =
+            elementId === "freeControlStatus"
+                ? "free-control-status"
+                : "notification-control-status";
+
+        el.style.background = "#fee2e2";
+        el.style.color = "#991b1b";
+    }else{
+        el.style.background = "";
+        el.style.color = "";
+
+        if(elementId === "freeControlStatus"){
+            el.className =
+                "free-control-status" +
+                (isOn ? " on" : "");
+        }else{
+            el.className =
+                "notification-control-status" +
+                (isOn ? " on" : "");
+        }
+    }
+
+    el.innerText = message;
+}
+
 function updateFreeControlUI(){
     const freeAll = freeConfig.freeAll === "ON";
     const freeMobile = freeConfig.freeMobile === "ON" || freeAll;
@@ -1164,6 +1201,9 @@ async function loadFreeConfig(){
 }
 
 async function toggleFree(platform){
+    if(controlWriteBusy) return;
+    controlWriteBusy = true;
+
     const user = auth.currentUser;
 
     if(!user ||
@@ -1183,9 +1223,9 @@ async function toggleFree(platform){
 
     const freeAll = freeConfig.freeAll === "ON";
     const currentMobile =
-        freeConfig.freeMobile === true || freeAll;
+        freeConfig.freeMobile === "ON" || freeAll;
     const currentTV =
-        freeConfig.freeTV === true || freeAll;
+        freeConfig.freeTV === "ON" || freeAll;
 
     let updates = {};
 
@@ -1438,18 +1478,27 @@ async function toggleFree(platform){
         }
 
         await loadFreeConfig();
+        controlWriteBusy = false;
 
     }catch(error){
 
         console.error(error);
 
-        showStatus(
+        const message =
             "❌ Không thể thay đổi trạng thái Free:\n" +
-            getFirebaseError(error),
-            "error"
+            getFirebaseError(error);
+
+        setControlStatus(
+            "freeControlStatus",
+            message,
+            false,
+            true
         );
 
+        showStatus(message, "error");
+
         await loadFreeConfig();
+        controlWriteBusy = false;
     }
 }
 
@@ -1594,6 +1643,9 @@ async function loadNotificationConfig(){
 
 async function toggleNotification(platform){
 
+    if(controlWriteBusy) return;
+    controlWriteBusy = true;
+
     const user =
         auth.currentUser;
 
@@ -1609,6 +1661,7 @@ async function toggleNotification(platform){
             "error"
         );
 
+        controlWriteBusy = false;
         return;
     }
 
@@ -1629,6 +1682,7 @@ async function toggleNotification(platform){
 
     }else{
 
+        controlWriteBusy = false;
         return;
     }
 
@@ -1665,37 +1719,57 @@ async function toggleNotification(platform){
 
         if(next === "ON"){
 
-            showStatus(
+            setControlStatus(
+                "notificationControlStatus",
                 "🔔 Đã BẬT THÔNG BÁO " +
                 platformName +
-                ".\n\n" +
-                "Ứng dụng sẽ kiểm tra trạng thái khi mở app " +
-                "và tải nội dung thông báo từ GitHub.",
+                ". Ứng dụng sẽ đọc trạng thái này khi mở app.",
+                true,
+                false
+            );
+
+            showStatus(
+                "🔔 Đã BẬT THÔNG BÁO " + platformName + ".",
                 "success"
             );
 
         }else{
 
-            showStatus(
+            setControlStatus(
+                "notificationControlStatus",
                 "🔕 Đã TẮT THÔNG BÁO " +
-                platformName +
-                ".\n\n" +
-                "Ứng dụng sẽ không hiện thông báo này.",
+                platformName + ".",
+                false,
+                false
+            );
+
+            showStatus(
+                "🔕 Đã TẮT THÔNG BÁO " + platformName + ".",
                 "success"
             );
         }
+
+        controlWriteBusy = false;
 
     }catch(error){
 
         console.error(error);
 
-        showStatus(
+        const message =
             "❌ Không thể thay đổi trạng thái thông báo:\n" +
-            getFirebaseError(error),
-            "error"
+            getFirebaseError(error);
+
+        setControlStatus(
+            "notificationControlStatus",
+            message,
+            false,
+            true
         );
 
+        showStatus(message, "error");
+
         await loadNotificationConfig();
+        controlWriteBusy = false;
     }
 }
 
