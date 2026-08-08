@@ -99,6 +99,37 @@ button:disabled {
     background: #2563eb;
 }
 
+.buttons button.selected {
+    background: #16a34a !important;
+    box-shadow: 0 0 0 3px rgba(22,163,74,.20);
+    transform: translateY(-1px);
+}
+
+.activate-panel {
+    margin-top: 18px;
+    padding: 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+.selected-duration {
+    margin-bottom: 12px;
+    font-size: 16px;
+    color: #334155;
+}
+
+.activate-main {
+    width: 100%;
+    background: #16a34a;
+    font-size: 16px;
+    padding: 14px;
+}
+
+.activate-main:disabled {
+    background: #94a3b8;
+}
+
 .status {
     margin-top: 20px;
     padding: 15px;
@@ -157,6 +188,42 @@ button:disabled {
         margin-top: 15px;
     }
 }
+
+.custom-duration {
+    margin-top: 22px;
+    padding: 18px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+.custom-row {
+    display: grid;
+    grid-template-columns: 1fr 180px;
+    gap: 10px;
+}
+
+.custom-row select {
+    width: 100%;
+    padding: 13px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+    background: white;
+}
+
+.custom-button {
+    width: 100%;
+    margin-top: 12px;
+    background: #16a34a;
+}
+
+@media(max-width:700px) {
+    .custom-row {
+        grid-template-columns: 1fr;
+    }
+}
+
 </style>
 </head>
 
@@ -262,42 +329,64 @@ button:disabled {
 
         <label>Thời hạn Premium</label>
 
-
         <div class="buttons">
 
-            <button onclick="activate(1)">
+            <button type="button" data-duration="1" onclick="selectDuration(1, 'days', '1 NGÀY', this)">
                 1 NGÀY
             </button>
 
-            <button onclick="activate(7)">
+            <button type="button" data-duration="7" onclick="selectDuration(7, 'days', '7 NGÀY', this)">
                 7 NGÀY
             </button>
 
-            <button onclick="activate(30)">
+            <button type="button" data-duration="1m" onclick="selectDuration(1, 'months', '1 THÁNG', this)">
                 1 THÁNG
             </button>
 
-            <button onclick="activate(90)">
+            <button type="button" data-duration="3m" onclick="selectDuration(3, 'months', '3 THÁNG', this)">
                 3 THÁNG
             </button>
 
-            <button onclick="activate(180)">
+            <button type="button" data-duration="6m" onclick="selectDuration(6, 'months', '6 THÁNG', this)">
                 6 THÁNG
             </button>
 
-            <button onclick="activate(365)">
+            <button type="button" data-duration="1y" onclick="selectDuration(1, 'years', '1 NĂM', this)">
                 1 NĂM
             </button>
 
-            <button
-                onclick="activate(0)"
-                style="background:#16a34a;"
-            >
+            <button type="button" data-duration="forever" onclick="selectDuration(0, 'forever', 'VĨNH VIỄN', this)" style="background:#16a34a;">
                 ♾️ VĨNH VIỄN
             </button>
 
         </div>
 
+        <div class="custom-duration">
+            <label>Thời hạn tùy chỉnh</label>
+
+            <div class="custom-row">
+                <input type="number" id="customValue" min="1" step="1" placeholder="Nhập số">
+                <select id="customUnit">
+                    <option value="days">NGÀY</option>
+                    <option value="months">THÁNG</option>
+                    <option value="years">NĂM</option>
+                </select>
+            </div>
+
+            <button type="button" class="custom-button" onclick="selectCustomDuration()">
+                ➕ CHỌN THỜI HẠN TÙY CHỈNH
+            </button>
+        </div>
+
+        <div class="activate-panel">
+            <div class="selected-duration">
+                Thời hạn đã chọn: <strong id="selectedDurationText">Chưa chọn</strong>
+            </div>
+
+            <button type="button" id="activateButton" class="activate-main" onclick="activateSelected()" disabled>
+                🔐 KÍCH HOẠT PREMIUM
+            </button>
+        </div>
 
         <div
             class="status"
@@ -628,168 +717,141 @@ function checkDevice() {
 
 
 /* =========================================================
-   KÍCH HOẠT LICENSE
+   CHỌN THỜI HẠN
+   Bấm các nút chỉ để chọn, không kích hoạt ngay.
 ========================================================= */
 
-function activate(days) {
+let selectedDuration = null;
 
-    const deviceId =
-        document
-            .getElementById("deviceId")
-            .value
-            .trim()
-            .toUpperCase();
+function selectDuration(value, unit, label, button) {
 
+    selectedDuration = { value, unit, label };
 
-    if (!deviceId) {
+    document.querySelectorAll(".buttons button").forEach((btn) => {
+        btn.classList.remove("selected");
+    });
 
-        showStatus(
-            "Vui lòng nhập ID thiết bị trước.",
-            "error"
-        );
+    if (button) button.classList.add("selected");
 
+    document.getElementById("selectedDurationText").innerText = label;
+    document.getElementById("activateButton").disabled = false;
+
+    showStatus(
+        "Đã chọn thời hạn " + label + ". Bấm KÍCH HOẠT PREMIUM để cấp.",
+        "info"
+    );
+}
+
+function selectCustomDuration() {
+
+    const value = parseInt(document.getElementById("customValue").value, 10);
+    const unit = document.getElementById("customUnit").value;
+
+    if (!Number.isInteger(value) || value < 1) {
+        showStatus("Vui lòng nhập số lớn hơn hoặc bằng 1.", "error");
         return;
     }
 
+    let label;
+    if (unit === "days") label = value + " NGÀY";
+    else if (unit === "months") label = value + " THÁNG";
+    else label = value + " NĂM";
+
+    selectedDuration = { value, unit, label };
+
+    document.querySelectorAll(".buttons button").forEach((btn) => {
+        btn.classList.remove("selected");
+    });
+
+    document.getElementById("selectedDurationText").innerText = label;
+    document.getElementById("activateButton").disabled = false;
+
+    showStatus(
+        "Đã chọn thời hạn " + label + ". Bấm KÍCH HOẠT PREMIUM để cấp.",
+        "info"
+    );
+}
+
+/* =========================================================
+   KÍCH HOẠT THỜI HẠN ĐÃ CHỌN
+   Không còn hộp thoại confirm của trình duyệt.
+========================================================= */
+
+function activateSelected() {
+
+    if (!selectedDuration) {
+        showStatus("Vui lòng chọn thời hạn trước.", "error");
+        return;
+    }
+
+    const deviceId = document.getElementById("deviceId").value.trim().toUpperCase();
+
+    if (!deviceId) {
+        showStatus("Vui lòng nhập ID thiết bị trước.", "error");
+        return;
+    }
 
     const user = auth.currentUser;
 
-
     if (!user) {
-
-        showStatus(
-            "Phiên Admin đã hết. Vui lòng đăng nhập lại.",
-            "error"
-        );
-
+        showStatus("Phiên Admin đã hết. Vui lòng đăng nhập lại.", "error");
         return;
     }
 
-
-    if (
-        user.email.toLowerCase()
-        !== "xavantai@gmail.com"
-    ) {
-
-        showStatus(
-            "Tài khoản không có quyền Admin.",
-            "error"
-        );
-
+    if (!user.email || user.email.toLowerCase() !== "xavantai@gmail.com") {
+        showStatus("Tài khoản không có quyền Admin.", "error");
         return;
     }
 
+    const value = selectedDuration.value;
+    const unit = selectedDuration.unit;
+    const label = selectedDuration.label;
 
-    let message;
+    showStatus("Đang kích hoạt " + label + "...", "info");
 
-
-    if (days === 0) {
-
-        message =
-            "Kích hoạt VĨNH VIỄN cho:\n\n" +
-            deviceId +
-            "\n\nBạn chắc chắn?";
-
-    } else {
-
-        message =
-            "Kích hoạt " +
-            getDurationText(days) +
-            " cho:\n\n" +
-            deviceId +
-            "\n\nBạn chắc chắn?";
-    }
-
-
-    if (!confirm(message)) {
-        return;
-    }
-
-
-    showStatus(
-        "Đang kích hoạt...",
-        "info"
-    );
-
-
-    let data = {
-
+    const data = {
         deviceId: deviceId,
-
         active: true,
-
-        activatedAt:
-            firebase.firestore.FieldValue.serverTimestamp(),
-
-        activatedBy:
-            user.email
-
+        activatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        activatedBy: user.email,
+        durationValue: value,
+        durationUnit: unit,
+        durationText: label
     };
 
+    if (unit === "forever") {
+        data.expiresAt = firebase.firestore.FieldValue.delete();
+    } else {
+        const expireDate = new Date();
 
-    /*
-     * VĨNH VIỄN
-     */
+        if (unit === "days") {
+            expireDate.setDate(expireDate.getDate() + value);
+        } else {
+            const months = unit === "years" ? value * 12 : value;
+            expireDate.setMonth(expireDate.getMonth() + months);
+        }
 
-    if (days === 0) {
-
-        data.expiresAt =
-            firebase.firestore.FieldValue.delete();
-
+        data.expiresAt = firebase.firestore.Timestamp.fromDate(expireDate);
     }
-
-    /*
-     * CÓ THỜI HẠN
-     */
-
-    else {
-
-        const expireDate =
-            new Date(
-                Date.now()
-                +
-                days * 24 * 60 * 60 * 1000
-            );
-
-
-        data.expiresAt =
-            firebase.firestore.Timestamp.fromDate(
-                expireDate
-            );
-    }
-
 
     db.collection("licenses")
         .doc(deviceId)
         .set(data, { merge: true })
-
         .then(() => {
-
             showStatus(
                 "✅ KÍCH HOẠT THÀNH CÔNG!\n\n" +
-                "ID: " +
-                deviceId +
-                "\n" +
-                "Thời hạn: " +
-                getDurationText(days),
+                "ID: " + deviceId + "\n" +
+                "Thời hạn: " + label,
                 "success"
             );
-
-
             checkDevice();
-
         })
-
         .catch((error) => {
-
             console.error(error);
-
             showStatus(
-                "❌ Kích hoạt thất bại:\n" +
-                getFirebaseError(error),
+                "❌ Kích hoạt thất bại:\n" + getFirebaseError(error),
                 "error"
             );
-
         });
 }
 
@@ -799,34 +861,16 @@ function activate(days) {
 ========================================================= */
 
 function getDurationText(days) {
-
     switch(days) {
-
-        case 1:
-            return "1 ngày";
-
-        case 7:
-            return "7 ngày";
-
-        case 30:
-            return "1 tháng";
-
-        case 90:
-            return "3 tháng";
-
-        case 180:
-            return "6 tháng";
-
-        case 365:
-            return "1 năm";
-
-        case 0:
-            return "Vĩnh viễn";
-
-        default:
-            return days + " ngày";
+        case 1: return "1 ngày";
+        case 7: return "7 ngày";
+        case 30: return "1 tháng";
+        case 90: return "3 tháng";
+        case 180: return "6 tháng";
+        case 365: return "1 năm";
+        case 0: return "Vĩnh viễn";
+        default: return days + " ngày";
     }
-
 }
 
 
