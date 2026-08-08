@@ -1,96 +1,163 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TV365 ADMIN</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TV365 ADMIN</title>
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+<style>
+* {
+    box-sizing: border-box;
+}
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f5f6fa;
-            color: #222;
-        }
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f5f6fa;
+    color: #222;
+}
 
-        .header {
-            background: #111827;
-            color: white;
-            padding: 18px 25px;
-            font-size: 22px;
-            font-weight: bold;
-        }
+.header {
+    background: #111827;
+    color: white;
+    padding: 18px 25px;
+    font-size: 22px;
+    font-weight: bold;
+}
 
-        .container {
-            max-width: 1000px;
-            margin: 30px auto;
-            padding: 20px;
-        }
+.container {
+    max-width: 1000px;
+    margin: 30px auto;
+    padding: 20px;
+}
 
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 3px 15px rgba(0,0,0,.08);
-        }
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 3px 15px rgba(0,0,0,.08);
+    margin-bottom: 20px;
+}
 
-        h2 {
-            margin-top: 0;
-        }
+h2 {
+    margin-top: 0;
+}
 
-        label {
-            display: block;
-            margin-top: 18px;
-            margin-bottom: 7px;
-            font-weight: bold;
-        }
+label {
+    display: block;
+    margin-top: 18px;
+    margin-bottom: 7px;
+    font-weight: bold;
+}
 
-        input, select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 16px;
-        }
+input {
+    width: 100%;
+    padding: 13px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+}
 
-        .buttons {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-top: 20px;
-        }
+button {
+    padding: 12px 18px;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 15px;
+}
 
-        button {
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            background: #2563eb;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-        }
+button:hover {
+    opacity: .9;
+}
 
-        button:hover {
-            opacity: .9;
-        }
+button:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
 
-        .status {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f1f5f9;
-            border-radius: 8px;
-        }
+.login-btn {
+    width: 100%;
+    margin-top: 20px;
+}
 
-        @media(max-width:700px) {
-            .buttons {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-    </style>
+.logout {
+    background: #dc2626;
+    float: right;
+}
+
+.buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.buttons button {
+    background: #2563eb;
+}
+
+.status {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f1f5f9;
+    border-radius: 8px;
+    line-height: 1.6;
+}
+
+.success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.error {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.info {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.hidden {
+    display: none;
+}
+
+.user-info {
+    margin-bottom: 20px;
+    padding: 12px;
+    background: #f1f5f9;
+    border-radius: 8px;
+}
+
+.device-info {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+@media(max-width:700px) {
+    .buttons {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .container {
+        padding: 10px;
+        margin-top: 15px;
+    }
+
+    .logout {
+        float: none;
+        width: 100%;
+        margin-top: 15px;
+    }
+}
+</style>
 </head>
 
 <body>
@@ -99,11 +166,75 @@
     📺 TV365 ADMIN
 </div>
 
+
 <div class="container">
 
-    <div class="card">
+    <!-- =====================================================
+         ĐĂNG NHẬP
+    ====================================================== -->
 
-        <h2>🔐 Quản lý Premium</h2>
+    <div class="card" id="loginCard">
+
+        <h2>🔐 Đăng nhập Admin</h2>
+
+        <p>
+            Chỉ tài khoản quản trị TV365 mới được sử dụng hệ thống.
+        </p>
+
+        <label>Email</label>
+
+        <input
+            type="email"
+            id="email"
+            placeholder="Email Admin"
+        >
+
+        <label>Mật khẩu</label>
+
+        <input
+            type="password"
+            id="password"
+            placeholder="Mật khẩu"
+        >
+
+        <button
+            class="login-btn"
+            onclick="login()"
+            id="loginButton"
+        >
+            ĐĂNG NHẬP
+        </button>
+
+        <div
+            class="status"
+            id="loginStatus"
+        >
+            Vui lòng đăng nhập.
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         ADMIN PANEL
+    ====================================================== -->
+
+    <div class="card hidden" id="adminCard">
+
+        <button
+            class="logout"
+            onclick="logout()"
+        >
+            ĐĂNG XUẤT
+        </button>
+
+        <h2>⚙️ Quản lý Premium</h2>
+
+        <div class="user-info">
+            👤 Admin:
+            <strong id="adminEmail"></strong>
+        </div>
+
 
         <label>ID thiết bị</label>
 
@@ -111,19 +242,26 @@
             type="text"
             id="deviceId"
             placeholder="Ví dụ: TV365-DT-5014A6"
+            autocomplete="off"
         >
+
+
+        <button
+            style="margin-top:15px; width:100%;"
+            onclick="checkDevice()"
+        >
+            🔍 KIỂM TRA ID
+        </button>
+
+
+        <div
+            class="device-info hidden"
+            id="deviceInfo"
+        ></div>
+
 
         <label>Thời hạn Premium</label>
 
-        <select id="duration">
-            <option value="1">1 ngày</option>
-            <option value="7">7 ngày</option>
-            <option value="30">1 tháng</option>
-            <option value="90">3 tháng</option>
-            <option value="180">6 tháng</option>
-            <option value="365">1 năm</option>
-            <option value="0">Vĩnh viễn</option>
-        </select>
 
         <div class="buttons">
 
@@ -139,13 +277,32 @@
                 1 THÁNG
             </button>
 
+            <button onclick="activate(90)">
+                3 THÁNG
+            </button>
+
+            <button onclick="activate(180)">
+                6 THÁNG
+            </button>
+
             <button onclick="activate(365)">
                 1 NĂM
             </button>
 
+            <button
+                onclick="activate(0)"
+                style="background:#16a34a;"
+            >
+                ♾️ VĨNH VIỄN
+            </button>
+
         </div>
 
-        <div class="status" id="status">
+
+        <div
+            class="status"
+            id="status"
+        >
             Chưa có thao tác.
         </div>
 
@@ -153,49 +310,637 @@
 
 </div>
 
+
+<!-- =========================================================
+     FIREBASE
+========================================================= -->
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+
 <script>
+
+/* =========================================================
+   FIREBASE CONFIG
+   TV365
+========================================================= */
+
+const firebaseConfig = {
+
+    apiKey: "AIzaSyAH--nzfZtxwRiPW8RwikcTmdM82pFpGSw",
+
+    authDomain: "tv365-b45e0.firebaseapp.com",
+
+    projectId: "tv365-b45e0",
+
+    storageBucket: "tv365-b45e0.firebasestorage.app",
+
+    messagingSenderId: "157742231327",
+
+    appId: "1:157742231327:web:4e00ccddb6fcde93d94a2a"
+
+};
+
+
+/* Khởi tạo Firebase */
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+
+const db = firebase.firestore();
+
+
+/* =========================================================
+   ĐĂNG NHẬP
+========================================================= */
+
+function login() {
+
+    const email =
+        document.getElementById("email").value.trim();
+
+    const password =
+        document.getElementById("password").value;
+
+
+    if (!email || !password) {
+
+        showLoginStatus(
+            "Vui lòng nhập email và mật khẩu.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    const button =
+        document.getElementById("loginButton");
+
+    button.disabled = true;
+
+    button.innerText = "ĐANG ĐĂNG NHẬP...";
+
+
+    auth.signInWithEmailAndPassword(
+        email,
+        password
+    )
+
+    .then((result) => {
+
+        const user = result.user;
+
+        /*
+         * Chỉ cho đúng Admin của TV365
+         */
+
+        if (
+            user.email.toLowerCase()
+            !== "xavantai@gmail.com"
+        ) {
+
+            return auth.signOut().then(() => {
+
+                throw new Error(
+                    "Tài khoản này không có quyền Admin."
+                );
+
+            });
+
+        }
+
+        showAdminPanel(user);
+
+    })
+
+    .catch((error) => {
+
+        console.error(error);
+
+        showLoginStatus(
+            "Đăng nhập thất bại: " +
+            getFirebaseError(error),
+            "error"
+        );
+
+    })
+
+    .finally(() => {
+
+        button.disabled = false;
+
+        button.innerText = "ĐĂNG NHẬP";
+
+    });
+}
+
+
+/* =========================================================
+   HIỂN THỊ ADMIN
+========================================================= */
+
+function showAdminPanel(user) {
+
+    document
+        .getElementById("loginCard")
+        .classList.add("hidden");
+
+
+    document
+        .getElementById("adminCard")
+        .classList.remove("hidden");
+
+
+    document
+        .getElementById("adminEmail")
+        .innerText = user.email;
+
+
+    showStatus(
+        "Đăng nhập Admin thành công.",
+        "success"
+    );
+}
+
+
+/* =========================================================
+   ĐĂNG XUẤT
+========================================================= */
+
+function logout() {
+
+    auth.signOut()
+        .then(() => {
+
+            document
+                .getElementById("adminCard")
+                .classList.add("hidden");
+
+            document
+                .getElementById("loginCard")
+                .classList.remove("hidden");
+
+            document
+                .getElementById("password")
+                .value = "";
+
+            showLoginStatus(
+                "Đã đăng xuất.",
+                "info"
+            );
+
+        });
+
+}
+
+
+/* =========================================================
+   KIỂM TRA ID THIẾT BỊ
+========================================================= */
+
+function checkDevice() {
+
+    const deviceId =
+        document
+            .getElementById("deviceId")
+            .value
+            .trim()
+            .toUpperCase();
+
+
+    if (!deviceId) {
+
+        showStatus(
+            "Vui lòng nhập ID thiết bị.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    showStatus(
+        "Đang kiểm tra thiết bị...",
+        "info"
+    );
+
+
+    db.collection("licenses")
+        .doc(deviceId)
+        .get()
+
+        .then((doc) => {
+
+            const box =
+                document.getElementById("deviceInfo");
+
+            box.classList.remove("hidden");
+
+
+            if (!doc.exists) {
+
+                box.innerHTML =
+                    "🆕 <strong>ID chưa tồn tại.</strong><br>" +
+                    "Bạn có thể tạo license cho ID này.";
+
+                showStatus(
+                    "ID chưa tồn tại trong Firebase.",
+                    "info"
+                );
+
+                return;
+            }
+
+
+            const data = doc.data();
+
+
+            let html =
+                "📱 <strong>ID:</strong> " +
+                (data.deviceId || deviceId);
+
+
+            html +=
+                "<br>🔐 <strong>Active:</strong> " +
+                (data.active === true
+                    ? "ĐANG KÍCH HOẠT"
+                    : "CHƯA KÍCH HOẠT");
+
+
+            if (data.trialStartedAt) {
+
+                html +=
+                    "<br>🎁 <strong>Trial bắt đầu:</strong> " +
+                    formatTimestamp(
+                        data.trialStartedAt
+                    );
+            }
+
+
+            if (data.expiresAt) {
+
+                html +=
+                    "<br>⏰ <strong>Hết hạn:</strong> " +
+                    formatTimestamp(
+                        data.expiresAt
+                    );
+
+            } else {
+
+                if (data.active === true) {
+
+                    html +=
+                        "<br>♾️ <strong>Thời hạn:</strong> Vĩnh viễn";
+
+                }
+
+            }
+
+
+            box.innerHTML = html;
+
+
+            showStatus(
+                "Đã tìm thấy ID thiết bị.",
+                "success"
+            );
+
+        })
+
+        .catch((error) => {
+
+            console.error(error);
+
+            showStatus(
+                "Không thể đọc dữ liệu: " +
+                getFirebaseError(error),
+                "error"
+            );
+
+        });
+}
+
+
+/* =========================================================
+   KÍCH HOẠT LICENSE
+========================================================= */
 
 function activate(days) {
 
     const deviceId =
-        document.getElementById("deviceId").value.trim();
+        document
+            .getElementById("deviceId")
+            .value
+            .trim()
+            .toUpperCase();
+
 
     if (!deviceId) {
-        alert("Vui lòng nhập ID thiết bị!");
+
+        showStatus(
+            "Vui lòng nhập ID thiết bị trước.",
+            "error"
+        );
+
         return;
     }
 
-    const now = new Date();
 
-    let expiresText = "";
+    const user = auth.currentUser;
+
+
+    if (!user) {
+
+        showStatus(
+            "Phiên Admin đã hết. Vui lòng đăng nhập lại.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    if (
+        user.email.toLowerCase()
+        !== "xavantai@gmail.com"
+    ) {
+
+        showStatus(
+            "Tài khoản không có quyền Admin.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    let message;
+
 
     if (days === 0) {
 
-        expiresText = "Vĩnh viễn";
+        message =
+            "Kích hoạt VĨNH VIỄN cho:\n\n" +
+            deviceId +
+            "\n\nBạn chắc chắn?";
 
     } else {
 
-        const expire = new Date(now);
-
-        expire.setDate(
-            expire.getDate() + days
-        );
-
-        expiresText =
-            expire.toLocaleString("vi-VN");
+        message =
+            "Kích hoạt " +
+            getDurationText(days) +
+            " cho:\n\n" +
+            deviceId +
+            "\n\nBạn chắc chắn?";
     }
 
-    document.getElementById("status").innerHTML =
-        "Thiết bị: <b>" + deviceId + "</b><br>" +
-        "Thời hạn: <b>" +
-        (days === 0 ? "Vĩnh viễn" : days + " ngày") +
-        "</b><br>" +
-        "Hết hạn: <b>" +
-        expiresText +
-        "</b><br><br>" +
-        "⚠️ Đây mới là giao diện thử nghiệm.";
+
+    if (!confirm(message)) {
+        return;
+    }
+
+
+    showStatus(
+        "Đang kích hoạt...",
+        "info"
+    );
+
+
+    let data = {
+
+        deviceId: deviceId,
+
+        active: true,
+
+        activatedAt:
+            firebase.firestore.FieldValue.serverTimestamp(),
+
+        activatedBy:
+            user.email
+
+    };
+
+
+    /*
+     * VĨNH VIỄN
+     */
+
+    if (days === 0) {
+
+        data.expiresAt =
+            firebase.firestore.FieldValue.delete();
+
+    }
+
+    /*
+     * CÓ THỜI HẠN
+     */
+
+    else {
+
+        const expireDate =
+            new Date(
+                Date.now()
+                +
+                days * 24 * 60 * 60 * 1000
+            );
+
+
+        data.expiresAt =
+            firebase.firestore.Timestamp.fromDate(
+                expireDate
+            );
+    }
+
+
+    db.collection("licenses")
+        .doc(deviceId)
+        .set(data, { merge: true })
+
+        .then(() => {
+
+            showStatus(
+                "✅ KÍCH HOẠT THÀNH CÔNG!\n\n" +
+                "ID: " +
+                deviceId +
+                "\n" +
+                "Thời hạn: " +
+                getDurationText(days),
+                "success"
+            );
+
+
+            checkDevice();
+
+        })
+
+        .catch((error) => {
+
+            console.error(error);
+
+            showStatus(
+                "❌ Kích hoạt thất bại:\n" +
+                getFirebaseError(error),
+                "error"
+            );
+
+        });
+}
+
+
+/* =========================================================
+   TEXT THỜI HẠN
+========================================================= */
+
+function getDurationText(days) {
+
+    switch(days) {
+
+        case 1:
+            return "1 ngày";
+
+        case 7:
+            return "7 ngày";
+
+        case 30:
+            return "1 tháng";
+
+        case 90:
+            return "3 tháng";
+
+        case 180:
+            return "6 tháng";
+
+        case 365:
+            return "1 năm";
+
+        case 0:
+            return "Vĩnh viễn";
+
+        default:
+            return days + " ngày";
+    }
 
 }
+
+
+/* =========================================================
+   FORMAT FIRESTORE TIMESTAMP
+========================================================= */
+
+function formatTimestamp(timestamp) {
+
+    if (!timestamp) {
+        return "Không có";
+    }
+
+
+    const date =
+        timestamp.toDate();
+
+
+    return date.toLocaleString(
+        "vi-VN",
+        {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit"
+        }
+    );
+}
+
+
+/* =========================================================
+   FIREBASE ERROR
+========================================================= */
+
+function getFirebaseError(error) {
+
+    if (!error) {
+        return "Lỗi không xác định.";
+    }
+
+
+    switch(error.code) {
+
+        case "auth/invalid-credential":
+            return "Email hoặc mật khẩu không đúng.";
+
+        case "auth/user-not-found":
+            return "Không tìm thấy tài khoản.";
+
+        case "auth/wrong-password":
+            return "Mật khẩu không đúng.";
+
+        case "auth/too-many-requests":
+            return "Có quá nhiều lần thử. Vui lòng thử lại sau.";
+
+        case "permission-denied":
+            return "Firebase từ chối quyền truy cập.";
+
+        default:
+            return error.message || "Lỗi không xác định.";
+    }
+
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+function showStatus(message, type) {
+
+    const status =
+        document.getElementById("status");
+
+    status.innerText = message;
+
+    status.className =
+        "status " + (type || "");
+
+}
+
+
+function showLoginStatus(message, type) {
+
+    const status =
+        document.getElementById("loginStatus");
+
+    status.innerText = message;
+
+    status.className =
+        "status " + (type || "");
+
+}
+
+
+/* =========================================================
+   KIỂM TRA TRẠNG THÁI ĐĂNG NHẬP
+========================================================= */
+
+auth.onAuthStateChanged((user) => {
+
+    if (
+        user &&
+        user.email &&
+        user.email.toLowerCase()
+        === "xavantai@gmail.com"
+    ) {
+
+        showAdminPanel(user);
+
+    }
+
+});
 
 </script>
 
