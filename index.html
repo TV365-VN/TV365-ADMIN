@@ -322,6 +322,33 @@ button:disabled{opacity:.5;cursor:not-allowed}
     font-weight:bold;
     color:#334155;
 }
+
+/* NÚT BẬT / TẮT DÙNG THỬ - đồng bộ kiểu nút Thông báo */
+.trial-toggle-btn{
+    width:100%;
+    min-height:54px;
+    font-size:15px;
+    font-weight:bold;
+    background:#2563eb;
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    transition:.15s;
+}
+
+.trial-toggle-btn:hover{
+    opacity:.9;
+}
+
+.trial-toggle-btn.is-on{
+    background:#dc2626!important;
+    box-shadow:0 0 0 3px rgba(220,38,38,.14);
+}
+
+.trial-toggle-btn:disabled{
+    opacity:.65;
+    cursor:wait;
+}
 .trial-settings-box{
     padding:12px;
     background:#f8fafc;
@@ -697,7 +724,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
                         <div
                             class="notification-editor-status"
                             id="notificationMobileEditStatus">
-                            Chưa có thay đổi.
+                            Nút BẬT/TẮT sẽ lưu trạng thái ngay vào Firebase. Thời gian lưu bằng nút bên dưới.
                         </div>
                     </div>
 
@@ -753,10 +780,21 @@ button:disabled{opacity:.5;cursor:not-allowed}
         <div class="trial-settings-row">
 
             <div>
-                <label for="trialEnabledSelect">Dùng thử</label>
-                <select id="trialEnabledSelect">
-                    <option value="ON">🟢 BẬT DÙNG THỬ</option>
-                    <option value="OFF">🔴 TẮT DÙNG THỬ</option>
+                <label>Dùng thử</label>
+
+                <!-- NÚT BẬT / TẮT DÙNG THỬ -->
+                <button
+                    type="button"
+                    id="trialToggleButton"
+                    class="trial-toggle-btn"
+                    onclick="toggleTrial()">
+                    🟢 BẬT DÙNG THỬ
+                </button>
+
+                <!-- Giữ lại field này để tương thích với code cũ -->
+                <select id="trialEnabledSelect" class="hidden">
+                    <option value="ON">ON</option>
+                    <option value="OFF">OFF</option>
                 </select>
 
                 <label for="trialValue">Số lượng</label>
@@ -2199,11 +2237,22 @@ function fillTrialEditor(){
     const enabledSelect =
         document.getElementById("trialEnabledSelect");
 
+    const trialIsOn =
+        String(trialConfig.trialEnabled || "ON").toUpperCase() !== "OFF";
+
     if(enabledSelect){
-        enabledSelect.value =
-            String(trialConfig.trialEnabled || "ON").toUpperCase() === "OFF"
-                ? "OFF"
-                : "ON";
+        enabledSelect.value = trialIsOn ? "ON" : "OFF";
+    }
+
+    const trialToggleButton =
+        document.getElementById("trialToggleButton");
+
+    if(trialToggleButton){
+        trialToggleButton.classList.toggle("is-on", trialIsOn);
+        trialToggleButton.innerText =
+            trialIsOn
+                ? "🔴 TẮT DÙNG THỬ"
+                : "🟢 BẬT DÙNG THỬ";
     }
 
     const valueInput = document.getElementById("trialValue");
@@ -2275,6 +2324,93 @@ function loadTrialConfigFromData(data){
     };
 
     fillTrialEditor();
+}
+
+async function toggleTrial(){
+
+    if(controlWriteBusy) return;
+    controlWriteBusy = true;
+
+    const user = auth.currentUser;
+
+    if(
+        !user ||
+        !user.email ||
+        user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()
+    ){
+        showStatus("Tài khoản không có quyền Admin.","error");
+        controlWriteBusy = false;
+        return;
+    }
+
+    const current =
+        String(trialConfig.trialEnabled || "ON").toUpperCase();
+
+    const next = current === "ON" ? "OFF" : "ON";
+
+    const button =
+        document.getElementById("trialToggleButton");
+
+    if(button){
+        button.disabled = true;
+        button.innerText =
+            next === "ON"
+                ? "🟢 ĐANG BẬT..."
+                : "🔴 ĐANG TẮT...";
+    }
+
+    try{
+
+        await db
+            .collection("premium_config")
+            .doc("system")
+            .set({
+                trialEnabled: next,
+
+                trialUpdatedAt:
+                    firebase.firestore.FieldValue.serverTimestamp(),
+
+                trialUpdatedBy: user.email
+            },{merge:true});
+
+        trialConfig.trialEnabled = next;
+
+        fillTrialEditor();
+
+        setTrialEditStatus(
+            next === "ON"
+                ? "✅ Đã BẬT dùng thử."
+                : "🔴 Đã TẮT dùng thử."
+        );
+
+        showStatus(
+            next === "ON"
+                ? "🟢 Đã BẬT dùng thử cho hệ thống."
+                : "🔴 Đã TẮT dùng thử cho hệ thống.",
+            next === "ON" ? "success" : "info"
+        );
+
+    }catch(error){
+
+        console.error(error);
+
+        const message =
+            "❌ Không thể thay đổi trạng thái dùng thử:\n" +
+            getFirebaseError(error);
+
+        setTrialEditStatus(message,true);
+        showStatus(message,"error");
+
+        fillTrialEditor();
+
+    }finally{
+
+        if(button){
+            button.disabled = false;
+        }
+
+        controlWriteBusy = false;
+    }
 }
 
 async function saveTrialSettings(){
