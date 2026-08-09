@@ -307,6 +307,66 @@ button:disabled{opacity:.5;cursor:not-allowed}
     font-weight:bold;
 }
 
+
+/* ===== CÀI ĐẶT THỜI GIAN DÙNG THỬ ===== */
+.trial-settings-panel{
+    margin-top:14px;
+    padding:14px;
+    background:#fff;
+    border:1px solid #e2e8f0;
+    border-radius:10px;
+}
+.trial-settings-title{
+    margin:0 0 12px;
+    font-size:15px;
+    font-weight:bold;
+    color:#334155;
+}
+.trial-settings-box{
+    padding:12px;
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    border-radius:10px;
+}
+.trial-settings-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+}
+.trial-settings-box input,
+.trial-settings-box select{
+    width:100%;
+    box-sizing:border-box;
+    padding:11px;
+    border:1px solid #cbd5e1;
+    border-radius:8px;
+    font-size:14px;
+    background:#fff;
+}
+.trial-save-btn{
+    width:100%;
+    margin-top:12px;
+    background:#2563eb;
+}
+.trial-current,.trial-edit-status{
+    margin-top:10px;
+    padding:9px 11px;
+    border-radius:8px;
+    font-size:13px;
+    white-space:pre-line;
+}
+.trial-current{
+    background:#eff6ff;
+    color:#1e40af;
+}
+.trial-edit-status{
+    background:#f1f5f9;
+    color:#475569;
+}
+@media(max-width:700px){
+    .trial-settings-row{grid-template-columns:1fr}
+}
+
 .notification-editor-panel{
     margin-top:14px;
     padding:14px;
@@ -680,7 +740,64 @@ button:disabled{opacity:.5;cursor:not-allowed}
             </div>
         </div>
 
-        <div class="free-control-panel">
+        
+<!-- =========================================================
+     CÀI ĐẶT THỜI GIAN DÙNG THỬ
+========================================================= -->
+<div class="trial-settings-panel">
+    <div class="trial-settings-title">
+        🧪 CÀI ĐẶT THỜI GIAN DÙNG THỬ
+    </div>
+
+    <div class="trial-settings-box">
+        <div class="trial-settings-row">
+
+            <div>
+                <label for="trialEnabledSelect">Dùng thử</label>
+                <select id="trialEnabledSelect">
+                    <option value="ON">🟢 BẬT DÙNG THỬ</option>
+                    <option value="OFF">🔴 TẮT DÙNG THỬ</option>
+                </select>
+
+                <label for="trialValue">Số lượng</label>
+                <input
+                    type="number"
+                    id="trialValue"
+                    min="1"
+                    max="3650"
+                    step="1"
+                    value="1">
+            </div>
+
+            <div>
+                <label for="trialUnit">Đơn vị</label>
+                <select id="trialUnit">
+                    <option value="DAY">Ngày</option>
+                    <option value="MONTH">Tháng</option>
+                </select>
+            </div>
+
+        </div>
+
+        <button
+            type="button"
+            class="trial-save-btn"
+            id="saveTrialSettingsButton"
+            onclick="saveTrialSettings()">
+            💾 LƯU THỜI GIAN DÙNG THỬ
+        </button>
+
+        <div class="trial-current" id="trialCurrentStatus">
+            Đang đọc cấu hình dùng thử...
+        </div>
+
+        <div class="trial-edit-status" id="trialEditStatus">
+            Chưa có thay đổi.
+        </div>
+    </div>
+</div>
+
+<div class="free-control-panel">
             <div class="free-control-title">🎁 QUẢN LÝ MỞ FREE</div>
 
             <div class="free-control-grid">
@@ -998,6 +1115,14 @@ let freeConfig = {
  * Admin bật/tắt quyền hiển thị và có thể sửa trực tiếp
  * tiêu đề + nội dung thông báo trong premium_config/system.
  */
+
+let trialConfig = {
+    trialEnabled: "ON",
+    trialDays: 1,
+    trialValue: 1,
+    trialUnit: "DAY"
+};
+
 let notificationConfig = {
     notificationMobile: "OFF",
     notificationTV: "OFF",
@@ -1328,6 +1453,8 @@ async function loadFreeConfig(){
         }
 
         const data = doc.data() || {};
+
+        loadTrialConfigFromData(data);
 
         freeConfig = {
             freeAll: normalizeOnOff(data.freeAll, "OFF"),
@@ -2055,6 +2182,222 @@ async function saveNotificationContent(platform){
                 platform === "mobile"
                     ? "💾 LƯU THÔNG BÁO MOBILE"
                     : "💾 LƯU THÔNG BÁO TIVI";
+        }
+
+        controlWriteBusy = false;
+    }
+}
+
+
+function normalizeTrialUnit(value){
+    return String(value || "DAY").toUpperCase() === "MONTH"
+        ? "MONTH"
+        : "DAY";
+}
+
+function fillTrialEditor(){
+    const enabledSelect =
+        document.getElementById("trialEnabledSelect");
+
+    if(enabledSelect){
+        enabledSelect.value =
+            String(trialConfig.trialEnabled || "ON").toUpperCase() === "OFF"
+                ? "OFF"
+                : "ON";
+    }
+
+    const valueInput = document.getElementById("trialValue");
+    const unitSelect = document.getElementById("trialUnit");
+    const current = document.getElementById("trialCurrentStatus");
+
+    if(valueInput){
+        valueInput.value = Number(trialConfig.trialValue || 1);
+    }
+
+    if(unitSelect){
+        unitSelect.value = normalizeTrialUnit(trialConfig.trialUnit);
+    }
+
+    if(current){
+        const unitText =
+            normalizeTrialUnit(trialConfig.trialUnit) === "MONTH"
+                ? "tháng" : "ngày";
+
+        current.innerText =
+            "Trạng thái: " +
+            (String(trialConfig.trialEnabled).toUpperCase() === "OFF"
+                ? "🔴 ĐANG TẮT" : "🟢 ĐANG BẬT") +
+            "\nThời gian: " +
+            Number(trialConfig.trialValue || 1) +
+            " " + unitText +
+            "\ntrialDays tương thích APK hiện tại: " +
+            Number(trialConfig.trialDays || 1) +
+            " ngày";
+    }
+}
+
+function setTrialEditStatus(message, isError){
+    const el = document.getElementById("trialEditStatus");
+    if(!el) return;
+
+    el.style.background = isError ? "#fee2e2" : "#dcfce7";
+    el.style.color = isError ? "#991b1b" : "#166534";
+    el.innerText = message;
+}
+
+function loadTrialConfigFromData(data){
+    const oldDays = Number(data.trialDays);
+    const savedValue = Number(data.trialValue);
+
+    let unit = normalizeTrialUnit(data.trialUnit);
+    let value =
+        Number.isFinite(savedValue) && savedValue > 0
+            ? Math.floor(savedValue)
+            : (Number.isFinite(oldDays) && oldDays > 0
+                ? Math.floor(oldDays) : 1);
+
+    if(!data.trialUnit && data.trialValue == null){
+        unit = "DAY";
+    }
+
+    trialConfig = {
+        trialEnabled:
+            String(data.trialEnabled || "ON").toUpperCase() === "OFF"
+                ? "OFF" : "ON",
+
+        trialDays:
+            Number.isFinite(oldDays) && oldDays > 0
+                ? Math.floor(oldDays)
+                : (unit === "MONTH" ? value * 30 : value),
+
+        trialValue: value,
+        trialUnit: unit
+    };
+
+    fillTrialEditor();
+}
+
+async function saveTrialSettings(){
+    const enabled =
+        String(
+            document.getElementById("trialEnabledSelect")?.value || "ON"
+        ).toUpperCase() === "OFF"
+            ? "OFF"
+            : "ON";
+
+
+    if(controlWriteBusy) return;
+    controlWriteBusy = true;
+
+    const user = auth.currentUser;
+
+    if(
+        !user ||
+        !user.email ||
+        user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()
+    ){
+        showStatus("Tài khoản không có quyền Admin.","error");
+        controlWriteBusy = false;
+        return;
+    }
+
+    const value =
+        Math.floor(Number(
+            document.getElementById("trialValue")?.value || 0
+        ));
+
+    const unit =
+        normalizeTrialUnit(
+            document.getElementById("trialUnit")?.value
+        );
+
+    if(!Number.isFinite(value) || value < 1){
+        setTrialEditStatus(
+            "⚠️ Số lượng phải lớn hơn hoặc bằng 1.",
+            true
+        );
+        controlWriteBusy = false;
+        return;
+    }
+
+    if(value > 3650){
+        setTrialEditStatus(
+            "⚠️ Số lượng tối đa là 3650.",
+            true
+        );
+        controlWriteBusy = false;
+        return;
+    }
+
+    /*
+     * Giữ trialDays để APK hiện tại không bị lỗi.
+     * Ngày  -> đúng số ngày.
+     * Tháng -> 30 ngày/tháng cho APK cũ.
+     *
+     * APK mới có thể dùng trialValue + trialUnit
+     * để tính tháng theo lịch chính xác.
+     */
+    const compatibilityDays =
+        unit === "MONTH" ? value * 30 : value;
+
+    const saveButton =
+        document.getElementById("saveTrialSettingsButton");
+
+    if(saveButton){
+        saveButton.disabled = true;
+        saveButton.innerText = "💾 ĐANG LƯU...";
+    }
+
+    try{
+
+        await db
+            .collection("premium_config")
+            .doc("system")
+            .set({
+                trialEnabled: enabled,
+                trialValue: value,
+                trialUnit: unit,
+                trialDays: compatibilityDays,
+
+                trialUpdatedAt:
+                    firebase.firestore.FieldValue.serverTimestamp(),
+
+                trialUpdatedBy: user.email
+            },{merge:true});
+
+        trialConfig.trialEnabled = enabled;
+        trialConfig.trialValue = value;
+        trialConfig.trialUnit = unit;
+        trialConfig.trialDays = compatibilityDays;
+
+        fillTrialEditor();
+
+        setTrialEditStatus(
+            "✅ Đã lưu thời gian dùng thử vào Firebase."
+        );
+
+        showStatus(
+            "✅ Đã cập nhật thời gian dùng thử.",
+            "success"
+        );
+
+    }catch(error){
+
+        console.error(error);
+
+        const message =
+            "❌ Không thể lưu thời gian dùng thử:\n" +
+            getFirebaseError(error);
+
+        setTrialEditStatus(message,true);
+        showStatus(message,"error");
+
+    }finally{
+
+        if(saveButton){
+            saveButton.disabled = false;
+            saveButton.innerText =
+                "💾 LƯU THỜI GIAN DÙNG THỬ";
         }
 
         controlWriteBusy = false;
