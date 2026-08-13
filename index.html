@@ -3072,6 +3072,7 @@ async function toggleTrial(platform){
     }
 
     if(controlWriteBusy) return;
+    controlWriteBusy = true;
 
     const user = auth.currentUser;
 
@@ -3081,6 +3082,7 @@ async function toggleTrial(platform){
         user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()
     ){
         showStatus("Tài khoản không có quyền Admin.","error");
+        controlWriteBusy = false;
         return;
     }
 
@@ -3089,54 +3091,48 @@ async function toggleTrial(platform){
             ? trialEnabledValue(trialConfig.trialTVEnabled)
             : trialEnabledValue(trialConfig.trialMobileEnabled);
 
-    const next = current === "ON" ? "OFF" : "ON";
-    const prefix = platform === "tv" ? "TV" : "Mobile";
-    const button = document.getElementById("trial" + prefix + "ToggleButton");
+    const next =
+        current === "ON" ? "OFF" : "ON";
 
-    // Cập nhật giao diện ngay lập tức, không khóa công tắc trong lúc chờ Firebase.
-    // Nếu Firebase lỗi, trạng thái sẽ được hoàn tác bên dưới.
-    if(platform === "tv") {
-        trialConfig.trialTVEnabled = next;
-    } else {
-        trialConfig.trialMobileEnabled = next;
+    const prefix =
+        platform === "tv" ? "TV" : "Mobile";
+
+    const button =
+        document.getElementById(
+            "trial" + prefix + "ToggleButton"
+        );
+
+    if(button){
+        button.disabled = true;
     }
-    fillTrialEditor();
-
-    if(button) button.disabled = false;
-
-    setTrialEditStatus(
-        next === "ON"
-            ? "⏳ Đang BẬT dùng thử " + prefix + "..."
-            : "⏳ Đang TẮT dùng thử " + prefix + "...",
-        false,
-        platform
-    );
-
-    showStatus(
-        next === "ON"
-            ? "⏳ Đang BẬT dùng thử " + prefix + "..."
-            : "⏳ Đang TẮT dùng thử " + prefix + "...",
-        "info"
-    );
 
     const payload = {
-        trialUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        trialUpdatedAt:
+            firebase.firestore.FieldValue.serverTimestamp(),
+
         trialUpdatedBy: user.email
     };
 
-    if(platform === "tv") {
+    if(platform === "tv"){
         payload.trialTVEnabled = next;
-    } else {
+    }else{
         payload.trialMobileEnabled = next;
     }
 
-    // Không giữ controlWriteBusy trong thời gian chờ Firestore.
-    // Điều này loại bỏ trạng thái xoay chuột/WAIT và cho phép UI hoàn tất ngay.
-    try {
+    try{
+
         await db
             .collection("premium_config")
             .doc("system")
             .set(payload,{merge:true});
+
+        if(platform === "tv"){
+            trialConfig.trialTVEnabled = next;
+        }else{
+            trialConfig.trialMobileEnabled = next;
+        }
+
+        fillTrialEditor();
 
         setTrialEditStatus(
             next === "ON"
@@ -3153,18 +3149,9 @@ async function toggleTrial(platform){
             next === "ON" ? "success" : "info"
         );
 
-    } catch(error) {
+    }catch(error){
 
         console.error(error);
-
-        // Firebase lỗi -> hoàn tác giao diện về trạng thái cũ.
-        if(platform === "tv") {
-            trialConfig.trialTVEnabled = current;
-        } else {
-            trialConfig.trialMobileEnabled = current;
-        }
-
-        fillTrialEditor();
 
         const message =
             "❌ Không thể thay đổi Trial " +
@@ -3173,8 +3160,16 @@ async function toggleTrial(platform){
 
         setTrialEditStatus(message,true,platform);
         showStatus(message,"error");
-    } finally {
-        if(button) button.disabled = false;
+
+        fillTrialEditor();
+
+    }finally{
+
+        if(button){
+            button.disabled = false;
+        }
+
+        controlWriteBusy = false;
     }
 }
 
@@ -3361,13 +3356,10 @@ async function saveTrialSettings(platform){
 async function toggleNotification(platform){
 
     if(controlWriteBusy){
-        updateNotificationControlUI();
         return;
     }
-    controlWriteBusy = true;
 
-    const user =
-        auth.currentUser;
+    const user = auth.currentUser;
 
     if(
         !user ||
@@ -3375,34 +3367,21 @@ async function toggleNotification(platform){
         user.email.toLowerCase() !==
             ADMIN_EMAIL.toLowerCase()
     ){
-
+        updateNotificationControlUI();
         showStatus(
             "Tài khoản không có quyền Admin.",
             "error"
         );
-
-        controlWriteBusy = false;
         return;
     }
-
-    const ref =
-        db
-            .collection("premium_config")
-            .doc("system");
 
     let field;
 
     if(platform === "mobile"){
-
         field = "notificationMobile";
-
     }else if(platform === "tv"){
-
         field = "notificationTV";
-
     }else{
-
-        controlWriteBusy = false;
         return;
     }
 
@@ -3419,72 +3398,77 @@ async function toggleNotification(platform){
                 : "notificationTVButton"
         );
 
-    if(switchInput){
-        switchInput.disabled = true;
+    /*
+     * FIX: cập nhật giao diện NGAY khi bấm, không chờ Firebase.
+     * Trước đây await ref.set() làm controlWriteBusy giữ trạng thái
+     * quá lâu nên công tắc nhìn như bị xoay và phải F5 mới hoàn tất.
+     */
+    notificationConfig[field] = next;
+    updateNotificationControlUI();
+
+    const platformName =
+        platform === "mobile"
+            ? "Mobile"
+            : "Tivi";
+
+    if(next === "ON"){
+        setControlStatus(
+            "notificationControlStatus",
+            "🔔 Đã BẬT THÔNG BÁO " +
+            platformName +
+            ". Ứng dụng sẽ đọc trạng thái này khi mở app.",
+            true,
+            false
+        );
+
+        showStatus(
+            "🔔 Đã BẬT THÔNG BÁO " + platformName + ".",
+            "success"
+        );
+    }else{
+        setControlStatus(
+            "notificationControlStatus",
+            "🔕 Đã TẮT THÔNG BÁO " +
+            platformName + ".",
+            false,
+            false
+        );
+
+        showStatus(
+            "🔕 Đã TẮT THÔNG BÁO " + platformName + ".",
+            "success"
+        );
     }
 
+    if(switchInput){
+        switchInput.disabled = false;
+    }
+
+    /* Không khóa toàn bộ các nút Admin trong lúc chờ Firebase. */
+    controlWriteBusy = false;
+
+    const ref =
+        db
+            .collection("premium_config")
+            .doc("system");
+
     try{
-
         await ref.set({
-
-            [field]:next,
-
+            [field]: next,
             notificationUpdatedAt:
                 firebase.firestore
                     .FieldValue
                     .serverTimestamp(),
-
             notificationUpdatedBy:
                 user.email
-
-        },{merge:true});
-
-        notificationConfig[field] = next;
-
-        updateNotificationControlUI();
-
-        const platformName =
-            platform === "mobile"
-                ? "Mobile"
-                : "Tivi";
-
-        if(next === "ON"){
-
-            setControlStatus(
-                "notificationControlStatus",
-                "🔔 Đã BẬT THÔNG BÁO " +
-                platformName +
-                ". Ứng dụng sẽ đọc trạng thái này khi mở app.",
-                true,
-                false
-            );
-
-            showStatus(
-                "🔔 Đã BẬT THÔNG BÁO " + platformName + ".",
-                "success"
-            );
-
-        }else{
-
-            setControlStatus(
-                "notificationControlStatus",
-                "🔕 Đã TẮT THÔNG BÁO " +
-                platformName + ".",
-                false,
-                false
-            );
-
-            showStatus(
-                "🔕 Đã TẮT THÔNG BÁO " + platformName + ".",
-                "success"
-            );
-        }
-
-        controlWriteBusy = false;
+        }, {merge:true});
 
     }catch(error){
-
         console.error(error);
+
+        /* Firebase lỗi: hoàn tác giao diện về trạng thái cũ. */
+        notificationConfig[field] = current ? "ON" : "OFF";
+        updateNotificationControlUI();
 
         const message =
             "❌ Không thể thay đổi trạng thái thông báo:\n" +
@@ -3499,13 +3483,9 @@ async function toggleNotification(platform){
 
         showStatus(message, "error");
 
-        await loadNotificationConfig();
-
         if(switchInput){
             switchInput.disabled = false;
         }
-
-        controlWriteBusy = false;
     }
 }
 
