@@ -493,11 +493,35 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .trial-switch-status.on{
     color:#16a34a;
 }
+.trial-platform-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:14px;
+    width:100%;
+    min-width:0;
+}
+
 .trial-settings-box{
     padding:12px;
     background:#f8fafc;
     border:1px solid #e2e8f0;
     border-radius:10px;
+    min-width:0;
+    box-sizing:border-box;
+}
+
+.trial-settings-box > div:first-child{
+    min-width:0;
+}
+
+.trial-platform-title{
+    font-size:20px;
+    font-weight:800;
+    line-height:1.25;
+    margin-bottom:12px;
+    white-space:normal;
+    word-break:keep-all;
+    overflow-wrap:normal;
 }
 .trial-settings-row{
     display:grid;
@@ -536,6 +560,30 @@ button:disabled{opacity:.5;cursor:not-allowed}
 }
 @media(max-width:700px){
     .trial-settings-row{grid-template-columns:1fr}
+    .trial-platform-grid{
+        grid-template-columns:1fr!important;
+        gap:12px;
+    }
+    .trial-settings-box{
+        width:100%;
+        max-width:100%;
+        min-width:0;
+    }
+    .trial-platform-title{
+        font-size:19px;
+        line-height:1.25;
+    }
+    .trial-toggle-wrap{
+        gap:8px;
+        padding:10px 12px;
+    }
+    .trial-switch{
+        flex:0 0 54px;
+        width:54px;
+    }
+    .trial-switch input:checked + .trial-slider:before{
+        transform:translateX(22px);
+    }
 }
 
 .notification-editor-panel{
@@ -841,6 +889,7 @@ html,body{
     .free-control-grid,
     .notification-editor-grid,
     .trial-settings-row,
+    .trial-platform-grid,
     .buttons,
     .stats-grid{
         grid-template-columns:1fr!important;
@@ -1091,7 +1140,7 @@ html,body{
                 </div>
 
                 <div class="admin-switch-row">
-                    <span class="admin-switch-name">📺 THÔNG BÁO TIVI</span>
+                    <span class="admin-switch-name">📺 THÔNG BÁO Tivi</span>
                     <div class="admin-switch-right">
                         <label class="admin-switch">
                             <input
@@ -1157,7 +1206,7 @@ html,body{
                     </div>
 
                     <div class="notification-editor-box tv">
-                        <h4>📺 THÔNG BÁO TIVI</h4>
+                        <h4>📺 THÔNG BÁO Tivi</h4>
 
                         <label for="notificationTVTitle">
                             Tiêu đề
@@ -1181,7 +1230,7 @@ html,body{
                             class="notification-save-btn"
                             id="saveNotificationTVButton"
                             onclick="saveNotificationContent('tv')">
-                            💾 LƯU THÔNG BÁO TIVI
+                            💾 LƯU THÔNG BÁO Tivi
                         </button>
 
                         <div
@@ -1204,11 +1253,11 @@ html,body{
         🧪 CÀI ĐẶT THỜI GIAN DÙNG THỬ
     </div>
 
-    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;">
+    <div class="trial-platform-grid">
 
         <!-- ================= MOBILE ================= -->
         <div class="trial-settings-box" style="margin:0;">
-            <div style="font-size:20px;font-weight:800;color:#2563eb;margin-bottom:12px;">
+            <div class="trial-platform-title" style="color:#2563eb;">
                 📱 DÙNG THỬ MOBILE
             </div>
 
@@ -1271,7 +1320,7 @@ html,body{
 
         <!-- ================= TV ================= -->
         <div class="trial-settings-box" style="margin:0;">
-            <div style="font-size:20px;font-weight:800;color:#7c3aed;margin-bottom:12px;">
+            <div class="trial-platform-title" style="color:#7c3aed;">
                 📺 DÙNG THỬ TV
             </div>
 
@@ -1362,7 +1411,7 @@ html,body{
             <div class="free-control-grid">
 
                 <div class="admin-switch-row">
-                    <span class="admin-switch-name">📱 FREE MOBILE</span>
+                    <span class="admin-switch-name">📱 MIỄN PHÍ MOBILE</span>
                     <div class="admin-switch-right">
                         <label class="admin-switch">
                             <input
@@ -1380,7 +1429,7 @@ html,body{
                 </div>
 
                 <div class="admin-switch-row">
-                    <span class="admin-switch-name">📺 FREE TIVI</span>
+                    <span class="admin-switch-name">📺 MIỄN PHÍ TIVI</span>
                     <div class="admin-switch-right">
                         <label class="admin-switch">
                             <input
@@ -1398,7 +1447,7 @@ html,body{
                 </div>
 
                 <div class="admin-switch-row">
-                    <span class="admin-switch-name">🌐 FREE CẢ 2</span>
+                    <span class="admin-switch-name">🌐 MIỄN PHÍ CẢ 2</span>
                     <div class="admin-switch-right">
                         <label class="admin-switch">
                             <input
@@ -1467,7 +1516,7 @@ html,body{
             </button>
         </div>
 
-        <h3 class="platform-title tv" style="margin-top:28px;">📺 TIVI</h3>
+        <h3 class="platform-title tv" style="margin-top:28px;">📺 Tivi</h3>
 
         <div class="stats-grid">
             <button class="stat-card stat-trial" onclick="showDeviceList('tv','trial')">
@@ -2024,22 +2073,22 @@ function updateFreeControlUI(){
     applyFreeButtonState(
         "freeMobileButton",
         freeMobile,
-        "📱 MỞ FREE MOBILE",
-        "📱 TẮT FREE MOBILE"
+        "📱 MỞ MIỄN PHÍ MOBILE",
+        "📱 TẮT MIỄN PHÍ MOBILE"
     );
 
     applyFreeButtonState(
         "freeTVButton",
         freeTV,
-        "📺 MỞ FREE TIVI",
-        "📺 TẮT FREE TIVI"
+        "📺 MỞ MIỄN PHÍ TIVI",
+        "📺 TẮT MIỄN PHÍ TIVI"
     );
 
     applyFreeButtonState(
         "freeAllButton",
         freeAll,
-        "🌐 MỞ FREE CẢ 2",
-        "🌐 TẮT FREE CẢ 2"
+        "🌐 MỞ MIỄN PHÍ CẢ 2",
+        "🌐 TẮT MIỄN PHÍ CẢ 2"
     );
 
     const status = document.getElementById("freeControlStatus");
@@ -2048,7 +2097,7 @@ function updateFreeControlUI(){
     const active = [];
 
     if(freeAll){
-        active.push("Mobile + Tivi");
+        active.push("MOBILE + TIVI");
     }else{
         if(freeMobile) active.push("Mobile");
         if(freeTV) active.push("Tivi");
@@ -2057,7 +2106,7 @@ function updateFreeControlUI(){
     if(active.length){
         status.className = "free-control-status on";
         status.innerText =
-            "🟢 ĐANG MỞ FREE: " + active.join(" + ");
+            "🟢 ĐANG MỞ MIỄN PHÍ: " + active.join(" + ");
     }else{
         status.className = "free-control-status";
         status.innerText =
@@ -2170,7 +2219,7 @@ async function toggleFree(platform){
     try{
 
         /* -----------------------------------------------------
-           MỞ / TẮT FREE CẢ 2
+           MỞ / TẮT MIỄN PHÍ CẢ 2
            ----------------------------------------------------- */
         if(platform === "all"){
 
@@ -2211,10 +2260,10 @@ async function toggleFree(platform){
                 await ref.set(updates,{merge:true});
 
                 showStatus(
-                    "🎁 Đã MỞ FREE CẢ 2.\n\n" +
+                    "🎁 Đã MỞ MIỄN PHÍ CẢ 2.\n\n" +
                     "Mobile và Tivi được xem miễn phí.\n" +
                     "Premium Mobile/Tivi đã tạm tắt.\n" +
-                    "Khi TẮT FREE CẢ 2, trạng thái Premium trước đó sẽ tự khôi phục.",
+                    "Khi TẮT MIỄN PHÍ CẢ 2, trạng thái Premium trước đó sẽ tự khôi phục.",
                     "success"
                 );
 
@@ -2222,7 +2271,7 @@ async function toggleFree(platform){
 
                 /*
                  * Khôi phục Premium đúng trạng thái trước khi
-                 * MỞ FREE CẢ 2.
+                 * MỞ MIỄN PHÍ CẢ 2.
                  */
                 const restoreMobile =
                     freeConfig.freeBackupPremiumMobile !== null
@@ -2258,7 +2307,7 @@ async function toggleFree(platform){
                 await ref.set(updates,{merge:true});
 
                 showStatus(
-                    "✅ Đã TẮT FREE CẢ 2.\n\n" +
+                    "✅ Đã TẮT MIỄN PHÍ CẢ 2.\n\n" +
                     "Mobile và Tivi đã khôi phục trạng thái Premium trước đó.",
                     "success"
                 );
@@ -2271,7 +2320,7 @@ async function toggleFree(platform){
 
             if(freeAll){
                 showStatus(
-                    "🌐 FREE CẢ 2 đang bật. Hãy dùng công tắc FREE CẢ 2 để khôi phục trạng thái.",
+                    "🌐 MIỄN PHÍ CẢ 2 đang bật. Hãy dùng công tắc MIỄN PHÍ CẢ 2 để khôi phục trạng thái.",
                     "info"
                 );
                 if(switchInput){
@@ -2307,7 +2356,7 @@ async function toggleFree(platform){
                 await ref.set(updates,{merge:true});
 
                 showStatus(
-                    "📱 Đã MỞ FREE MOBILE.\n\n" +
+                    "📱 Đã MỞ MIỄN PHÍ MOBILE.\n\n" +
                     "Mobile được xem miễn phí.\n" +
                     "Trạng thái Premium Mobile trước đó đã được lưu.",
                     "success"
@@ -2341,20 +2390,20 @@ async function toggleFree(platform){
                 await ref.set(updates,{merge:true});
 
                 showStatus(
-                    "✅ Đã TẮT FREE MOBILE.\n\n" +
+                    "✅ Đã TẮT MIỄN PHÍ MOBILE.\n\n" +
                     "Mobile đã khôi phục trạng thái Premium trước đó.",
                     "success"
                 );
             }
 
         /* -----------------------------------------------------
-           TIVI
+           Tivi
            ----------------------------------------------------- */
         }else if(platform === "tv"){
 
             if(freeAll){
                 showStatus(
-                    "🌐 FREE CẢ 2 đang bật. Hãy dùng công tắc FREE CẢ 2 để khôi phục trạng thái.",
+                    "🌐 MIỄN PHÍ CẢ 2 đang bật. Hãy dùng công tắc MIỄN PHÍ CẢ 2 để khôi phục trạng thái.",
                     "info"
                 );
                 if(switchInput){
@@ -2386,7 +2435,7 @@ async function toggleFree(platform){
                 await ref.set(updates,{merge:true});
 
                 showStatus(
-                    "📺 Đã MỞ FREE TIVI.\n\n" +
+                    "📺 Đã MỞ MIỄN PHÍ TIVI.\n\n" +
                     "Tivi được xem miễn phí.\n" +
                     "Trạng thái Premium Tivi trước đó đã được lưu.",
                     "success"
@@ -2416,7 +2465,7 @@ async function toggleFree(platform){
                 await ref.set(updates,{merge:true});
 
                 showStatus(
-                    "✅ Đã TẮT FREE TIVI.\n\n" +
+                    "✅ Đã TẮT MIỄN PHÍ TIVI.\n\n" +
                     "Tivi đã khôi phục trạng thái Premium trước đó.",
                     "success"
                 );
@@ -2520,8 +2569,8 @@ function updateNotificationControlUI(){
     updateNotificationButton(
         "notificationTVButton",
         tvOn,
-        "📺 BẬT THÔNG BÁO TIVI",
-        "📺 TẮT THÔNG BÁO TIVI"
+        "📺 BẬT THÔNG BÁO Tivi",
+        "📺 TẮT THÔNG BÁO Tivi"
     );
 
     const status =
@@ -2871,7 +2920,7 @@ async function saveNotificationContent(platform){
             saveButton.innerText =
                 platform === "mobile"
                     ? "💾 LƯU THÔNG BÁO MOBILE"
-                    : "💾 LƯU THÔNG BÁO TIVI";
+                    : "💾 LƯU THÔNG BÁO Tivi";
         }
 
         controlWriteBusy = false;
@@ -3810,7 +3859,7 @@ function showDeviceList(platform,type){
     const platformName =
         platform === "mobile"
             ? "📱 MOBILE"
-            : "📺 TIVI";
+            : "📺 Tivi";
 
     document.getElementById("deviceListTitle").innerText =
         platformName + " — " +
