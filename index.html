@@ -1,10 +1,15 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
+
+<!DOCTYPE html>
+
+
+html
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>TV365 ADMIN</title>
-
 <style>
 *{box-sizing:border-box}
 body{
@@ -171,7 +176,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .platform-title.tv{color:#7c3aed}
 .stats-grid{
     display:grid;
-    grid-template-columns:repeat(5,1fr);
+    grid-template-columns:repeat(6,1fr);
     gap:12px;
 }
 .stat-card{
@@ -196,6 +201,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 }
 .stat-trial{background:#fef3c7;color:#92400e}
 .stat-premium-active{background:#dcfce7;color:#166534}
+.stat-free-active{background:#dbeafe;color:#1e40af}
 .stat-trial-expired{background:#fee2e2;color:#991b1b}
 .stat-premium-expired{background:#ffedd5;color:#9a3412}
 .stat-blocked{background:#e5e7eb;color:#1f2937}
@@ -492,11 +498,35 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .trial-switch-status.on{
     color:#16a34a;
 }
+.trial-platform-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:14px;
+    width:100%;
+    min-width:0;
+}
+
 .trial-settings-box{
     padding:12px;
     background:#f8fafc;
     border:1px solid #e2e8f0;
     border-radius:10px;
+    min-width:0;
+    box-sizing:border-box;
+}
+
+.trial-settings-box > div:first-child{
+    min-width:0;
+}
+
+.trial-platform-title{
+    font-size:20px;
+    font-weight:800;
+    line-height:1.25;
+    margin-bottom:12px;
+    white-space:normal;
+    word-break:keep-all;
+    overflow-wrap:normal;
 }
 .trial-settings-row{
     display:grid;
@@ -535,6 +565,30 @@ button:disabled{opacity:.5;cursor:not-allowed}
 }
 @media(max-width:700px){
     .trial-settings-row{grid-template-columns:1fr}
+    .trial-platform-grid{
+        grid-template-columns:1fr!important;
+        gap:12px;
+    }
+    .trial-settings-box{
+        width:100%;
+        max-width:100%;
+        min-width:0;
+    }
+    .trial-platform-title{
+        font-size:19px;
+        line-height:1.25;
+    }
+    .trial-toggle-wrap{
+        gap:8px;
+        padding:10px 12px;
+    }
+    .trial-switch{
+        flex:0 0 54px;
+        width:54px;
+    }
+    .trial-switch input:checked + .trial-slider:before{
+        transform:translateX(22px);
+    }
 }
 
 .notification-editor-panel{
@@ -648,6 +702,44 @@ button:disabled{opacity:.5;cursor:not-allowed}
     flex-shrink:0;
 }
 .btn-detail{background:#2563eb}
+.copy-id-btn{
+    background:linear-gradient(135deg,#0f766e,#14b8a6)!important;
+    color:#fff;
+    border:0;
+    border-radius:9px;
+    padding:10px 13px;
+    font-size:13px;
+    font-weight:800;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    white-space:nowrap;
+    box-shadow:0 3px 8px rgba(15,118,110,.20);
+    transition:transform .15s,box-shadow .15s,opacity .15s;
+}
+.copy-id-btn:hover{opacity:1;transform:translateY(-1px);box-shadow:0 5px 12px rgba(15,118,110,.28)}
+.copy-id-btn:active{transform:translateY(0)}
+.copy-id-btn.copied{background:linear-gradient(135deg,#16a34a,#22c55e)!important}
+@media(max-width:700px){
+    .device-row{align-items:flex-start;flex-direction:column;width:100%;box-sizing:border-box}
+    .device-actions{width:100%;max-width:100%;flex-wrap:wrap;box-sizing:border-box;overflow:hidden}
+    .device-actions button{
+        flex:1 1 0;
+        min-width:0;
+        max-width:100%;
+        box-sizing:border-box;
+        padding:9px 7px;
+        font-size:11px;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+    }
+    .copy-id-btn{
+        width:auto;
+        max-width:100%;
+    }
+}
 .btn-lock{background:#dc2626}
 .btn-unlock{background:#16a34a}
 .empty{
@@ -704,6 +796,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .badge-trial{background:#fef3c7;color:#92400e}
 .badge-expired{background:#fee2e2;color:#991b1b}
 .badge-premium{background:#dcfce7;color:#166534}
+.badge-free{background:#dbeafe;color:#1e40af}
 .badge-blocked{background:#e5e7eb;color:#1f2937}
 
 @media(max-width:1000px){
@@ -734,8 +827,8 @@ button:disabled{opacity:.5;cursor:not-allowed}
     .buttons{grid-template-columns:repeat(2,1fr)}
     .custom-row{grid-template-columns:1fr}
     .device-row{align-items:flex-start;flex-direction:column}
-    .device-actions{width:100%}
-    .device-actions button{flex:1}
+    .device-actions{width:100%;max-width:100%;box-sizing:border-box;overflow:hidden}
+    .device-actions button{flex:1 1 0;min-width:0;max-width:100%;box-sizing:border-box;}
     .search-row{grid-template-columns:1fr}
     .free-control-grid{grid-template-columns:1fr}
 }
@@ -801,6 +894,7 @@ html,body{
     .free-control-grid,
     .notification-editor-grid,
     .trial-settings-row,
+    .trial-platform-grid,
     .buttons,
     .stats-grid{
         grid-template-columns:1fr!important;
@@ -871,11 +965,17 @@ html,body{
     }
 
     .device-actions{
+        width:100%;
+        max-width:100%;
         flex-wrap:wrap;
+        box-sizing:border-box;
+        overflow:hidden;
     }
 
     .device-actions button{
         min-width:0;
+        max-width:100%;
+        box-sizing:border-box;
     }
 
     .status,
@@ -957,577 +1057,575 @@ html,body{
 }
 
 </style>
-</head>
+<style>
+/* ===== FIX GIAO DIỆN DÙNG THỬ MOBILE / TIVI ===== */
+html, body, button, input, select, textarea, label {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, "Helvetica Neue", sans-serif;
+}
 
+.trial-settings-title {
+    font-size: 18px !important;
+    line-height: 1.35 !important;
+}
+
+.trial-platform-title {
+    font-size: 19px !important;
+    line-height: 1.3 !important;
+    letter-spacing: 0 !important;
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: anywhere !important;
+}
+
+.trial-settings-box label {
+    font-size: 15px !important;
+    line-height: 1.35 !important;
+}
+
+.trial-toggle-label,
+.trial-switch-status {
+    font-size: 14px !important;
+}
+
+.trial-save-btn {
+    font-size: 15px !important;
+    line-height: 1.35 !important;
+    min-height: 50px;
+}
+
+/* Tablet/mobile: không ép 2 khung Trial đứng cạnh nhau */
+@media (max-width: 900px) {
+    .trial-platform-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    .trial-settings-box > div[style*="grid-template-columns:1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    .trial-settings-box {
+        width: 100% !important;
+    }
+
+    .trial-platform-title {
+        font-size: 20px !important;
+    }
+}
+
+/* Điện thoại nhỏ */
+@media (max-width: 520px) {
+    .trial-settings-panel {
+        padding: 10px !important;
+    }
+
+    .trial-settings-box {
+        padding: 12px !important;
+    }
+
+    .trial-platform-title {
+        font-size: 18px !important;
+    }
+
+    .trial-save-btn {
+        font-size: 14px !important;
+        padding: 12px 10px !important;
+    }
+}
+</style><style>
+/* ===== FINAL FIX: TRIAL MOBILE / TIVI ===== */
+.trial-platform-grid{
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:14px !important;
+  width:100% !important;
+  align-items:start !important;
+}
+.trial-settings-box{
+  width:100% !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
+  margin:0 !important;
+}
+.trial-settings-row{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+  gap:10px !important;
+}
+.trial-platform-title{
+  display:block !important;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif !important;
+  font-size:20px !important;
+  line-height:1.3 !important;
+  white-space:normal !important;
+  word-break:normal !important;
+  overflow-wrap:break-word !important;
+  margin-bottom:12px !important;
+}
+.trial-toggle-wrap{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  width:100% !important;
+  box-sizing:border-box !important;
+}
+.trial-settings-box input,
+.trial-settings-box select{
+  width:100% !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+}
+@media(max-width:900px){
+  .trial-platform-grid{
+    grid-template-columns:1fr !important;
+  }
+  .trial-settings-row{
+    grid-template-columns:1fr 1fr !important;
+  }
+}
+@media(max-width:520px){
+  .trial-settings-row{
+    grid-template-columns:1fr !important;
+  }
+  .trial-platform-title{
+    font-size:19px !important;
+  }
+}
+</style><style>
+/* FINAL UI FIX - Trial Mobile / TIVI */
+.trial-settings-panel,
+.trial-settings-box,
+.trial-platform-grid {
+    box-sizing: border-box;
+}
+.trial-platform-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    width: 100%;
+}
+.trial-platform-title {
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: anywhere !important;
+    line-height: 1.25 !important;
+}
+@media (max-width: 900px) {
+    .trial-platform-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style></head>
 <body>
-
 <div class="header">
-    <div>📺 TV365 ADMIN</div>
-
-    <div class="header-brand">
-        <img
-            src="https://raw.githubusercontent.com/TV365-VN/TV365/main/TV.png"
-            alt="TV365"
-        >
-        <span>TV365</span>
-    </div>
+<div>📺 TV365 ADMIN</div>
+<div class="header-brand">
+<img alt="TV365" src="https://raw.githubusercontent.com/TV365-VN/TV365/main/TV.png"/>
+<span>TV365</span>
 </div>
-
+</div>
 <div class="container">
-
-<!-- LOGIN -->
+ LOGIN 
 <div class="card" id="loginCard">
-    <h2>🔐 Đăng nhập Admin 🔐</h2>
-    <p>Chỉ tài khoản quản trị TV365 mới được sử dụng hệ thống.</p>
-
-    <label>Email</label>
-    <input type="email" id="email" placeholder="Email Admin">
-
-    <label>Mật khẩu</label>
-    <input type="password" id="password" placeholder="Mật khẩu">
-
-    <button class="login-btn" onclick="login()" id="loginButton">
+<h2>🔐 Đăng nhập Admin 🔐</h2>
+<p>Chỉ tài khoản quản trị TV365 mới được sử dụng hệ thống.</p>
+<label>Email</label>
+<input id="email" placeholder="Email Admin" type="email"/>
+<label>Mật khẩu</label>
+<input id="password" placeholder="Mật khẩu" type="password"/>
+<button class="login-btn" id="loginButton" onclick="login()">
        🔐 ĐĂNG NHẬP 🔐
     </button>
-
-    <button
-        type="button"
-        onclick="forgotPassword()"
-        style="width:100%;margin-top:12px;background:#64748b;"
-        id="forgotPasswordButton">
+<button id="forgotPasswordButton" onclick="forgotPassword()" style="width:100%;margin-top:12px;background:#64748b;" type="button">
         🔑 QUÊN MẬT KHẨU 🔑
     </button>
-
-    <div class="status" id="loginStatus">
+<div class="status" id="loginStatus">
         Vui lòng đăng nhập.
     </div>
 </div>
-
-<!-- ADMIN -->
+ ADMIN 
 <div class="card hidden" id="adminCard">
-
-    <button class="logout" onclick="logout()">ĐĂNG XUẤT</button>
-
-    <h2>⚙️ Quản lý Premium & Thiết bị</h2>
-
-    <div class="user-info">
+<button class="logout" onclick="logout()">ĐĂNG XUẤT</button>
+<h2>⚙️ Quản lý Premium &amp; Thiết bị</h2>
+<div class="user-info">
         👤 Admin: <strong id="adminEmail"></strong>
-    </div>
-
-    <!-- =====================================================
-         DASHBOARD
-    ====================================================== -->
-    <div class="card" style="padding:18px;background:#fafafa;box-shadow:none;border:1px solid #e2e8f0;">
-        <!-- =====================================================
-             FREE CONTROL
-        ====================================================== -->
-        <div class="notification-control-panel">
-            <div class="notification-control-title">🔔 QUẢN LÝ THÔNG BÁO ỨNG DỤNG</div>
-
-            <div class="notification-control-grid">
-
-                <div class="admin-switch-row">
-                    <span class="admin-switch-name">📱 THÔNG BÁO MOBILE</span>
-                    <div class="admin-switch-right">
-                        <label class="admin-switch">
-                            <input
-                                type="checkbox"
-                                id="notificationMobileButton"
-                                onchange="toggleNotification('mobile')">
-                            <span class="admin-switch-slider"></span>
-                        </label>
-                        <span
-                            id="notificationMobileSwitchStatus"
-                            class="admin-switch-status">
+</div><div class="card" style="padding:18px;background:#fafafa;box-shadow:none;border:1px solid #e2e8f0;"><div class="notification-control-panel">
+<div class="notification-control-title">🔔 QUẢN LÝ THÔNG BÁO ỨNG DỤNG</div>
+<div class="notification-control-grid">
+<div class="admin-switch-row">
+<span class="admin-switch-name">📱 THÔNG BÁO MOBILE</span>
+<div class="admin-switch-right">
+<label class="admin-switch">
+<input id="notificationMobileButton" onchange="toggleNotification('mobile')" type="checkbox"/>
+<span class="admin-switch-slider"></span>
+</label>
+<span class="admin-switch-status" id="notificationMobileSwitchStatus">
                             ĐANG TẮT
                         </span>
-                    </div>
-                </div>
-
-                <div class="admin-switch-row">
-                    <span class="admin-switch-name">📺 THÔNG BÁO TIVI</span>
-                    <div class="admin-switch-right">
-                        <label class="admin-switch">
-                            <input
-                                type="checkbox"
-                                id="notificationTVButton"
-                                onchange="toggleNotification('tv')">
-                            <span class="admin-switch-slider"></span>
-                        </label>
-                        <span
-                            id="notificationTVSwitchStatus"
-                            class="admin-switch-status">
+</div>
+</div>
+<div class="admin-switch-row">
+<span class="admin-switch-name">📺 THÔNG BÁO TIVI</span>
+<div class="admin-switch-right">
+<label class="admin-switch">
+<input id="notificationTVButton" onchange="toggleNotification('tv')" type="checkbox"/>
+<span class="admin-switch-slider"></span>
+</label>
+<span class="admin-switch-status" id="notificationTVSwitchStatus">
                             ĐANG TẮT
                         </span>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="notification-control-status" id="notificationControlStatus">
+</div>
+</div>
+</div>
+<div class="notification-control-status" id="notificationControlStatus">
                 Đang đọc trạng thái thông báo...
             </div>
-
-            <div class="notification-editor-panel">
-                <div class="notification-editor-title">
+<div class="notification-editor-panel">
+<div class="notification-editor-title">
                     ✏️ SỬA NỘI DUNG THÔNG BÁO
                 </div>
-
-                <div class="notification-editor-grid">
-
-                    <div class="notification-editor-box mobile">
-                        <h4>📱 THÔNG BÁO MOBILE</h4>
-
-                        <label for="notificationMobileTitle">
+<div class="notification-editor-grid">
+<div class="notification-editor-box mobile">
+<h4>📱 THÔNG BÁO MOBILE</h4>
+<label for="notificationMobileTitle">
                             Tiêu đề
                         </label>
-                        <input
-                            type="text"
-                            id="notificationMobileTitle"
-                            placeholder="Nhập tiêu đề thông báo Mobile"
-                        >
-
-                        <label for="notificationMobileMessage">
+<input id="notificationMobileTitle" placeholder="Nhập tiêu đề thông báo Mobile" type="text"/>
+<label for="notificationMobileMessage">
                             Nội dung
                         </label>
-                        <textarea
-                            id="notificationMobileMessage"
-                            placeholder="Nhập nội dung thông báo Mobile"
-                        ></textarea>
-
-                        <button
-                            type="button"
-                            class="notification-save-btn"
-                            id="saveNotificationMobileButton"
-                            onclick="saveNotificationContent('mobile')">
+<textarea id="notificationMobileMessage" placeholder="Nhập nội dung thông báo Mobile"></textarea>
+<button class="notification-save-btn" id="saveNotificationMobileButton" onclick="saveNotificationContent('mobile')" type="button">
                             💾 LƯU THÔNG BÁO MOBILE
                         </button>
-
-                        <div
-                            class="notification-editor-status"
-                            id="notificationMobileEditStatus">
+<div class="notification-editor-status" id="notificationMobileEditStatus">
                             Nút BẬT/TẮT sẽ lưu trạng thái ngay vào Firebase. Thời gian lưu bằng nút bên dưới.
                         </div>
-                    </div>
-
-                    <div class="notification-editor-box tv">
-                        <h4>📺 THÔNG BÁO TIVI</h4>
-
-                        <label for="notificationTVTitle">
+</div>
+<div class="notification-editor-box tv">
+<h4>📺 THÔNG BÁO TIVI</h4>
+<label for="notificationTVTitle">
                             Tiêu đề
                         </label>
-                        <input
-                            type="text"
-                            id="notificationTVTitle"
-                            placeholder="Nhập tiêu đề thông báo Tivi"
-                        >
-
-                        <label for="notificationTVMessage">
+<input id="notificationTVTitle" placeholder="Nhập tiêu đề thông báo Tivi" type="text"/>
+<label for="notificationTVMessage">
                             Nội dung
                         </label>
-                        <textarea
-                            id="notificationTVMessage"
-                            placeholder="Nhập nội dung thông báo Tivi"
-                        ></textarea>
-
-                        <button
-                            type="button"
-                            class="notification-save-btn"
-                            id="saveNotificationTVButton"
-                            onclick="saveNotificationContent('tv')">
+<textarea id="notificationTVMessage" placeholder="Nhập nội dung thông báo Tivi"></textarea>
+<button class="notification-save-btn" id="saveNotificationTVButton" onclick="saveNotificationContent('tv')" type="button">
                             💾 LƯU THÔNG BÁO TIVI
                         </button>
-
-                        <div
-                            class="notification-editor-status"
-                            id="notificationTVEditStatus">
+<div class="notification-editor-status" id="notificationTVEditStatus">
                             Chưa có thay đổi.
                         </div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-
-        
-<!-- =========================================================
-     CÀI ĐẶT THỜI GIAN DÙNG THỬ
-========================================================= -->
-<div class="trial-settings-panel">
-    <div class="trial-settings-title">
+</div>
+</div>
+</div>
+</div><div class="trial-settings-panel">
+<div class="trial-settings-title">
         🧪 CÀI ĐẶT THỜI GIAN DÙNG THỬ
     </div>
-
-    <div class="trial-settings-box">
-        <div class="trial-settings-row">
-
-            <div>
-                <label>Dùng thử</label>
-
-                <!-- CÔNG TẮC GẠT BẬT / TẮT DÙNG THỬ -->
-                <div class="trial-toggle-wrap">
-                    <span class="trial-toggle-label">Dùng thử</span>
-
-                    <label class="trial-switch">
-                        <input
-                            type="checkbox"
-                            id="trialToggleButton"
-                            onchange="toggleTrial()">
-                        <span class="trial-slider"></span>
-                    </label>
-
-                    <span
-                        id="trialToggleStatus"
-                        class="trial-switch-status">
-                        ĐANG TẮT
-                    </span>
-                </div>
-
-                <!-- Giữ lại field này để tương thích với code cũ -->
-                <select id="trialEnabledSelect" class="hidden">
-                    <option value="ON">ON</option>
-                    <option value="OFF">OFF</option>
-                </select>
-
-                <label for="trialValue">Số lượng</label>
-                <input
-                    type="number"
-                    id="trialValue"
-                    min="1"
-                    max="3650"
-                    step="1"
-                    value="1">
+<div class="trial-platform-grid"><div class="trial-settings-box" style="margin:0;">
+<div class="trial-platform-title" style="color:#2563eb;">
+                📱 DÙNG THỬ MOBILE
             </div>
-
-            <div>
-                <label for="trialUnit">Đơn vị</label>
-                <select id="trialUnit">
-                    <option value="DAY">Ngày</option>
-                    <option value="MONTH">Tháng</option>
-                </select>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+<div>
+<label>Dùng thử Mobile</label>
+<div class="trial-toggle-wrap">
+<span class="trial-toggle-label">Mobile</span>
+<label class="trial-switch">
+<input id="trialMobileToggleButton" onchange="toggleTrial('mobile')" type="checkbox"/>
+<span class="trial-slider"></span>
+</label>
+<span class="trial-switch-status" id="trialMobileToggleStatus">
+                            ĐANG TẮT
+                        </span>
+</div>
+</div>
+<div>
+<label for="trialMobileUnit">Đơn vị</label>
+<select id="trialMobileUnit">
+<option value="DAY">Ngày</option>
+<option value="MONTH">Tháng</option>
+</select>
+</div>
+</div>
+<label for="trialMobileValue">Số lượng</label>
+<input id="trialMobileValue" max="3650" min="1" step="1" type="number" value="1"/>
+<button class="trial-save-btn" id="saveTrialMobileButton" onclick="saveTrialSettings('mobile')" type="button">
+                💾 LƯU DÙNG THỬ MOBILE
+            </button>
+<div class="trial-current" id="trialMobileCurrentStatus">
+                Đang đọc cấu hình...
             </div>
-
-        </div>
-
-        <button
-            type="button"
-            class="trial-save-btn"
-            id="saveTrialSettingsButton"
-            onclick="saveTrialSettings()">
-            💾 LƯU THỜI GIAN DÙNG THỬ
-        </button>
-
-        <div class="trial-current" id="trialCurrentStatus">
-            Đang đọc cấu hình dùng thử...
-        </div>
-
-        <div class="trial-edit-status" id="trialEditStatus">
-            Chưa có thay đổi.
-        </div>
+<div class="trial-edit-status" id="trialMobileEditStatus">
+                Chưa có thay đổi.
+            </div>
+</div><div class="trial-settings-box" style="margin:0;">
+<div class="trial-platform-title" style="color:#7c3aed;">
+                📺 DÙNG THỬ TIVI
+            </div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+<div>
+<label>Dùng thử Tivi</label>
+<div class="trial-toggle-wrap">
+<span class="trial-toggle-label">Tivi</span>
+<label class="trial-switch">
+<input id="trialTVToggleButton" onchange="toggleTrial('tv')" type="checkbox"/>
+<span class="trial-slider"></span>
+</label>
+<span class="trial-switch-status" id="trialTVToggleStatus">
+                            ĐANG TẮT
+                        </span>
+</div>
+</div>
+<div>
+<label for="trialTVUnit">Đơn vị</label>
+<select id="trialTVUnit">
+<option value="DAY">Ngày</option>
+<option value="MONTH">Tháng</option>
+</select>
+</div>
+</div>
+<label for="trialTVValue">Số lượng</label>
+<input id="trialTVValue" max="3650" min="1" step="1" type="number" value="1"/>
+<button class="trial-save-btn" id="saveTrialTVButton" onclick="saveTrialSettings('tv')" type="button">
+                💾 LƯU DÙNG THỬ TIVI
+            </button>
+<div class="trial-current" id="trialTVCurrentStatus">
+                Đang đọc cấu hình...
+            </div>
+<div class="trial-edit-status" id="trialTVEditStatus">
+                Chưa có thay đổi.
+            </div>
+</div>
+</div>
+<div style="margin-top:12px;padding:10px 14px;border-radius:10px;background:#eef6ff;color:#1d4ed8;font-size:14px;">
+        ℹ️ Mobile và Tivi dùng thử độc lập. Các field Trial cũ
+        <b>trialEnabled / trialValue / trialUnit / trialDays</b>
+        vẫn được giữ để tương thích với APK cũ.
     </div>
 </div>
-
+ Giữ các ID cũ để tránh JS cũ bên ngoài bị lỗi nếu có tham chiếu. 
+<div style="display:none;">
+<select id="trialEnabledSelect">
+<option value="ON">ON</option>
+<option value="OFF">OFF</option>
+</select>
+<input id="trialValue" value="1"/>
+<select id="trialUnit"><option value="DAY">Ngày</option></select>
+<input id="trialToggleButton" type="checkbox"/>
+<span id="trialToggleStatus"></span>
+<button id="saveTrialSettingsButton" type="button"></button>
+<div id="trialCurrentStatus"></div>
+<div id="trialEditStatus"></div>
+</div>
 <div class="free-control-panel">
-            <div class="free-control-title">🎁 QUẢN LÝ MỞ FREE</div>
-
-            <div class="free-control-grid">
-
-                <div class="admin-switch-row">
-                    <span class="admin-switch-name">📱 FREE MOBILE</span>
-                    <div class="admin-switch-right">
-                        <label class="admin-switch">
-                            <input
-                                type="checkbox"
-                                id="freeMobileButton"
-                                onchange="toggleFree('mobile')">
-                            <span class="admin-switch-slider"></span>
-                        </label>
-                        <span
-                            id="freeMobileSwitchStatus"
-                            class="admin-switch-status">
+<div class="free-control-title">🎁 QUẢN LÝ MỞ MIỄN PHÍ</div>
+<div class="free-control-grid">
+<div class="admin-switch-row">
+<span class="admin-switch-name">📱 MIỄN PHÍ MOBILE</span>
+<div class="admin-switch-right">
+<label class="admin-switch">
+<input id="freeMobileButton" onchange="toggleFree('mobile')" type="checkbox"/>
+<span class="admin-switch-slider"></span>
+</label>
+<span class="admin-switch-status" id="freeMobileSwitchStatus">
                             ĐANG TẮT
                         </span>
-                    </div>
-                </div>
-
-                <div class="admin-switch-row">
-                    <span class="admin-switch-name">📺 FREE TIVI</span>
-                    <div class="admin-switch-right">
-                        <label class="admin-switch">
-                            <input
-                                type="checkbox"
-                                id="freeTVButton"
-                                onchange="toggleFree('tv')">
-                            <span class="admin-switch-slider"></span>
-                        </label>
-                        <span
-                            id="freeTVSwitchStatus"
-                            class="admin-switch-status">
+</div>
+</div>
+<div class="admin-switch-row">
+<span class="admin-switch-name">📺 MIỄN PHÍ TIVI</span>
+<div class="admin-switch-right">
+<label class="admin-switch">
+<input id="freeTVButton" onchange="toggleFree('tv')" type="checkbox"/>
+<span class="admin-switch-slider"></span>
+</label>
+<span class="admin-switch-status" id="freeTVSwitchStatus">
                             ĐANG TẮT
                         </span>
-                    </div>
-                </div>
-
-                <div class="admin-switch-row">
-                    <span class="admin-switch-name">🌐 FREE CẢ 2</span>
-                    <div class="admin-switch-right">
-                        <label class="admin-switch">
-                            <input
-                                type="checkbox"
-                                id="freeAllButton"
-                                onchange="toggleFree('all')">
-                            <span class="admin-switch-slider"></span>
-                        </label>
-                        <span
-                            id="freeAllSwitchStatus"
-                            class="admin-switch-status">
+</div>
+</div>
+<div class="admin-switch-row">
+<span class="admin-switch-name">🌐 MIỄN PHÍ CẢ 2</span>
+<div class="admin-switch-right">
+<label class="admin-switch">
+<input id="freeAllButton" onchange="toggleFree('all')" type="checkbox"/>
+<span class="admin-switch-slider"></span>
+</label>
+<span class="admin-switch-status" id="freeAllSwitchStatus">
                             ĐANG TẮT
                         </span>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="free-control-status" id="freeControlStatus">
+</div>
+</div>
+</div>
+<div class="free-control-status" id="freeControlStatus">
                 Đang đọc trạng thái Free...
             </div>
-        </div>
-
-        <div class="dashboard-tools">
-            <button onclick="loadDashboard()">🔄 LÀM MỚI THỐNG KÊ</button>
-            <span class="last-update" id="lastUpdate">Chưa tải dữ liệu</span>
-        </div>
-
-        <h3 class="platform-title mobile">📱 MOBILE</h3>
-
-        <div class="stats-grid">
-            <button class="stat-card stat-trial" onclick="showDeviceList('mobile','trial')">
-                <div class="icon">🟡</div>
-                <div class="label">ĐANG DÙNG THỬ</div>
-                <div class="count" id="mobileTrialCount">0</div>
-            </button>
-
-            <button class="stat-card stat-premium-active" onclick="showDeviceList('mobile','premiumActive')">
-                <div class="icon">🟢</div>
-                <div class="label">ĐANG DÙNG PREMIUM</div>
-                <div class="count" id="mobilePremiumActiveCount">0</div>
-            </button>
-
-            <button class="stat-card stat-trial-expired" onclick="showDeviceList('mobile','trialExpired')">
-                <div class="icon">🔴</div>
-                <div class="label">HẾT DÙNG THỬ</div>
-                <div class="count" id="mobileTrialExpiredCount">0</div>
-            </button>
-
-            <button class="stat-card stat-premium-expired" onclick="showDeviceList('mobile','premiumExpired')">
-                <div class="icon">🟠</div>
-                <div class="label">PREMIUM HẾT HẠN</div>
-                <div class="count" id="mobilePremiumExpiredCount">0</div>
-            </button>
-
-            <button class="stat-card stat-blocked" onclick="showDeviceList('mobile','blocked')">
-                <div class="icon">🔒</div>
-                <div class="label">ĐÃ KHÓA</div>
-                <div class="count" id="mobileBlockedCount">0</div>
-            </button>
-        </div>
-
-        <h3 class="platform-title tv" style="margin-top:28px;">📺 TIVI</h3>
-
-        <div class="stats-grid">
-            <button class="stat-card stat-trial" onclick="showDeviceList('tv','trial')">
-                <div class="icon">🟡</div>
-                <div class="label">ĐANG DÙNG THỬ</div>
-                <div class="count" id="tvTrialCount">0</div>
-            </button>
-
-            <button class="stat-card stat-premium-active" onclick="showDeviceList('tv','premiumActive')">
-                <div class="icon">🟢</div>
-                <div class="label">ĐANG DÙNG PREMIUM</div>
-                <div class="count" id="tvPremiumActiveCount">0</div>
-            </button>
-
-            <button class="stat-card stat-trial-expired" onclick="showDeviceList('tv','trialExpired')">
-                <div class="icon">🔴</div>
-                <div class="label">HẾT DÙNG THỬ</div>
-                <div class="count" id="tvTrialExpiredCount">0</div>
-            </button>
-
-            <button class="stat-card stat-premium-expired" onclick="showDeviceList('tv','premiumExpired')">
-                <div class="icon">🟠</div>
-                <div class="label">PREMIUM HẾT HẠN</div>
-                <div class="count" id="tvPremiumExpiredCount">0</div>
-            </button>
-
-            <button class="stat-card stat-blocked" onclick="showDeviceList('tv','blocked')">
-                <div class="icon">🔒</div>
-                <div class="label">ĐÃ KHÓA</div>
-                <div class="count" id="tvBlockedCount">0</div>
-            </button>
-        </div>
-
-        <div class="list-panel hidden" id="deviceListPanel">
-            <div class="list-header" id="deviceListTitle"></div>
-
-            <div style="padding:12px;">
-                <div class="search-row">
-                    <input id="listSearch"
-                           placeholder="🔍 Tìm ID trong danh sách..."
-                           oninput="renderDeviceList()">
-                    <button onclick="closeDeviceList()" style="background:#64748b;">
+</div>
+<div class="dashboard-tools">
+<button onclick="loadDashboard()">🔄 LÀM MỚI THỐNG KÊ</button>
+<span class="last-update" id="lastUpdate">Chưa tải dữ liệu</span>
+</div>
+<h3 class="platform-title mobile">📱 MOBILE</h3>
+<div class="stats-grid">
+<button class="stat-card stat-trial" onclick="showDeviceList('mobile','trial')">
+<div class="icon">🟡</div>
+<div class="label">ĐANG DÙNG THỬ</div>
+<div class="count" id="mobileTrialCount">0</div>
+</button>
+<button class="stat-card stat-premium-active" onclick="showDeviceList('mobile','premiumActive')">
+<div class="icon">🟢</div>
+<div class="label">ĐANG DÙNG PREMIUM</div>
+<div class="count" id="mobilePremiumActiveCount">0</div>
+</button>
+<button class="stat-card stat-free-active" onclick="showDeviceList('mobile','freeActive')">
+<div class="icon">🔵</div>
+<div class="label">ĐANG DÙNG MIỄN PHÍ</div>
+<div class="count" id="mobileFreeActiveCount">0</div>
+</button>
+<button class="stat-card stat-trial-expired" onclick="showDeviceList('mobile','trialExpired')">
+<div class="icon">🔴</div>
+<div class="label">HẾT DÙNG THỬ</div>
+<div class="count" id="mobileTrialExpiredCount">0</div>
+</button>
+<button class="stat-card stat-premium-expired" onclick="showDeviceList('mobile','premiumExpired')">
+<div class="icon">🟠</div>
+<div class="label">PREMIUM HẾT HẠN</div>
+<div class="count" id="mobilePremiumExpiredCount">0</div>
+</button>
+<button class="stat-card stat-blocked" onclick="showDeviceList('mobile','blocked')">
+<div class="icon">🔒</div>
+<div class="label">ĐÃ KHÓA</div>
+<div class="count" id="mobileBlockedCount">0</div>
+</button>
+</div>
+<h3 class="platform-title tv" style="margin-top:28px;">📺 Tivi</h3>
+<div class="stats-grid">
+<button class="stat-card stat-trial" onclick="showDeviceList('tv','trial')">
+<div class="icon">🟡</div>
+<div class="label">ĐANG DÙNG THỬ</div>
+<div class="count" id="tvTrialCount">0</div>
+</button>
+<button class="stat-card stat-premium-active" onclick="showDeviceList('tv','premiumActive')">
+<div class="icon">🟢</div>
+<div class="label">ĐANG DÙNG PREMIUM</div>
+<div class="count" id="tvPremiumActiveCount">0</div>
+</button>
+<button class="stat-card stat-free-active" onclick="showDeviceList('tv','freeActive')">
+<div class="icon">🔵</div>
+<div class="label">ĐANG DÙNG MIỄN PHÍ</div>
+<div class="count" id="tvFreeActiveCount">0</div>
+</button>
+<button class="stat-card stat-trial-expired" onclick="showDeviceList('tv','trialExpired')">
+<div class="icon">🔴</div>
+<div class="label">HẾT DÙNG THỬ</div>
+<div class="count" id="tvTrialExpiredCount">0</div>
+</button>
+<button class="stat-card stat-premium-expired" onclick="showDeviceList('tv','premiumExpired')">
+<div class="icon">🟠</div>
+<div class="label">PREMIUM HẾT HẠN</div>
+<div class="count" id="tvPremiumExpiredCount">0</div>
+</button>
+<button class="stat-card stat-blocked" onclick="showDeviceList('tv','blocked')">
+<div class="icon">🔒</div>
+<div class="label">ĐÃ KHÓA</div>
+<div class="count" id="tvBlockedCount">0</div>
+</button>
+</div>
+<div class="list-panel hidden" id="deviceListPanel">
+<div class="list-header" id="deviceListTitle"></div>
+<div style="padding:12px;">
+<div class="search-row">
+<input id="listSearch" oninput="renderDeviceList()" placeholder="🔍 Tìm ID trong danh sách..."/>
+<button onclick="closeDeviceList()" style="background:#64748b;">
                         ĐÓNG
                     </button>
-                </div>
-            </div>
-
-            <div id="deviceList"></div>
-        </div>
-    </div>
-
-    <!-- =====================================================
-         KIỂM TRA ID
-    ====================================================== -->
-    <label>ID thiết bị</label>
-
-    <input
-        type="text"
-        id="deviceId"
-        placeholder="Ví dụ: TV365-DT-5014A6 hoặc TV365-TV-5014A6"
-        autocomplete="off"
-    >
-
-    <button
-        style="margin-top:15px;width:100%;"
-        onclick="checkDevice()"
-    >
+</div>
+</div>
+<div id="deviceList"></div>
+</div>
+</div><label>ID thiết bị</label>
+<input autocomplete="off" id="deviceId" placeholder="Ví dụ: TV365-DT-5014A6 hoặc TV365-TV-5014A6" type="text"/>
+<button onclick="checkDevice()" style="margin-top:15px;width:100%;">
         🔍 KIỂM TRA ID
     </button>
-
-    <div class="device-info hidden" id="deviceInfo"></div>
-
-    <!-- =====================================================
-         PREMIUM
-    ====================================================== -->
-    <label>Thời hạn Premium</label>
-
-    <div class="buttons">
-
-        <button type="button"
-                data-duration="3"
-                onclick="selectDuration(3,'days','3 NGÀY',this)">
+<div class="device-info hidden" id="deviceInfo"></div><label>Thời hạn Premium</label>
+<div class="buttons">
+<button data-duration="3" onclick="selectDuration(3,'days','3 NGÀY',this)" type="button">
             3 NGÀY
         </button>
-
-        <button type="button"
-                data-duration="7"
-                onclick="selectDuration(7,'days','7 NGÀY',this)">
+<button data-duration="7" onclick="selectDuration(7,'days','7 NGÀY',this)" type="button">
             7 NGÀY
         </button>
-
-        <button type="button"
-                data-duration="1m"
-                onclick="selectDuration(1,'months','1 THÁNG',this)">
+<button data-duration="1m" onclick="selectDuration(1,'months','1 THÁNG',this)" type="button">
             1 THÁNG
         </button>
-
-        <button type="button"
-                data-duration="3m"
-                onclick="selectDuration(3,'months','3 THÁNG',this)">
+<button data-duration="3m" onclick="selectDuration(3,'months','3 THÁNG',this)" type="button">
             3 THÁNG
         </button>
-
-        <button type="button"
-                data-duration="6m"
-                onclick="selectDuration(6,'months','6 THÁNG',this)">
+<button data-duration="6m" onclick="selectDuration(6,'months','6 THÁNG',this)" type="button">
             6 THÁNG
         </button>
-
-        <button type="button"
-                data-duration="9m"
-                onclick="selectDuration(9,'months','9 THÁNG',this)">
+<button data-duration="9m" onclick="selectDuration(9,'months','9 THÁNG',this)" type="button">
             9 THÁNG
         </button>
-
-        <button type="button"
-                data-duration="1y"
-                onclick="selectDuration(1,'years','1 NĂM',this)">
+<button data-duration="1y" onclick="selectDuration(1,'years','1 NĂM',this)" type="button">
             1 NĂM
         </button>
-
-        <button type="button"
-                data-duration="forever"
-                onclick="selectDuration(0,'forever','VĨNH VIỄN',this)"
-                style="background:#16a34a;">
+<button data-duration="forever" onclick="selectDuration(0,'forever','VĨNH VIỄN',this)" style="background:#16a34a;" type="button">
             ♾️ VĨNH VIỄN
         </button>
-
-    </div>
-
-    <div class="custom-duration">
-        <label>Thời hạn tùy chỉnh</label>
-
-        <div class="custom-row">
-            <input type="number"
-                   id="customValue"
-                   min="1"
-                   step="1"
-                   placeholder="Nhập số">
-
-            <select id="customUnit">
-                <option value="days">NGÀY</option>
-                <option value="months">THÁNG</option>
-                <option value="years">NĂM</option>
-            </select>
-        </div>
-
-        <button type="button"
-                class="custom-button"
-                onclick="selectCustomDuration()">
+</div>
+<div class="custom-duration">
+<label>Thời hạn tùy chỉnh</label>
+<div class="custom-row">
+<input id="customValue" min="1" placeholder="Nhập số" step="1" type="number"/>
+<select id="customUnit">
+<option value="days">NGÀY</option>
+<option value="months">THÁNG</option>
+<option value="years">NĂM</option>
+</select>
+</div>
+<button class="custom-button" onclick="selectCustomDuration()" type="button">
             ➕ CHỌN THỜI HẠN TÙY CHỈNH
         </button>
-    </div>
-
-    <div class="activate-panel">
-        <div class="selected-duration">
+</div>
+<div class="activate-panel">
+<div class="selected-duration">
             Thời hạn đã chọn:
             <strong id="selectedDurationText">Chưa chọn</strong>
-        </div>
-
-        <button type="button"
-                id="activateButton"
-                class="activate-main"
-                onclick="activateSelected()"
-                disabled>
+</div>
+<button class="activate-main" disabled="" id="activateButton" onclick="activateSelected()" type="button">
             🔐 KÍCH HOẠT PREMIUM
         </button>
-    </div>
-
-    <div class="status" id="status">
+</div>
+<div class="status" id="status">
         Chưa có thao tác.
     </div>
-
 </div>
 </div>
-
-<!-- MODAL CHI TIẾT -->
+ MODAL CHI TIẾT 
 <div class="modal-backdrop hidden" id="detailModal">
-    <div class="modal">
-        <h3>📋 Chi tiết thiết bị</h3>
-        <div id="detailContent"></div>
-
-        <div class="modal-actions">
-            <button class="btn-close" onclick="closeDetailModal()">ĐÓNG</button>
-            <button id="detailActionButton" onclick="toggleBlockedFromModal()">
+<div class="modal">
+<h3>📋 Chi tiết thiết bị</h3>
+<div id="detailContent"></div>
+<div class="modal-actions">
+<button class="btn-close" onclick="closeDetailModal()">ĐÓNG</button>
+<button class="copy-id-btn" onclick="copyDeviceId(currentDetailId, this)">
+                📋 SAO CHÉP ID
+            </button>
+<button id="detailActionButton" onclick="toggleBlockedFromModal()">
                 🔒 KHÓA
             </button>
-        </div>
-    </div>
 </div>
-
+</div>
+</div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
 <script>
 /* =========================================================
    FIREBASE
@@ -1579,10 +1677,23 @@ let freeConfig = {
  */
 
 let trialConfig = {
+    // Legacy / compatibility
     trialEnabled: "ON",
     trialDays: 1,
     trialValue: 1,
-    trialUnit: "DAY"
+    trialUnit: "DAY",
+
+    // Mobile
+    trialMobileEnabled: "ON",
+    trialMobileDays: 1,
+    trialMobileValue: 1,
+    trialMobileUnit: "DAY",
+
+    // TV
+    trialTVEnabled: "ON",
+    trialTVDays: 1,
+    trialTVValue: 1,
+    trialTVUnit: "DAY"
 };
 
 let notificationConfig = {
@@ -1865,22 +1976,22 @@ function updateFreeControlUI(){
     applyFreeButtonState(
         "freeMobileButton",
         freeMobile,
-        "📱 MỞ FREE MOBILE",
-        "📱 TẮT FREE MOBILE"
+        "📱 MỞ MIỄN PHÍ MOBILE",
+        "📱 TẮT MIỄN PHÍ MOBILE"
     );
 
     applyFreeButtonState(
         "freeTVButton",
         freeTV,
-        "📺 MỞ FREE TIVI",
-        "📺 TẮT FREE TIVI"
+        "📺 MỞ MIỄN PHÍ TIVI",
+        "📺 TẮT MIỄN PHÍ TIVI"
     );
 
     applyFreeButtonState(
         "freeAllButton",
         freeAll,
-        "🌐 MỞ FREE CẢ 2",
-        "🌐 TẮT FREE CẢ 2"
+        "🌐 MỞ MIỄN PHÍ CẢ 2",
+        "🌐 TẮT MIỄN PHÍ CẢ 2"
     );
 
     const status = document.getElementById("freeControlStatus");
@@ -1889,7 +2000,7 @@ function updateFreeControlUI(){
     const active = [];
 
     if(freeAll){
-        active.push("Mobile + Tivi");
+        active.push("MOBILE + TIVI");
     }else{
         if(freeMobile) active.push("Mobile");
         if(freeTV) active.push("Tivi");
@@ -1898,11 +2009,11 @@ function updateFreeControlUI(){
     if(active.length){
         status.className = "free-control-status on";
         status.innerText =
-            "🟢 ĐANG MỞ FREE: " + active.join(" + ");
+            "🟢 ĐANG MỞ MIỄN PHÍ: " + active.join(" + ");
     }else{
         status.className = "free-control-status";
         status.innerText =
-            "⚪ FREE đang tắt. Premium hoạt động theo cấu hình hiện tại.";
+            "⚪ Miễn Phí đang tắt. Premium hoạt động theo cấu hình hiện tại.";
     }
 }
 
@@ -2011,7 +2122,7 @@ async function toggleFree(platform){
     try{
 
         /* -----------------------------------------------------
-           MỞ / TẮT FREE CẢ 2
+           MỞ / TẮT MIỄN PHÍ CẢ 2
            ----------------------------------------------------- */
         if(platform === "all"){
 
@@ -2052,10 +2163,10 @@ async function toggleFree(platform){
                 await ref.set(updates,{merge:true});
 
                 showStatus(
-                    "🎁 Đã MỞ FREE CẢ 2.\n\n" +
+                    "🎁 Đã MỞ MIỄN PHÍ CẢ 2.\n\n" +
                     "Mobile và Tivi được xem miễn phí.\n" +
                     "Premium Mobile/Tivi đã tạm tắt.\n" +
-                    "Khi TẮT FREE CẢ 2, trạng thái Premium trước đó sẽ tự khôi phục.",
+                    "Khi TẮT MIỄN PHÍ CẢ 2, trạng thái Premium trước đó sẽ tự khôi phục.",
                     "success"
                 );
 
@@ -2063,7 +2174,7 @@ async function toggleFree(platform){
 
                 /*
                  * Khôi phục Premium đúng trạng thái trước khi
-                 * MỞ FREE CẢ 2.
+                 * MỞ MIỄN PHÍ CẢ 2.
                  */
                 const restoreMobile =
                     freeConfig.freeBackupPremiumMobile !== null
@@ -2099,7 +2210,7 @@ async function toggleFree(platform){
                 await ref.set(updates,{merge:true});
 
                 showStatus(
-                    "✅ Đã TẮT FREE CẢ 2.\n\n" +
+                    "✅ Đã TẮT MIỄN PHÍ CẢ 2.\n\n" +
                     "Mobile và Tivi đã khôi phục trạng thái Premium trước đó.",
                     "success"
                 );
@@ -2112,7 +2223,7 @@ async function toggleFree(platform){
 
             if(freeAll){
                 showStatus(
-                    "🌐 FREE CẢ 2 đang bật. Hãy dùng công tắc FREE CẢ 2 để khôi phục trạng thái.",
+                    "🌐 MIỄN PHÍ CẢ 2 đang bật. Hãy dùng công tắc MIỄN PHÍ CẢ 2 để khôi phục trạng thái.",
                     "info"
                 );
                 if(switchInput){
@@ -2148,7 +2259,7 @@ async function toggleFree(platform){
                 await ref.set(updates,{merge:true});
 
                 showStatus(
-                    "📱 Đã MỞ FREE MOBILE.\n\n" +
+                    "📱 Đã MỞ MIỄN PHÍ MOBILE.\n\n" +
                     "Mobile được xem miễn phí.\n" +
                     "Trạng thái Premium Mobile trước đó đã được lưu.",
                     "success"
@@ -2182,20 +2293,20 @@ async function toggleFree(platform){
                 await ref.set(updates,{merge:true});
 
                 showStatus(
-                    "✅ Đã TẮT FREE MOBILE.\n\n" +
+                    "✅ Đã TẮT MIỄN PHÍ MOBILE.\n\n" +
                     "Mobile đã khôi phục trạng thái Premium trước đó.",
                     "success"
                 );
             }
 
         /* -----------------------------------------------------
-           TIVI
+           Tivi
            ----------------------------------------------------- */
         }else if(platform === "tv"){
 
             if(freeAll){
                 showStatus(
-                    "🌐 FREE CẢ 2 đang bật. Hãy dùng công tắc FREE CẢ 2 để khôi phục trạng thái.",
+                    "🌐 MIỄN PHÍ CẢ 2 đang bật. Hãy dùng công tắc MIỄN PHÍ CẢ 2 để khôi phục trạng thái.",
                     "info"
                 );
                 if(switchInput){
@@ -2227,7 +2338,7 @@ async function toggleFree(platform){
                 await ref.set(updates,{merge:true});
 
                 showStatus(
-                    "📺 Đã MỞ FREE TIVI.\n\n" +
+                    "📺 Đã MỞ MIỄN PHÍ TIVI.\n\n" +
                     "Tivi được xem miễn phí.\n" +
                     "Trạng thái Premium Tivi trước đó đã được lưu.",
                     "success"
@@ -2257,7 +2368,7 @@ async function toggleFree(platform){
                 await ref.set(updates,{merge:true});
 
                 showStatus(
-                    "✅ Đã TẮT FREE TIVI.\n\n" +
+                    "✅ Đã TẮT MIỄN PHÍ TIVI.\n\n" +
                     "Tivi đã khôi phục trạng thái Premium trước đó.",
                     "success"
                 );
@@ -2265,6 +2376,11 @@ async function toggleFree(platform){
         }
 
         await loadFreeConfig();
+        applyFreeClassification();
+        updateCounts();
+        if(currentListPlatform && currentListType){
+            renderDeviceList();
+        }
         if(switchInput){
             switchInput.disabled = false;
         }
@@ -2289,6 +2405,11 @@ async function toggleFree(platform){
         showStatus(message, "error");
 
         await loadFreeConfig();
+        applyFreeClassification();
+        updateCounts();
+        if(currentListPlatform && currentListType){
+            renderDeviceList();
+        }
 
         if(switchInput){
             switchInput.disabled = false;
@@ -2351,8 +2472,8 @@ function updateNotificationControlUI(){
     updateNotificationButton(
         "notificationTVButton",
         tvOn,
-        "📺 BẬT THÔNG BÁO TIVI",
-        "📺 TẮT THÔNG BÁO TIVI"
+        "📺 BẬT THÔNG BÁO Tivi",
+        "📺 TẮT THÔNG BÁO Tivi"
     );
 
     const status =
@@ -2702,7 +2823,7 @@ async function saveNotificationContent(platform){
             saveButton.innerText =
                 platform === "mobile"
                     ? "💾 LƯU THÔNG BÁO MOBILE"
-                    : "💾 LƯU THÔNG BÁO TIVI";
+                    : "💾 LƯU THÔNG BÁO Tivi";
         }
 
         controlWriteBusy = false;
@@ -2716,66 +2837,117 @@ function normalizeTrialUnit(value){
         : "DAY";
 }
 
-function fillTrialEditor(){
-    const enabledSelect =
-        document.getElementById("trialEnabledSelect");
+function trialEnabledValue(value){
+    return String(value || "ON").toUpperCase() === "OFF"
+        ? "OFF"
+        : "ON";
+}
 
-    const trialIsOn =
-        String(trialConfig.trialEnabled || "ON").toUpperCase() !== "OFF";
-
-    if(enabledSelect){
-        enabledSelect.value = trialIsOn ? "ON" : "OFF";
+function getTrialConfigForPlatform(platform){
+    if(platform === "tv"){
+        return {
+            enabled: trialConfig.trialTVEnabled,
+            value: trialConfig.trialTVValue,
+            unit: trialConfig.trialTVUnit,
+            days: trialConfig.trialTVDays
+        };
     }
 
-    const trialToggleButton =
-        document.getElementById("trialToggleButton");
+    return {
+        enabled: trialConfig.trialMobileEnabled,
+        value: trialConfig.trialMobileValue,
+        unit: trialConfig.trialMobileUnit,
+        days: trialConfig.trialMobileDays
+    };
+}
 
-    const trialToggleStatus =
-        document.getElementById("trialToggleStatus");
+function fillOneTrialEditor(platform){
+    const isTV = platform === "tv";
+    const prefix = isTV ? "TV" : "Mobile";
+    const cfg = getTrialConfigForPlatform(platform);
 
-    if(trialToggleButton){
-        trialToggleButton.checked = trialIsOn;
+    const toggle =
+        document.getElementById("trial" + prefix + "ToggleButton");
+
+    const status =
+        document.getElementById("trial" + prefix + "ToggleStatus");
+
+    const valueInput =
+        document.getElementById("trial" + prefix + "Value");
+
+    const unitSelect =
+        document.getElementById("trial" + prefix + "Unit");
+
+    const current =
+        document.getElementById("trial" + prefix + "CurrentStatus");
+
+    const enabled =
+        trialEnabledValue(cfg.enabled) === "ON";
+
+    if(toggle){
+        toggle.checked = enabled;
     }
 
-    if(trialToggleStatus){
-        trialToggleStatus.innerText =
-            trialIsOn ? "ĐANG BẬT" : "ĐANG TẮT";
-
-        trialToggleStatus.classList.toggle("on", trialIsOn);
+    if(status){
+        status.innerText = enabled ? "ĐANG BẬT" : "ĐANG TẮT";
+        status.classList.toggle("on", enabled);
     }
-
-    const valueInput = document.getElementById("trialValue");
-    const unitSelect = document.getElementById("trialUnit");
-    const current = document.getElementById("trialCurrentStatus");
 
     if(valueInput){
-        valueInput.value = Number(trialConfig.trialValue || 1);
+        valueInput.value = Number(cfg.value || 1);
     }
 
     if(unitSelect){
-        unitSelect.value = normalizeTrialUnit(trialConfig.trialUnit);
+        unitSelect.value = normalizeTrialUnit(cfg.unit);
     }
 
     if(current){
         const unitText =
-            normalizeTrialUnit(trialConfig.trialUnit) === "MONTH"
+            normalizeTrialUnit(cfg.unit) === "MONTH"
                 ? "tháng" : "ngày";
 
         current.innerText =
             "Trạng thái: " +
-            (String(trialConfig.trialEnabled).toUpperCase() === "OFF"
-                ? "🔴 ĐANG TẮT" : "🟢 ĐANG BẬT") +
+            (enabled ? "🟢 ĐANG BẬT" : "🔴 ĐANG TẮT") +
             "\nThời gian: " +
-            Number(trialConfig.trialValue || 1) +
+            Number(cfg.value || 1) +
             " " + unitText +
-            "\ntrialDays tương thích APK hiện tại: " +
-            Number(trialConfig.trialDays || 1) +
+            "\ntrial" + prefix + "Days: " +
+            Number(cfg.days || 1) +
             " ngày";
     }
 }
 
-function setTrialEditStatus(message, isError){
-    const el = document.getElementById("trialEditStatus");
+function fillTrialEditor(){
+    fillOneTrialEditor("mobile");
+    fillOneTrialEditor("tv");
+
+    // Legacy hidden fields follow Mobile only for old JS compatibility.
+    const legacyEnabled =
+        document.getElementById("trialEnabledSelect");
+    const legacyValue =
+        document.getElementById("trialValue");
+    const legacyUnit =
+        document.getElementById("trialUnit");
+    const legacyToggle =
+        document.getElementById("trialToggleButton");
+
+    const mobileEnabled =
+        trialEnabledValue(trialConfig.trialMobileEnabled) === "ON";
+
+    if(legacyEnabled) legacyEnabled.value = mobileEnabled ? "ON" : "OFF";
+    if(legacyValue) legacyValue.value = Number(trialConfig.trialMobileValue || 1);
+    if(legacyUnit) legacyUnit.value = normalizeTrialUnit(trialConfig.trialMobileUnit);
+    if(legacyToggle) legacyToggle.checked = mobileEnabled;
+}
+
+function setTrialEditStatus(message, isError, platform){
+    const id =
+        platform === "tv"
+            ? "trialTVEditStatus"
+            : "trialMobileEditStatus";
+
+    const el = document.getElementById(id);
     if(!el) return;
 
     el.style.background = isError ? "#fee2e2" : "#dcfce7";
@@ -2784,38 +2956,120 @@ function setTrialEditStatus(message, isError){
 }
 
 function loadTrialConfigFromData(data){
-    const oldDays = Number(data.trialDays);
-    const savedValue = Number(data.trialValue);
+    const oldDays =
+        Number(data.trialDays);
 
-    let unit = normalizeTrialUnit(data.trialUnit);
-    let value =
-        Number.isFinite(savedValue) && savedValue > 0
-            ? Math.floor(savedValue)
-            : (Number.isFinite(oldDays) && oldDays > 0
-                ? Math.floor(oldDays) : 1);
+    const oldValue =
+        Number(data.trialValue);
 
-    if(!data.trialUnit && data.trialValue == null){
-        unit = "DAY";
-    }
+    const oldUnit =
+        normalizeTrialUnit(data.trialUnit);
+
+    const fallbackValue =
+        Number.isFinite(oldValue) && oldValue > 0
+            ? Math.floor(oldValue)
+            : (
+                Number.isFinite(oldDays) && oldDays > 0
+                    ? Math.floor(oldDays)
+                    : 1
+            );
+
+    // Mobile: use new fields; fallback to old shared fields.
+    const mobileValueRaw =
+        Number(data.trialMobileValue);
+
+    const mobileValue =
+        Number.isFinite(mobileValueRaw) && mobileValueRaw > 0
+            ? Math.floor(mobileValueRaw)
+            : fallbackValue;
+
+    const mobileUnit =
+        data.trialMobileUnit
+            ? normalizeTrialUnit(data.trialMobileUnit)
+            : oldUnit;
+
+    const mobileDaysRaw =
+        Number(data.trialMobileDays);
+
+    const mobileDays =
+        Number.isFinite(mobileDaysRaw) && mobileDaysRaw > 0
+            ? Math.floor(mobileDaysRaw)
+            : (
+                mobileUnit === "MONTH"
+                    ? mobileValue * 30
+                    : mobileValue
+            );
+
+    // TV: use new fields; fallback to old shared fields.
+    const tvValueRaw =
+        Number(data.trialTVValue);
+
+    const tvValue =
+        Number.isFinite(tvValueRaw) && tvValueRaw > 0
+            ? Math.floor(tvValueRaw)
+            : fallbackValue;
+
+    const tvUnit =
+        data.trialTVUnit
+            ? normalizeTrialUnit(data.trialTVUnit)
+            : oldUnit;
+
+    const tvDaysRaw =
+        Number(data.trialTVDays);
+
+    const tvDays =
+        Number.isFinite(tvDaysRaw) && tvDaysRaw > 0
+            ? Math.floor(tvDaysRaw)
+            : (
+                tvUnit === "MONTH"
+                    ? tvValue * 30
+                    : tvValue
+            );
+
+    const oldEnabled =
+        trialEnabledValue(data.trialEnabled);
 
     trialConfig = {
-        trialEnabled:
-            String(data.trialEnabled || "ON").toUpperCase() === "OFF"
-                ? "OFF" : "ON",
-
+        // Legacy
+        trialEnabled: oldEnabled,
         trialDays:
             Number.isFinite(oldDays) && oldDays > 0
                 ? Math.floor(oldDays)
-                : (unit === "MONTH" ? value * 30 : value),
+                : fallbackValue,
+        trialValue: fallbackValue,
+        trialUnit: oldUnit,
 
-        trialValue: value,
-        trialUnit: unit
+        // Mobile
+        trialMobileEnabled:
+            trialEnabledValue(
+                data.trialMobileEnabled != null
+                    ? data.trialMobileEnabled
+                    : oldEnabled
+            ),
+        trialMobileDays: mobileDays,
+        trialMobileValue: mobileValue,
+        trialMobileUnit: mobileUnit,
+
+        // TV
+        trialTVEnabled:
+            trialEnabledValue(
+                data.trialTVEnabled != null
+                    ? data.trialTVEnabled
+                    : oldEnabled
+            ),
+        trialTVDays: tvDays,
+        trialTVValue: tvValue,
+        trialTVUnit: tvUnit
     };
 
     fillTrialEditor();
 }
 
-async function toggleTrial(){
+async function toggleTrial(platform){
+
+    if(platform !== "mobile" && platform !== "tv"){
+        return;
+    }
 
     if(controlWriteBusy) return;
     controlWriteBusy = true;
@@ -2833,15 +3087,36 @@ async function toggleTrial(){
     }
 
     const current =
-        String(trialConfig.trialEnabled || "ON").toUpperCase();
+        platform === "tv"
+            ? trialEnabledValue(trialConfig.trialTVEnabled)
+            : trialEnabledValue(trialConfig.trialMobileEnabled);
 
-    const next = current === "ON" ? "OFF" : "ON";
+    const next =
+        current === "ON" ? "OFF" : "ON";
+
+    const prefix =
+        platform === "tv" ? "TV" : "Mobile";
 
     const button =
-        document.getElementById("trialToggleButton");
+        document.getElementById(
+            "trial" + prefix + "ToggleButton"
+        );
 
     if(button){
         button.disabled = true;
+    }
+
+    const payload = {
+        trialUpdatedAt:
+            firebase.firestore.FieldValue.serverTimestamp(),
+
+        trialUpdatedBy: user.email
+    };
+
+    if(platform === "tv"){
+        payload.trialTVEnabled = next;
+    }else{
+        payload.trialMobileEnabled = next;
     }
 
     try{
@@ -2849,29 +3124,28 @@ async function toggleTrial(){
         await db
             .collection("premium_config")
             .doc("system")
-            .set({
-                trialEnabled: next,
+            .set(payload,{merge:true});
 
-                trialUpdatedAt:
-                    firebase.firestore.FieldValue.serverTimestamp(),
-
-                trialUpdatedBy: user.email
-            },{merge:true});
-
-        trialConfig.trialEnabled = next;
+        if(platform === "tv"){
+            trialConfig.trialTVEnabled = next;
+        }else{
+            trialConfig.trialMobileEnabled = next;
+        }
 
         fillTrialEditor();
 
         setTrialEditStatus(
             next === "ON"
-                ? "✅ Đã BẬT dùng thử."
-                : "🔴 Đã TẮT dùng thử."
+                ? "✅ Đã BẬT dùng thử " + prefix + "."
+                : "🔴 Đã TẮT dùng thử " + prefix + ".",
+            false,
+            platform
         );
 
         showStatus(
             next === "ON"
-                ? "🟢 Đã BẬT dùng thử cho hệ thống."
-                : "🔴 Đã TẮT dùng thử cho hệ thống.",
+                ? "🟢 Đã BẬT dùng thử " + prefix + "."
+                : "🔴 Đã TẮT dùng thử " + prefix + ".",
             next === "ON" ? "success" : "info"
         );
 
@@ -2880,10 +3154,11 @@ async function toggleTrial(){
         console.error(error);
 
         const message =
-            "❌ Không thể thay đổi trạng thái dùng thử:\n" +
+            "❌ Không thể thay đổi Trial " +
+            prefix + ":\n" +
             getFirebaseError(error);
 
-        setTrialEditStatus(message,true);
+        setTrialEditStatus(message,true,platform);
         showStatus(message,"error");
 
         fillTrialEditor();
@@ -2898,16 +3173,16 @@ async function toggleTrial(){
     }
 }
 
-async function saveTrialSettings(){
-    const enabled =
-        String(
-            document.getElementById("trialEnabledSelect")?.value || "ON"
-        ).toUpperCase() === "OFF"
-            ? "OFF"
-            : "ON";
+async function saveTrialSettings(platform){
 
+    if(platform !== "mobile" && platform !== "tv"){
+        return;
+    }
 
-    if(controlWriteBusy) return;
+    if(controlWriteBusy){
+        return;
+    }
+
     controlWriteBusy = true;
 
     const user = auth.currentUser;
@@ -2917,56 +3192,88 @@ async function saveTrialSettings(){
         !user.email ||
         user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()
     ){
-        showStatus("Tài khoản không có quyền Admin.","error");
+        showStatus(
+            "Tài khoản không có quyền Admin.",
+            "error"
+        );
+
         controlWriteBusy = false;
         return;
     }
 
+    const prefix =
+        platform === "tv" ? "TV" : "Mobile";
+
+    const valueInput =
+        document.getElementById(
+            "trial" + prefix + "Value"
+        );
+
+    const unitSelect =
+        document.getElementById(
+            "trial" + prefix + "Unit"
+        );
+
     const value =
-        Math.floor(Number(
-            document.getElementById("trialValue")?.value || 0
-        ));
+        Math.max(
+            1,
+            Math.min(
+                3650,
+                parseInt(
+                    valueInput ? valueInput.value : "1",
+                    10
+                ) || 1
+            )
+        );
 
     const unit =
         normalizeTrialUnit(
-            document.getElementById("trialUnit")?.value
+            unitSelect ? unitSelect.value : "DAY"
         );
 
-    if(!Number.isFinite(value) || value < 1){
-        setTrialEditStatus(
-            "⚠️ Số lượng phải lớn hơn hoặc bằng 1.",
-            true
-        );
-        controlWriteBusy = false;
-        return;
-    }
-
-    if(value > 3650){
-        setTrialEditStatus(
-            "⚠️ Số lượng tối đa là 3650.",
-            true
-        );
-        controlWriteBusy = false;
-        return;
-    }
+    const enabled =
+        platform === "tv"
+            ? trialEnabledValue(trialConfig.trialTVEnabled)
+            : trialEnabledValue(trialConfig.trialMobileEnabled);
 
     /*
-     * Giữ trialDays để APK hiện tại không bị lỗi.
-     * Ngày  -> đúng số ngày.
+     * Giữ trialDays tương thích:
+     * Ngày -> số ngày.
      * Tháng -> 30 ngày/tháng cho APK cũ.
-     *
-     * APK mới có thể dùng trialValue + trialUnit
-     * để tính tháng theo lịch chính xác.
      */
     const compatibilityDays =
         unit === "MONTH" ? value * 30 : value;
 
-    const saveButton =
-        document.getElementById("saveTrialSettingsButton");
+    const button =
+        document.getElementById(
+            "saveTrial" + prefix + "Button"
+        );
 
-    if(saveButton){
-        saveButton.disabled = true;
-        saveButton.innerText = "💾 ĐANG LƯU...";
+    if(button){
+        button.disabled = true;
+        button.innerText = "💾 ĐANG LƯU...";
+    }
+
+    const payload = {
+        trialUpdatedAt:
+            firebase.firestore.FieldValue.serverTimestamp(),
+
+        trialUpdatedBy: user.email
+    };
+
+    if(platform === "tv"){
+
+        payload.trialTVEnabled = enabled;
+        payload.trialTVValue = value;
+        payload.trialTVUnit = unit;
+        payload.trialTVDays = compatibilityDays;
+
+    }else{
+
+        payload.trialMobileEnabled = enabled;
+        payload.trialMobileValue = value;
+        payload.trialMobileUnit = unit;
+        payload.trialMobileDays = compatibilityDays;
     }
 
     try{
@@ -2974,31 +3281,35 @@ async function saveTrialSettings(){
         await db
             .collection("premium_config")
             .doc("system")
-            .set({
-                trialEnabled: enabled,
-                trialValue: value,
-                trialUnit: unit,
-                trialDays: compatibilityDays,
+            .set(payload,{merge:true});
 
-                trialUpdatedAt:
-                    firebase.firestore.FieldValue.serverTimestamp(),
+        if(platform === "tv"){
 
-                trialUpdatedBy: user.email
-            },{merge:true});
+            trialConfig.trialTVEnabled = enabled;
+            trialConfig.trialTVValue = value;
+            trialConfig.trialTVUnit = unit;
+            trialConfig.trialTVDays = compatibilityDays;
 
-        trialConfig.trialEnabled = enabled;
-        trialConfig.trialValue = value;
-        trialConfig.trialUnit = unit;
-        trialConfig.trialDays = compatibilityDays;
+        }else{
+
+            trialConfig.trialMobileEnabled = enabled;
+            trialConfig.trialMobileValue = value;
+            trialConfig.trialMobileUnit = unit;
+            trialConfig.trialMobileDays = compatibilityDays;
+        }
 
         fillTrialEditor();
 
         setTrialEditStatus(
-            "✅ Đã lưu thời gian dùng thử vào Firebase."
+            "✅ Đã lưu thời gian dùng thử " +
+            prefix + " vào Firebase.",
+            false,
+            platform
         );
 
         showStatus(
-            "✅ Đã cập nhật thời gian dùng thử.",
+            "✅ Đã cập nhật Trial " +
+            prefix + ".",
             "success"
         );
 
@@ -3007,131 +3318,171 @@ async function saveTrialSettings(){
         console.error(error);
 
         const message =
-            "❌ Không thể lưu thời gian dùng thử:\n" +
+            "❌ Không thể lưu Trial " +
+            prefix + ":\n" +
             getFirebaseError(error);
 
-        setTrialEditStatus(message,true);
-        showStatus(message,"error");
+        setTrialEditStatus(
+            message,
+            true,
+            platform
+        );
+
+        showStatus(
+            message,
+            "error"
+        );
 
     }finally{
 
-        if(saveButton){
-            saveButton.disabled = false;
-            saveButton.innerText =
-                "💾 LƯU THỜI GIAN DÙNG THỬ";
+        if(button){
+            button.disabled = false;
+            button.innerText =
+                platform === "tv"
+                    ? "💾 LƯU TRIAL TV"
+                    : "💾 LƯU TRIAL MOBILE";
         }
 
         controlWriteBusy = false;
     }
 }
 
+/*
+ * Tương thích với code cũ nếu có nơi nào đó vẫn gọi
+ * saveTrialSettings() hoặc toggleTrial() không truyền platform.
+ * Không tự ghi dữ liệu khi không xác định được platform.
+ */
+
 async function toggleNotification(platform){
 
-    const switchId =
-        platform === "mobile"
-            ? "notificationMobileButton"
-            : platform === "tv"
-                ? "notificationTVButton"
-                : null;
+    if(controlWriteBusy){
+        updateNotificationControlUI();
+        return;
+    }
+    controlWriteBusy = true;
 
-    const field =
-        platform === "mobile"
-            ? "notificationMobile"
-            : platform === "tv"
-                ? "notificationTV"
-                : null;
-
-    if(!switchId || !field) return;
-
-    const user = auth.currentUser;
+    const user =
+        auth.currentUser;
 
     if(
         !user ||
         !user.email ||
-        user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()
+        user.email.toLowerCase() !==
+            ADMIN_EMAIL.toLowerCase()
     ){
-        updateNotificationControlUI();
+
         showStatus(
             "Tài khoản không có quyền Admin.",
             "error"
         );
+
+        controlWriteBusy = false;
         return;
     }
 
-    const switchInput = document.getElementById(switchId);
-    if(!switchInput) return;
+    const ref =
+        db
+            .collection("premium_config")
+            .doc("system");
 
-    /*
-     * IMPORTANT:
-     * onchange chạy sau khi checkbox đã đổi trạng thái.
-     * Vì vậy lấy trạng thái trực tiếp từ checkbox để cập nhật UI NGAY,
-     * không chờ Firebase trả kết quả mới đổi giao diện.
-     */
-    const previousValue = notificationConfig[field] === "ON";
-    const nextValue = switchInput.checked;
-    const next = nextValue ? "ON" : "OFF";
-    const platformName = platform === "mobile" ? "Mobile" : "Tivi";
+    let field;
 
-    /* Cập nhật giao diện ngay lập tức */
-    notificationConfig[field] = next;
-    updateNotificationControlUI();
+    if(platform === "mobile"){
 
-    /* Khóa riêng công tắc đang ghi, nhưng không làm trang bị đứng */
-    switchInput.disabled = true;
-    controlWriteBusy = true;
+        field = "notificationMobile";
 
-    const statusText = document.getElementById("notificationControlStatus");
-    if(statusText){
-        statusText.className = "notification-control-status on";
-        statusText.innerText =
-            nextValue
-                ? "🔄 Đang bật thông báo " + platformName + "..."
-                : "🔄 Đang tắt thông báo " + platformName + "...";
+    }else if(platform === "tv"){
+
+        field = "notificationTV";
+
+    }else{
+
+        controlWriteBusy = false;
+        return;
+    }
+
+    const current =
+        notificationConfig[field] === "ON";
+
+    const next =
+        current ? "OFF" : "ON";
+
+    const switchInput =
+        document.getElementById(
+            platform === "mobile"
+                ? "notificationMobileButton"
+                : "notificationTVButton"
+        );
+
+    if(switchInput){
+        switchInput.disabled = true;
     }
 
     try{
-        await db
-            .collection("premium_config")
-            .doc("system")
-            .set({
-                [field]: next,
-                notificationUpdatedAt:
-                    firebase.firestore.FieldValue.serverTimestamp(),
-                notificationUpdatedBy: user.email
-            }, {merge:true});
 
-        /* Firebase đã lưu thành công */
+        await ref.set({
+
+            [field]:next,
+
+            notificationUpdatedAt:
+                firebase.firestore
+                    .FieldValue
+                    .serverTimestamp(),
+
+            notificationUpdatedBy:
+                user.email
+
+        },{merge:true});
+
         notificationConfig[field] = next;
+
         updateNotificationControlUI();
 
-        setControlStatus(
-            "notificationControlStatus",
-            nextValue
-                ? "🔔 Đã BẬT THÔNG BÁO " + platformName + ". Ứng dụng sẽ đọc trạng thái này khi mở app."
-                : "🔕 Đã TẮT THÔNG BÁO " + platformName + ".",
-            nextValue,
-            false
-        );
+        const platformName =
+            platform === "mobile"
+                ? "Mobile"
+                : "Tivi";
 
-        showStatus(
-            nextValue
-                ? "🔔 Đã BẬT THÔNG BÁO " + platformName + "."
-                : "🔕 Đã TẮT THÔNG BÁO " + platformName + ".",
-            "success"
-        );
+        if(next === "ON"){
+
+            setControlStatus(
+                "notificationControlStatus",
+                "🔔 Đã BẬT THÔNG BÁO " +
+                platformName +
+                ". Ứng dụng sẽ đọc trạng thái này khi mở app.",
+                true,
+                false
+            );
+
+            showStatus(
+                "🔔 Đã BẬT THÔNG BÁO " + platformName + ".",
+                "success"
+            );
+
+        }else{
+
+            setControlStatus(
+                "notificationControlStatus",
+                "🔕 Đã TẮT THÔNG BÁO " +
+                platformName + ".",
+                false,
+                false
+            );
+
+            showStatus(
+                "🔕 Đã TẮT THÔNG BÁO " + platformName + ".",
+                "success"
+            );
+        }
+
+        controlWriteBusy = false;
 
     }catch(error){
 
         console.error(error);
 
-        /* Firebase lỗi -> trả công tắc về trạng thái cũ */
-        notificationConfig[field] = previousValue ? "ON" : "OFF";
-        switchInput.checked = previousValue;
-        updateNotificationControlUI();
-
         const message =
-            "❌ Không thể thay đổi trạng thái thông báo " +
-            platformName + ":\n" +
+            "❌ Không thể thay đổi trạng thái thông báo:\n" +
             getFirebaseError(error);
 
         setControlStatus(
@@ -3143,8 +3494,12 @@ async function toggleNotification(platform){
 
         showStatus(message, "error");
 
-    }finally{
-        switchInput.disabled = false;
+        await loadNotificationConfig();
+
+        if(switchInput){
+            switchInput.disabled = false;
+        }
+
         controlWriteBusy = false;
     }
 }
@@ -3254,19 +3609,23 @@ async function loadDashboard(){
 
             if(!platform) return;
 
+            const baseCategory = classifyLicense(
+                data,
+                trialDays
+            );
+
             allLicenses.push({
                 id: deviceId,
                 data: data,
                 platform: platform,
-                category: classifyLicense(
-                    data,
-                    trialDays
-                )
+                baseCategory: baseCategory,
+                category: baseCategory
             });
         });
 
-        updateCounts();
         await loadFreeConfig();
+        applyFreeClassification();
+        updateCounts();
 
         document.getElementById("lastUpdate").innerText =
             "Cập nhật: " +
@@ -3287,6 +3646,50 @@ async function loadDashboard(){
     }
 }
 
+function applyFreeClassification(){
+
+    const freeAll = freeConfig.freeAll === "ON";
+    const freeMobile = freeConfig.freeMobile === "ON" || freeAll;
+    const freeTV = freeConfig.freeTV === "ON" || freeAll;
+
+    allLicenses.forEach(item => {
+
+        const base = item.baseCategory || item.category;
+
+        if(base === "blocked" || item.data.blocked === true){
+            item.category = "blocked";
+            return;
+        }
+
+        const freeEnabled =
+            item.platform === "mobile"
+                ? freeMobile
+                : freeTV;
+
+        /*
+         * LOGIC FREE:
+         * - Đang dùng thử       -> giữ ĐANG DÙNG THỬ
+         * - Premium còn hạn     -> giữ ĐANG DÙNG PREMIUM
+         * - Hết dùng thử        -> FREE khi Free được bật
+         * - Premium hết hạn     -> FREE khi Free được bật
+         * - Tắt Free            -> quay lại đúng nhóm hết hạn ban đầu
+         * - Đã khóa             -> luôn giữ ĐÃ KHÓA
+         *
+         * baseCategory luôn giữ trạng thái gốc nên khi tắt Free
+         * ID sẽ tự quay lại đúng mục trước đó.
+         */
+        const isExpired =
+            base === "trialExpired" ||
+            base === "premiumExpired";
+
+        if(freeEnabled && isExpired){
+            item.category = "freeActive";
+        }else{
+            item.category = base;
+        }
+    });
+}
+
 function updateCounts(){
 
     const count = (platform,category) =>
@@ -3300,6 +3703,9 @@ function updateCounts(){
 
     document.getElementById("mobilePremiumActiveCount").innerText =
         count("mobile","premiumActive");
+
+    document.getElementById("mobileFreeActiveCount").innerText =
+        count("mobile","freeActive");
 
     document.getElementById("mobileTrialExpiredCount").innerText =
         count("mobile","trialExpired");
@@ -3315,6 +3721,9 @@ function updateCounts(){
 
     document.getElementById("tvPremiumActiveCount").innerText =
         count("tv","premiumActive");
+
+    document.getElementById("tvFreeActiveCount").innerText =
+        count("tv","freeActive");
 
     document.getElementById("tvTrialExpiredCount").innerText =
         count("tv","trialExpired");
@@ -3333,6 +3742,7 @@ function updateCounts(){
 const categoryNames = {
     trial: "🟡 ĐANG DÙNG THỬ",
     premiumActive: "🟢 ĐANG DÙNG PREMIUM",
+    freeActive: "🔵 ĐANG DÙNG MIỄN PHÍ",
     trialExpired: "🔴 HẾT DÙNG THỬ",
     premiumExpired: "🟠 PREMIUM HẾT HẠN",
     blocked: "🔒 ĐÃ KHÓA"
@@ -3352,7 +3762,7 @@ function showDeviceList(platform,type){
     const platformName =
         platform === "mobile"
             ? "📱 MOBILE"
-            : "📺 TIVI";
+            : "📺 Tivi";
 
     document.getElementById("deviceListTitle").innerText =
         platformName + " — " +
@@ -3414,6 +3824,8 @@ function renderDeviceList(){
                 sub = "🎁 Đang dùng thử";
             }else if(item.category === "premiumActive"){
                 sub = "🟢 Premium đang hoạt động";
+            }else if(item.category === "freeActive"){
+                sub = "🔵 Đang được phép dùng Free";
             }else if(item.category === "trialExpired"){
                 sub = "🔴 Đã hết thời gian dùng thử";
             }else if(item.category === "premiumExpired"){
@@ -3432,6 +3844,12 @@ function renderDeviceList(){
                     </div>
 
                     <div class="device-actions">
+                        <button
+                            class="copy-id-btn"
+                            onclick="copyDeviceId('${escapeJs(item.id)}', this)">
+                            📋 SAO CHÉP ID
+                        </button>
+
                         <button
                             class="btn-detail"
                             onclick="openDetail('${escapeJs(item.id)}')">
@@ -3505,6 +3923,11 @@ function openDetail(deviceId){
         case "trial":
             statusHtml =
                 '<span class="badge badge-trial">🟡 ĐANG DÙNG THỬ</span>';
+            break;
+
+        case "freeActive":
+            statusHtml =
+                '<span class="badge badge-free">🔵 ĐANG DÙNG MIỄN PHÍ</span>';
             break;
 
         case "trialExpired":
@@ -3636,6 +4059,30 @@ function closeDetailModal(){
         .classList.add("hidden");
 
     currentDetailId = null;
+}
+
+async function copyDeviceId(deviceId, button){
+    const id = String(deviceId || "").trim();
+    if(!id){ showStatus("Không có ID để sao chép.","error"); return; }
+    try{
+        if(navigator.clipboard && window.isSecureContext){
+            await navigator.clipboard.writeText(id);
+        }else{
+            const textarea=document.createElement("textarea");
+            textarea.value=id; textarea.style.position="fixed"; textarea.style.left="-9999px";
+            document.body.appendChild(textarea); textarea.focus(); textarea.select();
+            document.execCommand("copy"); textarea.remove();
+        }
+        if(button){
+            const oldText=button.innerHTML;
+            button.classList.add("copied"); button.innerHTML="✅ ĐÃ COPY ID";
+            setTimeout(()=>{button.classList.remove("copied");button.innerHTML=oldText;},1200);
+        }
+        showStatus("📋 Đã sao chép ID: "+id,"success");
+    }catch(error){
+        console.error(error);
+        showStatus("Không thể sao chép ID. Bạn có thể bôi đen ID để sao chép thủ công.","error");
+    }
 }
 
 function toggleBlockedFromModal(){
