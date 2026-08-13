@@ -171,7 +171,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .platform-title.tv{color:#7c3aed}
 .stats-grid{
     display:grid;
-    grid-template-columns:repeat(5,1fr);
+    grid-template-columns:repeat(6,1fr);
     gap:12px;
 }
 .stat-card{
@@ -196,6 +196,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 }
 .stat-trial{background:#fef3c7;color:#92400e}
 .stat-premium-active{background:#dcfce7;color:#166534}
+.stat-free-active{background:#dbeafe;color:#1e40af}
 .stat-trial-expired{background:#fee2e2;color:#991b1b}
 .stat-premium-expired{background:#ffedd5;color:#9a3412}
 .stat-blocked{background:#e5e7eb;color:#1f2937}
@@ -648,6 +649,30 @@ button:disabled{opacity:.5;cursor:not-allowed}
     flex-shrink:0;
 }
 .btn-detail{background:#2563eb}
+.copy-id-btn{
+    background:linear-gradient(135deg,#0f766e,#14b8a6)!important;
+    color:#fff;
+    border:0;
+    border-radius:9px;
+    padding:10px 13px;
+    font-size:13px;
+    font-weight:800;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    white-space:nowrap;
+    box-shadow:0 3px 8px rgba(15,118,110,.20);
+    transition:transform .15s,box-shadow .15s,opacity .15s;
+}
+.copy-id-btn:hover{opacity:1;transform:translateY(-1px);box-shadow:0 5px 12px rgba(15,118,110,.28)}
+.copy-id-btn:active{transform:translateY(0)}
+.copy-id-btn.copied{background:linear-gradient(135deg,#16a34a,#22c55e)!important}
+@media(max-width:700px){
+    .device-row{align-items:flex-start;flex-direction:column}
+    .device-actions{width:100%;flex-wrap:wrap}
+    .device-actions button{flex:1 1 auto}
+}
 .btn-lock{background:#dc2626}
 .btn-unlock{background:#16a34a}
 .empty{
@@ -704,6 +729,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .badge-trial{background:#fef3c7;color:#92400e}
 .badge-expired{background:#fee2e2;color:#991b1b}
 .badge-premium{background:#dcfce7;color:#166534}
+.badge-free{background:#dbeafe;color:#1e40af}
 .badge-blocked{background:#e5e7eb;color:#1f2937}
 
 @media(max-width:1000px){
@@ -1313,6 +1339,12 @@ html,body{
                 <div class="count" id="mobilePremiumActiveCount">0</div>
             </button>
 
+            <button class="stat-card stat-free-active" onclick="showDeviceList('mobile','freeActive')">
+                <div class="icon">🔵</div>
+                <div class="label">ĐANG DÙNG FREE</div>
+                <div class="count" id="mobileFreeActiveCount">0</div>
+            </button>
+
             <button class="stat-card stat-trial-expired" onclick="showDeviceList('mobile','trialExpired')">
                 <div class="icon">🔴</div>
                 <div class="label">HẾT DÙNG THỬ</div>
@@ -1345,6 +1377,12 @@ html,body{
                 <div class="icon">🟢</div>
                 <div class="label">ĐANG DÙNG PREMIUM</div>
                 <div class="count" id="tvPremiumActiveCount">0</div>
+            </button>
+
+            <button class="stat-card stat-free-active" onclick="showDeviceList('tv','freeActive')">
+                <div class="icon">🔵</div>
+                <div class="label">ĐANG DÙNG FREE</div>
+                <div class="count" id="tvFreeActiveCount">0</div>
             </button>
 
             <button class="stat-card stat-trial-expired" onclick="showDeviceList('tv','trialExpired')">
@@ -1517,6 +1555,11 @@ html,body{
 
         <div class="modal-actions">
             <button class="btn-close" onclick="closeDetailModal()">ĐÓNG</button>
+            <button
+                class="copy-id-btn"
+                onclick="copyDeviceId(currentDetailId, this)">
+                📋 SAO CHÉP ID
+            </button>
             <button id="detailActionButton" onclick="toggleBlockedFromModal()">
                 🔒 KHÓA
             </button>
@@ -2265,6 +2308,11 @@ async function toggleFree(platform){
         }
 
         await loadFreeConfig();
+        applyFreeClassification();
+        updateCounts();
+        if(currentListPlatform && currentListType){
+            renderDeviceList();
+        }
         if(switchInput){
             switchInput.disabled = false;
         }
@@ -2289,6 +2337,11 @@ async function toggleFree(platform){
         showStatus(message, "error");
 
         await loadFreeConfig();
+        applyFreeClassification();
+        updateCounts();
+        if(currentListPlatform && currentListType){
+            renderDeviceList();
+        }
 
         if(switchInput){
             switchInput.disabled = false;
@@ -3281,19 +3334,23 @@ async function loadDashboard(){
 
             if(!platform) return;
 
+            const baseCategory = classifyLicense(
+                data,
+                trialDays
+            );
+
             allLicenses.push({
                 id: deviceId,
                 data: data,
                 platform: platform,
-                category: classifyLicense(
-                    data,
-                    trialDays
-                )
+                baseCategory: baseCategory,
+                category: baseCategory
             });
         });
 
-        updateCounts();
         await loadFreeConfig();
+        applyFreeClassification();
+        updateCounts();
 
         document.getElementById("lastUpdate").innerText =
             "Cập nhật: " +
@@ -3314,6 +3371,50 @@ async function loadDashboard(){
     }
 }
 
+function applyFreeClassification(){
+
+    const freeAll = freeConfig.freeAll === "ON";
+    const freeMobile = freeConfig.freeMobile === "ON" || freeAll;
+    const freeTV = freeConfig.freeTV === "ON" || freeAll;
+
+    allLicenses.forEach(item => {
+
+        const base = item.baseCategory || item.category;
+
+        if(base === "blocked" || item.data.blocked === true){
+            item.category = "blocked";
+            return;
+        }
+
+        const freeEnabled =
+            item.platform === "mobile"
+                ? freeMobile
+                : freeTV;
+
+        /*
+         * LOGIC FREE:
+         * - Đang dùng thử       -> giữ ĐANG DÙNG THỬ
+         * - Premium còn hạn     -> giữ ĐANG DÙNG PREMIUM
+         * - Hết dùng thử        -> FREE khi Free được bật
+         * - Premium hết hạn     -> FREE khi Free được bật
+         * - Tắt Free            -> quay lại đúng nhóm hết hạn ban đầu
+         * - Đã khóa             -> luôn giữ ĐÃ KHÓA
+         *
+         * baseCategory luôn giữ trạng thái gốc nên khi tắt Free
+         * ID sẽ tự quay lại đúng mục trước đó.
+         */
+        const isExpired =
+            base === "trialExpired" ||
+            base === "premiumExpired";
+
+        if(freeEnabled && isExpired){
+            item.category = "freeActive";
+        }else{
+            item.category = base;
+        }
+    });
+}
+
 function updateCounts(){
 
     const count = (platform,category) =>
@@ -3327,6 +3428,9 @@ function updateCounts(){
 
     document.getElementById("mobilePremiumActiveCount").innerText =
         count("mobile","premiumActive");
+
+    document.getElementById("mobileFreeActiveCount").innerText =
+        count("mobile","freeActive");
 
     document.getElementById("mobileTrialExpiredCount").innerText =
         count("mobile","trialExpired");
@@ -3342,6 +3446,9 @@ function updateCounts(){
 
     document.getElementById("tvPremiumActiveCount").innerText =
         count("tv","premiumActive");
+
+    document.getElementById("tvFreeActiveCount").innerText =
+        count("tv","freeActive");
 
     document.getElementById("tvTrialExpiredCount").innerText =
         count("tv","trialExpired");
@@ -3360,6 +3467,7 @@ function updateCounts(){
 const categoryNames = {
     trial: "🟡 ĐANG DÙNG THỬ",
     premiumActive: "🟢 ĐANG DÙNG PREMIUM",
+    freeActive: "🔵 ĐANG DÙNG FREE",
     trialExpired: "🔴 HẾT DÙNG THỬ",
     premiumExpired: "🟠 PREMIUM HẾT HẠN",
     blocked: "🔒 ĐÃ KHÓA"
@@ -3441,6 +3549,8 @@ function renderDeviceList(){
                 sub = "🎁 Đang dùng thử";
             }else if(item.category === "premiumActive"){
                 sub = "🟢 Premium đang hoạt động";
+            }else if(item.category === "freeActive"){
+                sub = "🔵 Đang được phép dùng Free";
             }else if(item.category === "trialExpired"){
                 sub = "🔴 Đã hết thời gian dùng thử";
             }else if(item.category === "premiumExpired"){
@@ -3459,6 +3569,12 @@ function renderDeviceList(){
                     </div>
 
                     <div class="device-actions">
+                        <button
+                            class="copy-id-btn"
+                            onclick="copyDeviceId('${escapeJs(item.id)}', this)">
+                            📋 SAO CHÉP ID
+                        </button>
+
                         <button
                             class="btn-detail"
                             onclick="openDetail('${escapeJs(item.id)}')">
@@ -3532,6 +3648,11 @@ function openDetail(deviceId){
         case "trial":
             statusHtml =
                 '<span class="badge badge-trial">🟡 ĐANG DÙNG THỬ</span>';
+            break;
+
+        case "freeActive":
+            statusHtml =
+                '<span class="badge badge-free">🔵 ĐANG DÙNG FREE</span>';
             break;
 
         case "trialExpired":
@@ -3663,6 +3784,30 @@ function closeDetailModal(){
         .classList.add("hidden");
 
     currentDetailId = null;
+}
+
+async function copyDeviceId(deviceId, button){
+    const id = String(deviceId || "").trim();
+    if(!id){ showStatus("Không có ID để sao chép.","error"); return; }
+    try{
+        if(navigator.clipboard && window.isSecureContext){
+            await navigator.clipboard.writeText(id);
+        }else{
+            const textarea=document.createElement("textarea");
+            textarea.value=id; textarea.style.position="fixed"; textarea.style.left="-9999px";
+            document.body.appendChild(textarea); textarea.focus(); textarea.select();
+            document.execCommand("copy"); textarea.remove();
+        }
+        if(button){
+            const oldText=button.innerHTML;
+            button.classList.add("copied"); button.innerHTML="✅ ĐÃ COPY ID";
+            setTimeout(()=>{button.classList.remove("copied");button.innerHTML=oldText;},1200);
+        }
+        showStatus("📋 Đã sao chép ID: "+id,"success");
+    }catch(error){
+        console.error(error);
+        showStatus("Không thể sao chép ID. Bạn có thể bôi đen ID để sao chép thủ công.","error");
+    }
 }
 
 function toggleBlockedFromModal(){
