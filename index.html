@@ -3072,7 +3072,6 @@ async function toggleTrial(platform){
     }
 
     if(controlWriteBusy) return;
-    controlWriteBusy = true;
 
     const user = auth.currentUser;
 
@@ -3082,7 +3081,6 @@ async function toggleTrial(platform){
         user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()
     ){
         showStatus("Tài khoản không có quyền Admin.","error");
-        controlWriteBusy = false;
         return;
     }
 
@@ -3091,48 +3089,54 @@ async function toggleTrial(platform){
             ? trialEnabledValue(trialConfig.trialTVEnabled)
             : trialEnabledValue(trialConfig.trialMobileEnabled);
 
-    const next =
-        current === "ON" ? "OFF" : "ON";
+    const next = current === "ON" ? "OFF" : "ON";
+    const prefix = platform === "tv" ? "TV" : "Mobile";
+    const button = document.getElementById("trial" + prefix + "ToggleButton");
 
-    const prefix =
-        platform === "tv" ? "TV" : "Mobile";
-
-    const button =
-        document.getElementById(
-            "trial" + prefix + "ToggleButton"
-        );
-
-    if(button){
-        button.disabled = true;
+    // Cập nhật giao diện ngay lập tức, không khóa công tắc trong lúc chờ Firebase.
+    // Nếu Firebase lỗi, trạng thái sẽ được hoàn tác bên dưới.
+    if(platform === "tv") {
+        trialConfig.trialTVEnabled = next;
+    } else {
+        trialConfig.trialMobileEnabled = next;
     }
+    fillTrialEditor();
+
+    if(button) button.disabled = false;
+
+    setTrialEditStatus(
+        next === "ON"
+            ? "⏳ Đang BẬT dùng thử " + prefix + "..."
+            : "⏳ Đang TẮT dùng thử " + prefix + "...",
+        false,
+        platform
+    );
+
+    showStatus(
+        next === "ON"
+            ? "⏳ Đang BẬT dùng thử " + prefix + "..."
+            : "⏳ Đang TẮT dùng thử " + prefix + "...",
+        "info"
+    );
 
     const payload = {
-        trialUpdatedAt:
-            firebase.firestore.FieldValue.serverTimestamp(),
-
+        trialUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
         trialUpdatedBy: user.email
     };
 
-    if(platform === "tv"){
+    if(platform === "tv") {
         payload.trialTVEnabled = next;
-    }else{
+    } else {
         payload.trialMobileEnabled = next;
     }
 
-    try{
-
+    // Không giữ controlWriteBusy trong thời gian chờ Firestore.
+    // Điều này loại bỏ trạng thái xoay chuột/WAIT và cho phép UI hoàn tất ngay.
+    try {
         await db
             .collection("premium_config")
             .doc("system")
             .set(payload,{merge:true});
-
-        if(platform === "tv"){
-            trialConfig.trialTVEnabled = next;
-        }else{
-            trialConfig.trialMobileEnabled = next;
-        }
-
-        fillTrialEditor();
 
         setTrialEditStatus(
             next === "ON"
@@ -3149,9 +3153,18 @@ async function toggleTrial(platform){
             next === "ON" ? "success" : "info"
         );
 
-    }catch(error){
+    } catch(error) {
 
         console.error(error);
+
+        // Firebase lỗi -> hoàn tác giao diện về trạng thái cũ.
+        if(platform === "tv") {
+            trialConfig.trialTVEnabled = current;
+        } else {
+            trialConfig.trialMobileEnabled = current;
+        }
+
+        fillTrialEditor();
 
         const message =
             "❌ Không thể thay đổi Trial " +
@@ -3160,16 +3173,8 @@ async function toggleTrial(platform){
 
         setTrialEditStatus(message,true,platform);
         showStatus(message,"error");
-
-        fillTrialEditor();
-
-    }finally{
-
-        if(button){
-            button.disabled = false;
-        }
-
-        controlWriteBusy = false;
+    } finally {
+        if(button) button.disabled = false;
     }
 }
 
