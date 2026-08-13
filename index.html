@@ -1,4 +1,9 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
+
+<!DOCTYPE html>
+
+
 html
 <html lang="vi">
 <head>
@@ -1127,6 +1132,89 @@ html, body, button, input, select, textarea, label {
         padding: 12px 10px !important;
     }
 }
+</style><style>
+/* ===== FINAL FIX: TRIAL MOBILE / TIVI ===== */
+.trial-platform-grid{
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:14px !important;
+  width:100% !important;
+  align-items:start !important;
+}
+.trial-settings-box{
+  width:100% !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
+  margin:0 !important;
+}
+.trial-settings-row{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+  gap:10px !important;
+}
+.trial-platform-title{
+  display:block !important;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif !important;
+  font-size:20px !important;
+  line-height:1.3 !important;
+  white-space:normal !important;
+  word-break:normal !important;
+  overflow-wrap:break-word !important;
+  margin-bottom:12px !important;
+}
+.trial-toggle-wrap{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  width:100% !important;
+  box-sizing:border-box !important;
+}
+.trial-settings-box input,
+.trial-settings-box select{
+  width:100% !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+}
+@media(max-width:900px){
+  .trial-platform-grid{
+    grid-template-columns:1fr !important;
+  }
+  .trial-settings-row{
+    grid-template-columns:1fr 1fr !important;
+  }
+}
+@media(max-width:520px){
+  .trial-settings-row{
+    grid-template-columns:1fr !important;
+  }
+  .trial-platform-title{
+    font-size:19px !important;
+  }
+}
+</style><style>
+/* FINAL UI FIX - Trial Mobile / TIVI */
+.trial-settings-panel,
+.trial-settings-box,
+.trial-platform-grid {
+    box-sizing: border-box;
+}
+.trial-platform-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    width: 100%;
+}
+.trial-platform-title {
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: anywhere !important;
+    line-height: 1.25 !important;
+}
+@media (max-width: 900px) {
+    .trial-platform-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
 </style></head>
 <body>
 <div class="header">
@@ -1161,15 +1249,7 @@ html, body, button, input, select, textarea, label {
 <h2>⚙️ Quản lý Premium &amp; Thiết bị</h2>
 <div class="user-info">
         👤 Admin: <strong id="adminEmail"></strong>
-</div>
- =====================================================
-         DASHBOARD
-    ====================================================== 
-<div class="card" style="padding:18px;background:#fafafa;box-shadow:none;border:1px solid #e2e8f0;">
- =====================================================
-             MIỄN PHÍ CONTROL
-        ====================================================== 
-<div class="notification-control-panel">
+</div><div class="card" style="padding:18px;background:#fafafa;box-shadow:none;border:1px solid #e2e8f0;"><div class="notification-control-panel">
 <div class="notification-control-title">🔔 QUẢN LÝ THÔNG BÁO ỨNG DỤNG</div>
 <div class="notification-control-grid">
 <div class="admin-switch-row">
@@ -1185,7 +1265,7 @@ html, body, button, input, select, textarea, label {
 </div>
 </div>
 <div class="admin-switch-row">
-<span class="admin-switch-name">📺 THÔNG BÁO Tivi</span>
+<span class="admin-switch-name">📺 THÔNG BÁO TIVI</span>
 <div class="admin-switch-right">
 <label class="admin-switch">
 <input id="notificationTVButton" onchange="toggleNotification('tv')" type="checkbox"/>
@@ -1223,7 +1303,7 @@ html, body, button, input, select, textarea, label {
                         </div>
 </div>
 <div class="notification-editor-box tv">
-<h4>📺 THÔNG BÁO Tivi</h4>
+<h4>📺 THÔNG BÁO TIVI</h4>
 <label for="notificationTVTitle">
                             Tiêu đề
                         </label>
@@ -1233,7 +1313,7 @@ html, body, button, input, select, textarea, label {
                         </label>
 <textarea id="notificationTVMessage" placeholder="Nhập nội dung thông báo Tivi"></textarea>
 <button class="notification-save-btn" id="saveNotificationTVButton" onclick="saveNotificationContent('tv')" type="button">
-                            💾 LƯU THÔNG BÁO Tivi
+                            💾 LƯU THÔNG BÁO TIVI
                         </button>
 <div class="notification-editor-status" id="notificationTVEditStatus">
                             Chưa có thay đổi.
@@ -1241,17 +1321,11 @@ html, body, button, input, select, textarea, label {
 </div>
 </div>
 </div>
-</div>
- =========================================================
-     CÀI ĐẶT THỜI GIAN DÙNG THỬ - TÁCH MOBILE / TIVI
-========================================================= 
-<div class="trial-settings-panel">
+</div><div class="trial-settings-panel">
 <div class="trial-settings-title">
         🧪 CÀI ĐẶT THỜI GIAN DÙNG THỬ
     </div>
-<div class="trial-platform-grid">
- ================= MOBILE ================= 
-<div class="trial-settings-box" style="margin:0;">
+<div class="trial-platform-grid"><div class="trial-settings-box" style="margin:0;">
 <div class="trial-platform-title" style="color:#2563eb;">
                 📱 DÙNG THỬ MOBILE
             </div>
@@ -1288,9 +1362,7 @@ html, body, button, input, select, textarea, label {
 <div class="trial-edit-status" id="trialMobileEditStatus">
                 Chưa có thay đổi.
             </div>
-</div>
- ================= TIVI ================= 
-<div class="trial-settings-box" style="margin:0;">
+</div><div class="trial-settings-box" style="margin:0;">
 <div class="trial-platform-title" style="color:#7c3aed;">
                 📺 DÙNG THỬ TIVI
             </div>
@@ -1475,20 +1547,12 @@ html, body, button, input, select, textarea, label {
 </div>
 <div id="deviceList"></div>
 </div>
-</div>
- =====================================================
-         KIỂM TRA ID
-    ====================================================== 
-<label>ID thiết bị</label>
+</div><label>ID thiết bị</label>
 <input autocomplete="off" id="deviceId" placeholder="Ví dụ: TV365-DT-5014A6 hoặc TV365-TV-5014A6" type="text"/>
 <button onclick="checkDevice()" style="margin-top:15px;width:100%;">
         🔍 KIỂM TRA ID
     </button>
-<div class="device-info hidden" id="deviceInfo"></div>
- =====================================================
-         PREMIUM
-    ====================================================== 
-<label>Thời hạn Premium</label>
+<div class="device-info hidden" id="deviceInfo"></div><label>Thời hạn Premium</label>
 <div class="buttons">
 <button data-duration="3" onclick="selectDuration(3,'days','3 NGÀY',this)" type="button">
             3 NGÀY
