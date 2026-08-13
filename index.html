@@ -1,10 +1,10 @@
 <!DOCTYPE html>
+html
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>TV365 ADMIN</title>
-
 <style>
 *{box-sizing:border-box}
 body{
@@ -1052,677 +1052,516 @@ html,body{
 }
 
 </style>
-</head>
+<style>
+/* ===== FIX GIAO DIỆN DÙNG THỬ MOBILE / TIVI ===== */
+html, body, button, input, select, textarea, label {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, "Helvetica Neue", sans-serif;
+}
 
+.trial-settings-title {
+    font-size: 18px !important;
+    line-height: 1.35 !important;
+}
+
+.trial-platform-title {
+    font-size: 19px !important;
+    line-height: 1.3 !important;
+    letter-spacing: 0 !important;
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: anywhere !important;
+}
+
+.trial-settings-box label {
+    font-size: 15px !important;
+    line-height: 1.35 !important;
+}
+
+.trial-toggle-label,
+.trial-switch-status {
+    font-size: 14px !important;
+}
+
+.trial-save-btn {
+    font-size: 15px !important;
+    line-height: 1.35 !important;
+    min-height: 50px;
+}
+
+/* Tablet/mobile: không ép 2 khung Trial đứng cạnh nhau */
+@media (max-width: 900px) {
+    .trial-platform-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    .trial-settings-box > div[style*="grid-template-columns:1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    .trial-settings-box {
+        width: 100% !important;
+    }
+
+    .trial-platform-title {
+        font-size: 20px !important;
+    }
+}
+
+/* Điện thoại nhỏ */
+@media (max-width: 520px) {
+    .trial-settings-panel {
+        padding: 10px !important;
+    }
+
+    .trial-settings-box {
+        padding: 12px !important;
+    }
+
+    .trial-platform-title {
+        font-size: 18px !important;
+    }
+
+    .trial-save-btn {
+        font-size: 14px !important;
+        padding: 12px 10px !important;
+    }
+}
+</style></head>
 <body>
-
 <div class="header">
-    <div>📺 TV365 ADMIN</div>
-
-    <div class="header-brand">
-        <img
-            src="https://raw.githubusercontent.com/TV365-VN/TV365/main/TV.png"
-            alt="TV365"
-        >
-        <span>TV365</span>
-    </div>
+<div>📺 TV365 ADMIN</div>
+<div class="header-brand">
+<img alt="TV365" src="https://raw.githubusercontent.com/TV365-VN/TV365/main/TV.png"/>
+<span>TV365</span>
 </div>
-
+</div>
 <div class="container">
-
-<!-- LOGIN -->
+ LOGIN 
 <div class="card" id="loginCard">
-    <h2>🔐 Đăng nhập Admin 🔐</h2>
-    <p>Chỉ tài khoản quản trị TV365 mới được sử dụng hệ thống.</p>
-
-    <label>Email</label>
-    <input type="email" id="email" placeholder="Email Admin">
-
-    <label>Mật khẩu</label>
-    <input type="password" id="password" placeholder="Mật khẩu">
-
-    <button class="login-btn" onclick="login()" id="loginButton">
+<h2>🔐 Đăng nhập Admin 🔐</h2>
+<p>Chỉ tài khoản quản trị TV365 mới được sử dụng hệ thống.</p>
+<label>Email</label>
+<input id="email" placeholder="Email Admin" type="email"/>
+<label>Mật khẩu</label>
+<input id="password" placeholder="Mật khẩu" type="password"/>
+<button class="login-btn" id="loginButton" onclick="login()">
        🔐 ĐĂNG NHẬP 🔐
     </button>
-
-    <button
-        type="button"
-        onclick="forgotPassword()"
-        style="width:100%;margin-top:12px;background:#64748b;"
-        id="forgotPasswordButton">
+<button id="forgotPasswordButton" onclick="forgotPassword()" style="width:100%;margin-top:12px;background:#64748b;" type="button">
         🔑 QUÊN MẬT KHẨU 🔑
     </button>
-
-    <div class="status" id="loginStatus">
+<div class="status" id="loginStatus">
         Vui lòng đăng nhập.
     </div>
 </div>
-
-<!-- ADMIN -->
+ ADMIN 
 <div class="card hidden" id="adminCard">
-
-    <button class="logout" onclick="logout()">ĐĂNG XUẤT</button>
-
-    <h2>⚙️ Quản lý Premium & Thiết bị</h2>
-
-    <div class="user-info">
+<button class="logout" onclick="logout()">ĐĂNG XUẤT</button>
+<h2>⚙️ Quản lý Premium &amp; Thiết bị</h2>
+<div class="user-info">
         👤 Admin: <strong id="adminEmail"></strong>
-    </div>
-
-    <!-- =====================================================
+</div>
+ =====================================================
          DASHBOARD
-    ====================================================== -->
-    <div class="card" style="padding:18px;background:#fafafa;box-shadow:none;border:1px solid #e2e8f0;">
-        <!-- =====================================================
-             FREE CONTROL
-        ====================================================== -->
-        <div class="notification-control-panel">
-            <div class="notification-control-title">🔔 QUẢN LÝ THÔNG BÁO ỨNG DỤNG</div>
-
-            <div class="notification-control-grid">
-
-                <div class="admin-switch-row">
-                    <span class="admin-switch-name">📱 THÔNG BÁO MOBILE</span>
-                    <div class="admin-switch-right">
-                        <label class="admin-switch">
-                            <input
-                                type="checkbox"
-                                id="notificationMobileButton"
-                                onchange="toggleNotification('mobile')">
-                            <span class="admin-switch-slider"></span>
-                        </label>
-                        <span
-                            id="notificationMobileSwitchStatus"
-                            class="admin-switch-status">
+    ====================================================== 
+<div class="card" style="padding:18px;background:#fafafa;box-shadow:none;border:1px solid #e2e8f0;">
+ =====================================================
+             MIỄN PHÍ CONTROL
+        ====================================================== 
+<div class="notification-control-panel">
+<div class="notification-control-title">🔔 QUẢN LÝ THÔNG BÁO ỨNG DỤNG</div>
+<div class="notification-control-grid">
+<div class="admin-switch-row">
+<span class="admin-switch-name">📱 THÔNG BÁO MOBILE</span>
+<div class="admin-switch-right">
+<label class="admin-switch">
+<input id="notificationMobileButton" onchange="toggleNotification('mobile')" type="checkbox"/>
+<span class="admin-switch-slider"></span>
+</label>
+<span class="admin-switch-status" id="notificationMobileSwitchStatus">
                             ĐANG TẮT
                         </span>
-                    </div>
-                </div>
-
-                <div class="admin-switch-row">
-                    <span class="admin-switch-name">📺 THÔNG BÁO Tivi</span>
-                    <div class="admin-switch-right">
-                        <label class="admin-switch">
-                            <input
-                                type="checkbox"
-                                id="notificationTVButton"
-                                onchange="toggleNotification('tv')">
-                            <span class="admin-switch-slider"></span>
-                        </label>
-                        <span
-                            id="notificationTVSwitchStatus"
-                            class="admin-switch-status">
+</div>
+</div>
+<div class="admin-switch-row">
+<span class="admin-switch-name">📺 THÔNG BÁO Tivi</span>
+<div class="admin-switch-right">
+<label class="admin-switch">
+<input id="notificationTVButton" onchange="toggleNotification('tv')" type="checkbox"/>
+<span class="admin-switch-slider"></span>
+</label>
+<span class="admin-switch-status" id="notificationTVSwitchStatus">
                             ĐANG TẮT
                         </span>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="notification-control-status" id="notificationControlStatus">
+</div>
+</div>
+</div>
+<div class="notification-control-status" id="notificationControlStatus">
                 Đang đọc trạng thái thông báo...
             </div>
-
-            <div class="notification-editor-panel">
-                <div class="notification-editor-title">
+<div class="notification-editor-panel">
+<div class="notification-editor-title">
                     ✏️ SỬA NỘI DUNG THÔNG BÁO
                 </div>
-
-                <div class="notification-editor-grid">
-
-                    <div class="notification-editor-box mobile">
-                        <h4>📱 THÔNG BÁO MOBILE</h4>
-
-                        <label for="notificationMobileTitle">
+<div class="notification-editor-grid">
+<div class="notification-editor-box mobile">
+<h4>📱 THÔNG BÁO MOBILE</h4>
+<label for="notificationMobileTitle">
                             Tiêu đề
                         </label>
-                        <input
-                            type="text"
-                            id="notificationMobileTitle"
-                            placeholder="Nhập tiêu đề thông báo Mobile"
-                        >
-
-                        <label for="notificationMobileMessage">
+<input id="notificationMobileTitle" placeholder="Nhập tiêu đề thông báo Mobile" type="text"/>
+<label for="notificationMobileMessage">
                             Nội dung
                         </label>
-                        <textarea
-                            id="notificationMobileMessage"
-                            placeholder="Nhập nội dung thông báo Mobile"
-                        ></textarea>
-
-                        <button
-                            type="button"
-                            class="notification-save-btn"
-                            id="saveNotificationMobileButton"
-                            onclick="saveNotificationContent('mobile')">
+<textarea id="notificationMobileMessage" placeholder="Nhập nội dung thông báo Mobile"></textarea>
+<button class="notification-save-btn" id="saveNotificationMobileButton" onclick="saveNotificationContent('mobile')" type="button">
                             💾 LƯU THÔNG BÁO MOBILE
                         </button>
-
-                        <div
-                            class="notification-editor-status"
-                            id="notificationMobileEditStatus">
+<div class="notification-editor-status" id="notificationMobileEditStatus">
                             Nút BẬT/TẮT sẽ lưu trạng thái ngay vào Firebase. Thời gian lưu bằng nút bên dưới.
                         </div>
-                    </div>
-
-                    <div class="notification-editor-box tv">
-                        <h4>📺 THÔNG BÁO Tivi</h4>
-
-                        <label for="notificationTVTitle">
+</div>
+<div class="notification-editor-box tv">
+<h4>📺 THÔNG BÁO Tivi</h4>
+<label for="notificationTVTitle">
                             Tiêu đề
                         </label>
-                        <input
-                            type="text"
-                            id="notificationTVTitle"
-                            placeholder="Nhập tiêu đề thông báo Tivi"
-                        >
-
-                        <label for="notificationTVMessage">
+<input id="notificationTVTitle" placeholder="Nhập tiêu đề thông báo Tivi" type="text"/>
+<label for="notificationTVMessage">
                             Nội dung
                         </label>
-                        <textarea
-                            id="notificationTVMessage"
-                            placeholder="Nhập nội dung thông báo Tivi"
-                        ></textarea>
-
-                        <button
-                            type="button"
-                            class="notification-save-btn"
-                            id="saveNotificationTVButton"
-                            onclick="saveNotificationContent('tv')">
+<textarea id="notificationTVMessage" placeholder="Nhập nội dung thông báo Tivi"></textarea>
+<button class="notification-save-btn" id="saveNotificationTVButton" onclick="saveNotificationContent('tv')" type="button">
                             💾 LƯU THÔNG BÁO Tivi
                         </button>
-
-                        <div
-                            class="notification-editor-status"
-                            id="notificationTVEditStatus">
+<div class="notification-editor-status" id="notificationTVEditStatus">
                             Chưa có thay đổi.
                         </div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-
-        
-<!-- =========================================================
-     CÀI ĐẶT THỜI GIAN DÙNG THỬ - TÁCH MOBILE / TV
-========================================================= -->
+</div>
+</div>
+</div>
+</div>
+ =========================================================
+     CÀI ĐẶT THỜI GIAN DÙNG THỬ - TÁCH MOBILE / TIVI
+========================================================= 
 <div class="trial-settings-panel">
-    <div class="trial-settings-title">
+<div class="trial-settings-title">
         🧪 CÀI ĐẶT THỜI GIAN DÙNG THỬ
     </div>
-
-    <div class="trial-platform-grid">
-
-        <!-- ================= MOBILE ================= -->
-        <div class="trial-settings-box" style="margin:0;">
-            <div class="trial-platform-title" style="color:#2563eb;">
+<div class="trial-platform-grid">
+ ================= MOBILE ================= 
+<div class="trial-settings-box" style="margin:0;">
+<div class="trial-platform-title" style="color:#2563eb;">
                 📱 DÙNG THỬ MOBILE
             </div>
-
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                <div>
-                    <label>Dùng thử Mobile</label>
-                    <div class="trial-toggle-wrap">
-                        <span class="trial-toggle-label">Mobile</span>
-
-                        <label class="trial-switch">
-                            <input
-                                type="checkbox"
-                                id="trialMobileToggleButton"
-                                onchange="toggleTrial('mobile')">
-                            <span class="trial-slider"></span>
-                        </label>
-
-                        <span
-                            id="trialMobileToggleStatus"
-                            class="trial-switch-status">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+<div>
+<label>Dùng thử Mobile</label>
+<div class="trial-toggle-wrap">
+<span class="trial-toggle-label">Mobile</span>
+<label class="trial-switch">
+<input id="trialMobileToggleButton" onchange="toggleTrial('mobile')" type="checkbox"/>
+<span class="trial-slider"></span>
+</label>
+<span class="trial-switch-status" id="trialMobileToggleStatus">
                             ĐANG TẮT
                         </span>
-                    </div>
-                </div>
-
-                <div>
-                    <label for="trialMobileUnit">Đơn vị</label>
-                    <select id="trialMobileUnit">
-                        <option value="DAY">Ngày</option>
-                        <option value="MONTH">Tháng</option>
-                    </select>
-                </div>
-            </div>
-
-            <label for="trialMobileValue">Số lượng</label>
-            <input
-                type="number"
-                id="trialMobileValue"
-                min="1"
-                max="3650"
-                step="1"
-                value="1">
-
-            <button
-                type="button"
-                class="trial-save-btn"
-                id="saveTrialMobileButton"
-                onclick="saveTrialSettings('mobile')">
-                💾 LƯU TRIAL MOBILE
+</div>
+</div>
+<div>
+<label for="trialMobileUnit">Đơn vị</label>
+<select id="trialMobileUnit">
+<option value="DAY">Ngày</option>
+<option value="MONTH">Tháng</option>
+</select>
+</div>
+</div>
+<label for="trialMobileValue">Số lượng</label>
+<input id="trialMobileValue" max="3650" min="1" step="1" type="number" value="1"/>
+<button class="trial-save-btn" id="saveTrialMobileButton" onclick="saveTrialSettings('mobile')" type="button">
+                💾 LƯU DÙNG THỬ MOBILE
             </button>
-
-            <div class="trial-current" id="trialMobileCurrentStatus">
+<div class="trial-current" id="trialMobileCurrentStatus">
                 Đang đọc cấu hình...
             </div>
-
-            <div class="trial-edit-status" id="trialMobileEditStatus">
+<div class="trial-edit-status" id="trialMobileEditStatus">
                 Chưa có thay đổi.
             </div>
-        </div>
-
-        <!-- ================= TV ================= -->
-        <div class="trial-settings-box" style="margin:0;">
-            <div class="trial-platform-title" style="color:#7c3aed;">
-                📺 DÙNG THỬ TV
+</div>
+ ================= TIVI ================= 
+<div class="trial-settings-box" style="margin:0;">
+<div class="trial-platform-title" style="color:#7c3aed;">
+                📺 DÙNG THỬ TIVI
             </div>
-
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                <div>
-                    <label>Dùng thử TV</label>
-                    <div class="trial-toggle-wrap">
-                        <span class="trial-toggle-label">TV</span>
-
-                        <label class="trial-switch">
-                            <input
-                                type="checkbox"
-                                id="trialTVToggleButton"
-                                onchange="toggleTrial('tv')">
-                            <span class="trial-slider"></span>
-                        </label>
-
-                        <span
-                            id="trialTVToggleStatus"
-                            class="trial-switch-status">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+<div>
+<label>Dùng thử Tivi</label>
+<div class="trial-toggle-wrap">
+<span class="trial-toggle-label">TV</span>
+<label class="trial-switch">
+<input id="trialTVToggleButton" onchange="toggleTrial('tv')" type="checkbox"/>
+<span class="trial-slider"></span>
+</label>
+<span class="trial-switch-status" id="trialTVToggleStatus">
                             ĐANG TẮT
                         </span>
-                    </div>
-                </div>
-
-                <div>
-                    <label for="trialTVUnit">Đơn vị</label>
-                    <select id="trialTVUnit">
-                        <option value="DAY">Ngày</option>
-                        <option value="MONTH">Tháng</option>
-                    </select>
-                </div>
-            </div>
-
-            <label for="trialTVValue">Số lượng</label>
-            <input
-                type="number"
-                id="trialTVValue"
-                min="1"
-                max="3650"
-                step="1"
-                value="1">
-
-            <button
-                type="button"
-                class="trial-save-btn"
-                id="saveTrialTVButton"
-                onclick="saveTrialSettings('tv')">
-                💾 LƯU TRIAL TV
+</div>
+</div>
+<div>
+<label for="trialTVUnit">Đơn vị</label>
+<select id="trialTVUnit">
+<option value="DAY">Ngày</option>
+<option value="MONTH">Tháng</option>
+</select>
+</div>
+</div>
+<label for="trialTVValue">Số lượng</label>
+<input id="trialTVValue" max="3650" min="1" step="1" type="number" value="1"/>
+<button class="trial-save-btn" id="saveTrialTVButton" onclick="saveTrialSettings('tv')" type="button">
+                💾 LƯU DÙNG THỬ TIVI
             </button>
-
-            <div class="trial-current" id="trialTVCurrentStatus">
+<div class="trial-current" id="trialTVCurrentStatus">
                 Đang đọc cấu hình...
             </div>
-
-            <div class="trial-edit-status" id="trialTVEditStatus">
+<div class="trial-edit-status" id="trialTVEditStatus">
                 Chưa có thay đổi.
             </div>
-        </div>
-
-    </div>
-
-    <div style="margin-top:12px;padding:10px 14px;border-radius:10px;background:#eef6ff;color:#1d4ed8;font-size:14px;">
-        ℹ️ Mobile và TV dùng thử độc lập. Các field Trial cũ
+</div>
+</div>
+<div style="margin-top:12px;padding:10px 14px;border-radius:10px;background:#eef6ff;color:#1d4ed8;font-size:14px;">
+        ℹ️ Mobile và TIVI dùng thử độc lập. Các field Trial cũ
         <b>trialEnabled / trialValue / trialUnit / trialDays</b>
         vẫn được giữ để tương thích với APK cũ.
     </div>
 </div>
-
-<!-- Giữ các ID cũ để tránh JS cũ bên ngoài bị lỗi nếu có tham chiếu. -->
+ Giữ các ID cũ để tránh JS cũ bên ngoài bị lỗi nếu có tham chiếu. 
 <div style="display:none;">
-    <select id="trialEnabledSelect">
-        <option value="ON">ON</option>
-        <option value="OFF">OFF</option>
-    </select>
-    <input id="trialValue" value="1">
-    <select id="trialUnit"><option value="DAY">Ngày</option></select>
-    <input id="trialToggleButton" type="checkbox">
-    <span id="trialToggleStatus"></span>
-    <button id="saveTrialSettingsButton" type="button"></button>
-    <div id="trialCurrentStatus"></div>
-    <div id="trialEditStatus"></div>
+<select id="trialEnabledSelect">
+<option value="ON">ON</option>
+<option value="OFF">OFF</option>
+</select>
+<input id="trialValue" value="1"/>
+<select id="trialUnit"><option value="DAY">Ngày</option></select>
+<input id="trialToggleButton" type="checkbox"/>
+<span id="trialToggleStatus"></span>
+<button id="saveTrialSettingsButton" type="button"></button>
+<div id="trialCurrentStatus"></div>
+<div id="trialEditStatus"></div>
 </div>
-
 <div class="free-control-panel">
-            <div class="free-control-title">🎁 QUẢN LÝ MỞ FREE</div>
-
-            <div class="free-control-grid">
-
-                <div class="admin-switch-row">
-                    <span class="admin-switch-name">📱 MIỄN PHÍ MOBILE</span>
-                    <div class="admin-switch-right">
-                        <label class="admin-switch">
-                            <input
-                                type="checkbox"
-                                id="freeMobileButton"
-                                onchange="toggleFree('mobile')">
-                            <span class="admin-switch-slider"></span>
-                        </label>
-                        <span
-                            id="freeMobileSwitchStatus"
-                            class="admin-switch-status">
+<div class="free-control-title">🎁 QUẢN LÝ MỞ MIỄN PHÍ</div>
+<div class="free-control-grid">
+<div class="admin-switch-row">
+<span class="admin-switch-name">📱 MIỄN PHÍ MOBILE</span>
+<div class="admin-switch-right">
+<label class="admin-switch">
+<input id="freeMobileButton" onchange="toggleFree('mobile')" type="checkbox"/>
+<span class="admin-switch-slider"></span>
+</label>
+<span class="admin-switch-status" id="freeMobileSwitchStatus">
                             ĐANG TẮT
                         </span>
-                    </div>
-                </div>
-
-                <div class="admin-switch-row">
-                    <span class="admin-switch-name">📺 MIỄN PHÍ TIVI</span>
-                    <div class="admin-switch-right">
-                        <label class="admin-switch">
-                            <input
-                                type="checkbox"
-                                id="freeTVButton"
-                                onchange="toggleFree('tv')">
-                            <span class="admin-switch-slider"></span>
-                        </label>
-                        <span
-                            id="freeTVSwitchStatus"
-                            class="admin-switch-status">
+</div>
+</div>
+<div class="admin-switch-row">
+<span class="admin-switch-name">📺 MIỄN PHÍ TIVI</span>
+<div class="admin-switch-right">
+<label class="admin-switch">
+<input id="freeTVButton" onchange="toggleFree('tv')" type="checkbox"/>
+<span class="admin-switch-slider"></span>
+</label>
+<span class="admin-switch-status" id="freeTVSwitchStatus">
                             ĐANG TẮT
                         </span>
-                    </div>
-                </div>
-
-                <div class="admin-switch-row">
-                    <span class="admin-switch-name">🌐 MIỄN PHÍ CẢ 2</span>
-                    <div class="admin-switch-right">
-                        <label class="admin-switch">
-                            <input
-                                type="checkbox"
-                                id="freeAllButton"
-                                onchange="toggleFree('all')">
-                            <span class="admin-switch-slider"></span>
-                        </label>
-                        <span
-                            id="freeAllSwitchStatus"
-                            class="admin-switch-status">
+</div>
+</div>
+<div class="admin-switch-row">
+<span class="admin-switch-name">🌐 MIỄN PHÍ CẢ 2</span>
+<div class="admin-switch-right">
+<label class="admin-switch">
+<input id="freeAllButton" onchange="toggleFree('all')" type="checkbox"/>
+<span class="admin-switch-slider"></span>
+</label>
+<span class="admin-switch-status" id="freeAllSwitchStatus">
                             ĐANG TẮT
                         </span>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="free-control-status" id="freeControlStatus">
+</div>
+</div>
+</div>
+<div class="free-control-status" id="freeControlStatus">
                 Đang đọc trạng thái Free...
             </div>
-        </div>
-
-        <div class="dashboard-tools">
-            <button onclick="loadDashboard()">🔄 LÀM MỚI THỐNG KÊ</button>
-            <span class="last-update" id="lastUpdate">Chưa tải dữ liệu</span>
-        </div>
-
-        <h3 class="platform-title mobile">📱 MOBILE</h3>
-
-        <div class="stats-grid">
-            <button class="stat-card stat-trial" onclick="showDeviceList('mobile','trial')">
-                <div class="icon">🟡</div>
-                <div class="label">ĐANG DÙNG THỬ</div>
-                <div class="count" id="mobileTrialCount">0</div>
-            </button>
-
-            <button class="stat-card stat-premium-active" onclick="showDeviceList('mobile','premiumActive')">
-                <div class="icon">🟢</div>
-                <div class="label">ĐANG DÙNG PREMIUM</div>
-                <div class="count" id="mobilePremiumActiveCount">0</div>
-            </button>
-
-            <button class="stat-card stat-free-active" onclick="showDeviceList('mobile','freeActive')">
-                <div class="icon">🔵</div>
-                <div class="label">ĐANG DÙNG MIỄN PHÍ</div>
-                <div class="count" id="mobileFreeActiveCount">0</div>
-            </button>
-
-            <button class="stat-card stat-trial-expired" onclick="showDeviceList('mobile','trialExpired')">
-                <div class="icon">🔴</div>
-                <div class="label">HẾT DÙNG THỬ</div>
-                <div class="count" id="mobileTrialExpiredCount">0</div>
-            </button>
-
-            <button class="stat-card stat-premium-expired" onclick="showDeviceList('mobile','premiumExpired')">
-                <div class="icon">🟠</div>
-                <div class="label">PREMIUM HẾT HẠN</div>
-                <div class="count" id="mobilePremiumExpiredCount">0</div>
-            </button>
-
-            <button class="stat-card stat-blocked" onclick="showDeviceList('mobile','blocked')">
-                <div class="icon">🔒</div>
-                <div class="label">ĐÃ KHÓA</div>
-                <div class="count" id="mobileBlockedCount">0</div>
-            </button>
-        </div>
-
-        <h3 class="platform-title tv" style="margin-top:28px;">📺 Tivi</h3>
-
-        <div class="stats-grid">
-            <button class="stat-card stat-trial" onclick="showDeviceList('tv','trial')">
-                <div class="icon">🟡</div>
-                <div class="label">ĐANG DÙNG THỬ</div>
-                <div class="count" id="tvTrialCount">0</div>
-            </button>
-
-            <button class="stat-card stat-premium-active" onclick="showDeviceList('tv','premiumActive')">
-                <div class="icon">🟢</div>
-                <div class="label">ĐANG DÙNG PREMIUM</div>
-                <div class="count" id="tvPremiumActiveCount">0</div>
-            </button>
-
-            <button class="stat-card stat-free-active" onclick="showDeviceList('tv','freeActive')">
-                <div class="icon">🔵</div>
-                <div class="label">ĐANG DÙNG MIỄN PHÍ</div>
-                <div class="count" id="tvFreeActiveCount">0</div>
-            </button>
-
-            <button class="stat-card stat-trial-expired" onclick="showDeviceList('tv','trialExpired')">
-                <div class="icon">🔴</div>
-                <div class="label">HẾT DÙNG THỬ</div>
-                <div class="count" id="tvTrialExpiredCount">0</div>
-            </button>
-
-            <button class="stat-card stat-premium-expired" onclick="showDeviceList('tv','premiumExpired')">
-                <div class="icon">🟠</div>
-                <div class="label">PREMIUM HẾT HẠN</div>
-                <div class="count" id="tvPremiumExpiredCount">0</div>
-            </button>
-
-            <button class="stat-card stat-blocked" onclick="showDeviceList('tv','blocked')">
-                <div class="icon">🔒</div>
-                <div class="label">ĐÃ KHÓA</div>
-                <div class="count" id="tvBlockedCount">0</div>
-            </button>
-        </div>
-
-        <div class="list-panel hidden" id="deviceListPanel">
-            <div class="list-header" id="deviceListTitle"></div>
-
-            <div style="padding:12px;">
-                <div class="search-row">
-                    <input id="listSearch"
-                           placeholder="🔍 Tìm ID trong danh sách..."
-                           oninput="renderDeviceList()">
-                    <button onclick="closeDeviceList()" style="background:#64748b;">
+</div>
+<div class="dashboard-tools">
+<button onclick="loadDashboard()">🔄 LÀM MỚI THỐNG KÊ</button>
+<span class="last-update" id="lastUpdate">Chưa tải dữ liệu</span>
+</div>
+<h3 class="platform-title mobile">📱 MOBILE</h3>
+<div class="stats-grid">
+<button class="stat-card stat-trial" onclick="showDeviceList('mobile','trial')">
+<div class="icon">🟡</div>
+<div class="label">ĐANG DÙNG THỬ</div>
+<div class="count" id="mobileTrialCount">0</div>
+</button>
+<button class="stat-card stat-premium-active" onclick="showDeviceList('mobile','premiumActive')">
+<div class="icon">🟢</div>
+<div class="label">ĐANG DÙNG PREMIUM</div>
+<div class="count" id="mobilePremiumActiveCount">0</div>
+</button>
+<button class="stat-card stat-free-active" onclick="showDeviceList('mobile','freeActive')">
+<div class="icon">🔵</div>
+<div class="label">ĐANG DÙNG MIỄN PHÍ</div>
+<div class="count" id="mobileFreeActiveCount">0</div>
+</button>
+<button class="stat-card stat-trial-expired" onclick="showDeviceList('mobile','trialExpired')">
+<div class="icon">🔴</div>
+<div class="label">HẾT DÙNG THỬ</div>
+<div class="count" id="mobileTrialExpiredCount">0</div>
+</button>
+<button class="stat-card stat-premium-expired" onclick="showDeviceList('mobile','premiumExpired')">
+<div class="icon">🟠</div>
+<div class="label">PREMIUM HẾT HẠN</div>
+<div class="count" id="mobilePremiumExpiredCount">0</div>
+</button>
+<button class="stat-card stat-blocked" onclick="showDeviceList('mobile','blocked')">
+<div class="icon">🔒</div>
+<div class="label">ĐÃ KHÓA</div>
+<div class="count" id="mobileBlockedCount">0</div>
+</button>
+</div>
+<h3 class="platform-title tv" style="margin-top:28px;">📺 Tivi</h3>
+<div class="stats-grid">
+<button class="stat-card stat-trial" onclick="showDeviceList('tv','trial')">
+<div class="icon">🟡</div>
+<div class="label">ĐANG DÙNG THỬ</div>
+<div class="count" id="tvTrialCount">0</div>
+</button>
+<button class="stat-card stat-premium-active" onclick="showDeviceList('tv','premiumActive')">
+<div class="icon">🟢</div>
+<div class="label">ĐANG DÙNG PREMIUM</div>
+<div class="count" id="tvPremiumActiveCount">0</div>
+</button>
+<button class="stat-card stat-free-active" onclick="showDeviceList('tv','freeActive')">
+<div class="icon">🔵</div>
+<div class="label">ĐANG DÙNG MIỄN PHÍ</div>
+<div class="count" id="tvFreeActiveCount">0</div>
+</button>
+<button class="stat-card stat-trial-expired" onclick="showDeviceList('tv','trialExpired')">
+<div class="icon">🔴</div>
+<div class="label">HẾT DÙNG THỬ</div>
+<div class="count" id="tvTrialExpiredCount">0</div>
+</button>
+<button class="stat-card stat-premium-expired" onclick="showDeviceList('tv','premiumExpired')">
+<div class="icon">🟠</div>
+<div class="label">PREMIUM HẾT HẠN</div>
+<div class="count" id="tvPremiumExpiredCount">0</div>
+</button>
+<button class="stat-card stat-blocked" onclick="showDeviceList('tv','blocked')">
+<div class="icon">🔒</div>
+<div class="label">ĐÃ KHÓA</div>
+<div class="count" id="tvBlockedCount">0</div>
+</button>
+</div>
+<div class="list-panel hidden" id="deviceListPanel">
+<div class="list-header" id="deviceListTitle"></div>
+<div style="padding:12px;">
+<div class="search-row">
+<input id="listSearch" oninput="renderDeviceList()" placeholder="🔍 Tìm ID trong danh sách..."/>
+<button onclick="closeDeviceList()" style="background:#64748b;">
                         ĐÓNG
                     </button>
-                </div>
-            </div>
-
-            <div id="deviceList"></div>
-        </div>
-    </div>
-
-    <!-- =====================================================
+</div>
+</div>
+<div id="deviceList"></div>
+</div>
+</div>
+ =====================================================
          KIỂM TRA ID
-    ====================================================== -->
-    <label>ID thiết bị</label>
-
-    <input
-        type="text"
-        id="deviceId"
-        placeholder="Ví dụ: TV365-DT-5014A6 hoặc TV365-TV-5014A6"
-        autocomplete="off"
-    >
-
-    <button
-        style="margin-top:15px;width:100%;"
-        onclick="checkDevice()"
-    >
+    ====================================================== 
+<label>ID thiết bị</label>
+<input autocomplete="off" id="deviceId" placeholder="Ví dụ: TV365-DT-5014A6 hoặc TV365-TV-5014A6" type="text"/>
+<button onclick="checkDevice()" style="margin-top:15px;width:100%;">
         🔍 KIỂM TRA ID
     </button>
-
-    <div class="device-info hidden" id="deviceInfo"></div>
-
-    <!-- =====================================================
+<div class="device-info hidden" id="deviceInfo"></div>
+ =====================================================
          PREMIUM
-    ====================================================== -->
-    <label>Thời hạn Premium</label>
-
-    <div class="buttons">
-
-        <button type="button"
-                data-duration="3"
-                onclick="selectDuration(3,'days','3 NGÀY',this)">
+    ====================================================== 
+<label>Thời hạn Premium</label>
+<div class="buttons">
+<button data-duration="3" onclick="selectDuration(3,'days','3 NGÀY',this)" type="button">
             3 NGÀY
         </button>
-
-        <button type="button"
-                data-duration="7"
-                onclick="selectDuration(7,'days','7 NGÀY',this)">
+<button data-duration="7" onclick="selectDuration(7,'days','7 NGÀY',this)" type="button">
             7 NGÀY
         </button>
-
-        <button type="button"
-                data-duration="1m"
-                onclick="selectDuration(1,'months','1 THÁNG',this)">
+<button data-duration="1m" onclick="selectDuration(1,'months','1 THÁNG',this)" type="button">
             1 THÁNG
         </button>
-
-        <button type="button"
-                data-duration="3m"
-                onclick="selectDuration(3,'months','3 THÁNG',this)">
+<button data-duration="3m" onclick="selectDuration(3,'months','3 THÁNG',this)" type="button">
             3 THÁNG
         </button>
-
-        <button type="button"
-                data-duration="6m"
-                onclick="selectDuration(6,'months','6 THÁNG',this)">
+<button data-duration="6m" onclick="selectDuration(6,'months','6 THÁNG',this)" type="button">
             6 THÁNG
         </button>
-
-        <button type="button"
-                data-duration="9m"
-                onclick="selectDuration(9,'months','9 THÁNG',this)">
+<button data-duration="9m" onclick="selectDuration(9,'months','9 THÁNG',this)" type="button">
             9 THÁNG
         </button>
-
-        <button type="button"
-                data-duration="1y"
-                onclick="selectDuration(1,'years','1 NĂM',this)">
+<button data-duration="1y" onclick="selectDuration(1,'years','1 NĂM',this)" type="button">
             1 NĂM
         </button>
-
-        <button type="button"
-                data-duration="forever"
-                onclick="selectDuration(0,'forever','VĨNH VIỄN',this)"
-                style="background:#16a34a;">
+<button data-duration="forever" onclick="selectDuration(0,'forever','VĨNH VIỄN',this)" style="background:#16a34a;" type="button">
             ♾️ VĨNH VIỄN
         </button>
-
-    </div>
-
-    <div class="custom-duration">
-        <label>Thời hạn tùy chỉnh</label>
-
-        <div class="custom-row">
-            <input type="number"
-                   id="customValue"
-                   min="1"
-                   step="1"
-                   placeholder="Nhập số">
-
-            <select id="customUnit">
-                <option value="days">NGÀY</option>
-                <option value="months">THÁNG</option>
-                <option value="years">NĂM</option>
-            </select>
-        </div>
-
-        <button type="button"
-                class="custom-button"
-                onclick="selectCustomDuration()">
+</div>
+<div class="custom-duration">
+<label>Thời hạn tùy chỉnh</label>
+<div class="custom-row">
+<input id="customValue" min="1" placeholder="Nhập số" step="1" type="number"/>
+<select id="customUnit">
+<option value="days">NGÀY</option>
+<option value="months">THÁNG</option>
+<option value="years">NĂM</option>
+</select>
+</div>
+<button class="custom-button" onclick="selectCustomDuration()" type="button">
             ➕ CHỌN THỜI HẠN TÙY CHỈNH
         </button>
-    </div>
-
-    <div class="activate-panel">
-        <div class="selected-duration">
+</div>
+<div class="activate-panel">
+<div class="selected-duration">
             Thời hạn đã chọn:
             <strong id="selectedDurationText">Chưa chọn</strong>
-        </div>
-
-        <button type="button"
-                id="activateButton"
-                class="activate-main"
-                onclick="activateSelected()"
-                disabled>
+</div>
+<button class="activate-main" disabled="" id="activateButton" onclick="activateSelected()" type="button">
             🔐 KÍCH HOẠT PREMIUM
         </button>
-    </div>
-
-    <div class="status" id="status">
+</div>
+<div class="status" id="status">
         Chưa có thao tác.
     </div>
-
 </div>
 </div>
-
-<!-- MODAL CHI TIẾT -->
+ MODAL CHI TIẾT 
 <div class="modal-backdrop hidden" id="detailModal">
-    <div class="modal">
-        <h3>📋 Chi tiết thiết bị</h3>
-        <div id="detailContent"></div>
-
-        <div class="modal-actions">
-            <button class="btn-close" onclick="closeDetailModal()">ĐÓNG</button>
-            <button
-                class="copy-id-btn"
-                onclick="copyDeviceId(currentDetailId, this)">
+<div class="modal">
+<h3>📋 Chi tiết thiết bị</h3>
+<div id="detailContent"></div>
+<div class="modal-actions">
+<button class="btn-close" onclick="closeDetailModal()">ĐÓNG</button>
+<button class="copy-id-btn" onclick="copyDeviceId(currentDetailId, this)">
                 📋 SAO CHÉP ID
             </button>
-            <button id="detailActionButton" onclick="toggleBlockedFromModal()">
+<button id="detailActionButton" onclick="toggleBlockedFromModal()">
                 🔒 KHÓA
             </button>
-        </div>
-    </div>
 </div>
-
+</div>
+</div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
 <script>
 /* =========================================================
    FIREBASE
