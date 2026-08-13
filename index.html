@@ -669,9 +669,23 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .copy-id-btn:active{transform:translateY(0)}
 .copy-id-btn.copied{background:linear-gradient(135deg,#16a34a,#22c55e)!important}
 @media(max-width:700px){
-    .device-row{align-items:flex-start;flex-direction:column}
-    .device-actions{width:100%;flex-wrap:wrap}
-    .device-actions button{flex:1 1 auto}
+    .device-row{align-items:flex-start;flex-direction:column;width:100%;box-sizing:border-box}
+    .device-actions{width:100%;max-width:100%;flex-wrap:wrap;box-sizing:border-box;overflow:hidden}
+    .device-actions button{
+        flex:1 1 0;
+        min-width:0;
+        max-width:100%;
+        box-sizing:border-box;
+        padding:9px 7px;
+        font-size:11px;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+    }
+    .copy-id-btn{
+        width:auto;
+        max-width:100%;
+    }
 }
 .btn-lock{background:#dc2626}
 .btn-unlock{background:#16a34a}
@@ -760,8 +774,8 @@ button:disabled{opacity:.5;cursor:not-allowed}
     .buttons{grid-template-columns:repeat(2,1fr)}
     .custom-row{grid-template-columns:1fr}
     .device-row{align-items:flex-start;flex-direction:column}
-    .device-actions{width:100%}
-    .device-actions button{flex:1}
+    .device-actions{width:100%;max-width:100%;box-sizing:border-box;overflow:hidden}
+    .device-actions button{flex:1 1 0;min-width:0;max-width:100%;box-sizing:border-box;}
     .search-row{grid-template-columns:1fr}
     .free-control-grid{grid-template-columns:1fr}
 }
@@ -897,11 +911,17 @@ html,body{
     }
 
     .device-actions{
+        width:100%;
+        max-width:100%;
         flex-wrap:wrap;
+        box-sizing:border-box;
+        overflow:hidden;
     }
 
     .device-actions button{
         min-width:0;
+        max-width:100%;
+        box-sizing:border-box;
     }
 
     .status,
@@ -1341,7 +1361,7 @@ html,body{
 
             <button class="stat-card stat-free-active" onclick="showDeviceList('mobile','freeActive')">
                 <div class="icon">🔵</div>
-                <div class="label">ĐANG DÙNG FREE</div>
+                <div class="label">ĐANG DÙNG MIỄN PHÍ</div>
                 <div class="count" id="mobileFreeActiveCount">0</div>
             </button>
 
@@ -1381,7 +1401,7 @@ html,body{
 
             <button class="stat-card stat-free-active" onclick="showDeviceList('tv','freeActive')">
                 <div class="icon">🔵</div>
-                <div class="label">ĐANG DÙNG FREE</div>
+                <div class="label">ĐANG DÙNG MIỄN PHÍ</div>
                 <div class="count" id="tvFreeActiveCount">0</div>
             </button>
 
@@ -3467,7 +3487,7 @@ function updateCounts(){
 const categoryNames = {
     trial: "🟡 ĐANG DÙNG THỬ",
     premiumActive: "🟢 ĐANG DÙNG PREMIUM",
-    freeActive: "🔵 ĐANG DÙNG FREE",
+    freeActive: "🔵 ĐANG DÙNG MIỄN PHÍ",
     trialExpired: "🔴 HẾT DÙNG THỬ",
     premiumExpired: "🟠 PREMIUM HẾT HẠN",
     blocked: "🔒 ĐÃ KHÓA"
@@ -3652,7 +3672,7 @@ function openDetail(deviceId){
 
         case "freeActive":
             statusHtml =
-                '<span class="badge badge-free">🔵 ĐANG DÙNG FREE</span>';
+                '<span class="badge badge-free">🔵 ĐANG DÙNG MIỄN PHÍ</span>';
             break;
 
         case "trialExpired":
