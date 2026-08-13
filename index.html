@@ -1197,80 +1197,163 @@ html,body{
 
         
 <!-- =========================================================
-     CÀI ĐẶT THỜI GIAN DÙNG THỬ
+     CÀI ĐẶT THỜI GIAN DÙNG THỬ - TÁCH MOBILE / TV
 ========================================================= -->
 <div class="trial-settings-panel">
     <div class="trial-settings-title">
         🧪 CÀI ĐẶT THỜI GIAN DÙNG THỬ
     </div>
 
-    <div class="trial-settings-box">
-        <div class="trial-settings-row">
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;">
 
-            <div>
-                <label>Dùng thử</label>
+        <!-- ================= MOBILE ================= -->
+        <div class="trial-settings-box" style="margin:0;">
+            <div style="font-size:20px;font-weight:800;color:#2563eb;margin-bottom:12px;">
+                📱 DÙNG THỬ MOBILE
+            </div>
 
-                <!-- CÔNG TẮC GẠT BẬT / TẮT DÙNG THỬ -->
-                <div class="trial-toggle-wrap">
-                    <span class="trial-toggle-label">Dùng thử</span>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div>
+                    <label>Dùng thử Mobile</label>
+                    <div class="trial-toggle-wrap">
+                        <span class="trial-toggle-label">Mobile</span>
 
-                    <label class="trial-switch">
-                        <input
-                            type="checkbox"
-                            id="trialToggleButton"
-                            onchange="toggleTrial()">
-                        <span class="trial-slider"></span>
-                    </label>
+                        <label class="trial-switch">
+                            <input
+                                type="checkbox"
+                                id="trialMobileToggleButton"
+                                onchange="toggleTrial('mobile')">
+                            <span class="trial-slider"></span>
+                        </label>
 
-                    <span
-                        id="trialToggleStatus"
-                        class="trial-switch-status">
-                        ĐANG TẮT
-                    </span>
+                        <span
+                            id="trialMobileToggleStatus"
+                            class="trial-switch-status">
+                            ĐANG TẮT
+                        </span>
+                    </div>
                 </div>
 
-                <!-- Giữ lại field này để tương thích với code cũ -->
-                <select id="trialEnabledSelect" class="hidden">
-                    <option value="ON">ON</option>
-                    <option value="OFF">OFF</option>
-                </select>
-
-                <label for="trialValue">Số lượng</label>
-                <input
-                    type="number"
-                    id="trialValue"
-                    min="1"
-                    max="3650"
-                    step="1"
-                    value="1">
+                <div>
+                    <label for="trialMobileUnit">Đơn vị</label>
+                    <select id="trialMobileUnit">
+                        <option value="DAY">Ngày</option>
+                        <option value="MONTH">Tháng</option>
+                    </select>
+                </div>
             </div>
 
-            <div>
-                <label for="trialUnit">Đơn vị</label>
-                <select id="trialUnit">
-                    <option value="DAY">Ngày</option>
-                    <option value="MONTH">Tháng</option>
-                </select>
+            <label for="trialMobileValue">Số lượng</label>
+            <input
+                type="number"
+                id="trialMobileValue"
+                min="1"
+                max="3650"
+                step="1"
+                value="1">
+
+            <button
+                type="button"
+                class="trial-save-btn"
+                id="saveTrialMobileButton"
+                onclick="saveTrialSettings('mobile')">
+                💾 LƯU TRIAL MOBILE
+            </button>
+
+            <div class="trial-current" id="trialMobileCurrentStatus">
+                Đang đọc cấu hình...
             </div>
 
+            <div class="trial-edit-status" id="trialMobileEditStatus">
+                Chưa có thay đổi.
+            </div>
         </div>
 
-        <button
-            type="button"
-            class="trial-save-btn"
-            id="saveTrialSettingsButton"
-            onclick="saveTrialSettings()">
-            💾 LƯU THỜI GIAN DÙNG THỬ
-        </button>
+        <!-- ================= TV ================= -->
+        <div class="trial-settings-box" style="margin:0;">
+            <div style="font-size:20px;font-weight:800;color:#7c3aed;margin-bottom:12px;">
+                📺 DÙNG THỬ TV
+            </div>
 
-        <div class="trial-current" id="trialCurrentStatus">
-            Đang đọc cấu hình dùng thử...
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div>
+                    <label>Dùng thử TV</label>
+                    <div class="trial-toggle-wrap">
+                        <span class="trial-toggle-label">TV</span>
+
+                        <label class="trial-switch">
+                            <input
+                                type="checkbox"
+                                id="trialTVToggleButton"
+                                onchange="toggleTrial('tv')">
+                            <span class="trial-slider"></span>
+                        </label>
+
+                        <span
+                            id="trialTVToggleStatus"
+                            class="trial-switch-status">
+                            ĐANG TẮT
+                        </span>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="trialTVUnit">Đơn vị</label>
+                    <select id="trialTVUnit">
+                        <option value="DAY">Ngày</option>
+                        <option value="MONTH">Tháng</option>
+                    </select>
+                </div>
+            </div>
+
+            <label for="trialTVValue">Số lượng</label>
+            <input
+                type="number"
+                id="trialTVValue"
+                min="1"
+                max="3650"
+                step="1"
+                value="1">
+
+            <button
+                type="button"
+                class="trial-save-btn"
+                id="saveTrialTVButton"
+                onclick="saveTrialSettings('tv')">
+                💾 LƯU TRIAL TV
+            </button>
+
+            <div class="trial-current" id="trialTVCurrentStatus">
+                Đang đọc cấu hình...
+            </div>
+
+            <div class="trial-edit-status" id="trialTVEditStatus">
+                Chưa có thay đổi.
+            </div>
         </div>
 
-        <div class="trial-edit-status" id="trialEditStatus">
-            Chưa có thay đổi.
-        </div>
     </div>
+
+    <div style="margin-top:12px;padding:10px 14px;border-radius:10px;background:#eef6ff;color:#1d4ed8;font-size:14px;">
+        ℹ️ Mobile và TV dùng thử độc lập. Các field Trial cũ
+        <b>trialEnabled / trialValue / trialUnit / trialDays</b>
+        vẫn được giữ để tương thích với APK cũ.
+    </div>
+</div>
+
+<!-- Giữ các ID cũ để tránh JS cũ bên ngoài bị lỗi nếu có tham chiếu. -->
+<div style="display:none;">
+    <select id="trialEnabledSelect">
+        <option value="ON">ON</option>
+        <option value="OFF">OFF</option>
+    </select>
+    <input id="trialValue" value="1">
+    <select id="trialUnit"><option value="DAY">Ngày</option></select>
+    <input id="trialToggleButton" type="checkbox">
+    <span id="trialToggleStatus"></span>
+    <button id="saveTrialSettingsButton" type="button"></button>
+    <div id="trialCurrentStatus"></div>
+    <div id="trialEditStatus"></div>
 </div>
 
 <div class="free-control-panel">
@@ -1642,10 +1725,23 @@ let freeConfig = {
  */
 
 let trialConfig = {
+    // Legacy / compatibility
     trialEnabled: "ON",
     trialDays: 1,
     trialValue: 1,
-    trialUnit: "DAY"
+    trialUnit: "DAY",
+
+    // Mobile
+    trialMobileEnabled: "ON",
+    trialMobileDays: 1,
+    trialMobileValue: 1,
+    trialMobileUnit: "DAY",
+
+    // TV
+    trialTVEnabled: "ON",
+    trialTVDays: 1,
+    trialTVValue: 1,
+    trialTVUnit: "DAY"
 };
 
 let notificationConfig = {
@@ -2789,66 +2885,117 @@ function normalizeTrialUnit(value){
         : "DAY";
 }
 
-function fillTrialEditor(){
-    const enabledSelect =
-        document.getElementById("trialEnabledSelect");
+function trialEnabledValue(value){
+    return String(value || "ON").toUpperCase() === "OFF"
+        ? "OFF"
+        : "ON";
+}
 
-    const trialIsOn =
-        String(trialConfig.trialEnabled || "ON").toUpperCase() !== "OFF";
-
-    if(enabledSelect){
-        enabledSelect.value = trialIsOn ? "ON" : "OFF";
+function getTrialConfigForPlatform(platform){
+    if(platform === "tv"){
+        return {
+            enabled: trialConfig.trialTVEnabled,
+            value: trialConfig.trialTVValue,
+            unit: trialConfig.trialTVUnit,
+            days: trialConfig.trialTVDays
+        };
     }
 
-    const trialToggleButton =
-        document.getElementById("trialToggleButton");
+    return {
+        enabled: trialConfig.trialMobileEnabled,
+        value: trialConfig.trialMobileValue,
+        unit: trialConfig.trialMobileUnit,
+        days: trialConfig.trialMobileDays
+    };
+}
 
-    const trialToggleStatus =
-        document.getElementById("trialToggleStatus");
+function fillOneTrialEditor(platform){
+    const isTV = platform === "tv";
+    const prefix = isTV ? "TV" : "Mobile";
+    const cfg = getTrialConfigForPlatform(platform);
 
-    if(trialToggleButton){
-        trialToggleButton.checked = trialIsOn;
+    const toggle =
+        document.getElementById("trial" + prefix + "ToggleButton");
+
+    const status =
+        document.getElementById("trial" + prefix + "ToggleStatus");
+
+    const valueInput =
+        document.getElementById("trial" + prefix + "Value");
+
+    const unitSelect =
+        document.getElementById("trial" + prefix + "Unit");
+
+    const current =
+        document.getElementById("trial" + prefix + "CurrentStatus");
+
+    const enabled =
+        trialEnabledValue(cfg.enabled) === "ON";
+
+    if(toggle){
+        toggle.checked = enabled;
     }
 
-    if(trialToggleStatus){
-        trialToggleStatus.innerText =
-            trialIsOn ? "ĐANG BẬT" : "ĐANG TẮT";
-
-        trialToggleStatus.classList.toggle("on", trialIsOn);
+    if(status){
+        status.innerText = enabled ? "ĐANG BẬT" : "ĐANG TẮT";
+        status.classList.toggle("on", enabled);
     }
-
-    const valueInput = document.getElementById("trialValue");
-    const unitSelect = document.getElementById("trialUnit");
-    const current = document.getElementById("trialCurrentStatus");
 
     if(valueInput){
-        valueInput.value = Number(trialConfig.trialValue || 1);
+        valueInput.value = Number(cfg.value || 1);
     }
 
     if(unitSelect){
-        unitSelect.value = normalizeTrialUnit(trialConfig.trialUnit);
+        unitSelect.value = normalizeTrialUnit(cfg.unit);
     }
 
     if(current){
         const unitText =
-            normalizeTrialUnit(trialConfig.trialUnit) === "MONTH"
+            normalizeTrialUnit(cfg.unit) === "MONTH"
                 ? "tháng" : "ngày";
 
         current.innerText =
             "Trạng thái: " +
-            (String(trialConfig.trialEnabled).toUpperCase() === "OFF"
-                ? "🔴 ĐANG TẮT" : "🟢 ĐANG BẬT") +
+            (enabled ? "🟢 ĐANG BẬT" : "🔴 ĐANG TẮT") +
             "\nThời gian: " +
-            Number(trialConfig.trialValue || 1) +
+            Number(cfg.value || 1) +
             " " + unitText +
-            "\ntrialDays tương thích APK hiện tại: " +
-            Number(trialConfig.trialDays || 1) +
+            "\ntrial" + prefix + "Days: " +
+            Number(cfg.days || 1) +
             " ngày";
     }
 }
 
-function setTrialEditStatus(message, isError){
-    const el = document.getElementById("trialEditStatus");
+function fillTrialEditor(){
+    fillOneTrialEditor("mobile");
+    fillOneTrialEditor("tv");
+
+    // Legacy hidden fields follow Mobile only for old JS compatibility.
+    const legacyEnabled =
+        document.getElementById("trialEnabledSelect");
+    const legacyValue =
+        document.getElementById("trialValue");
+    const legacyUnit =
+        document.getElementById("trialUnit");
+    const legacyToggle =
+        document.getElementById("trialToggleButton");
+
+    const mobileEnabled =
+        trialEnabledValue(trialConfig.trialMobileEnabled) === "ON";
+
+    if(legacyEnabled) legacyEnabled.value = mobileEnabled ? "ON" : "OFF";
+    if(legacyValue) legacyValue.value = Number(trialConfig.trialMobileValue || 1);
+    if(legacyUnit) legacyUnit.value = normalizeTrialUnit(trialConfig.trialMobileUnit);
+    if(legacyToggle) legacyToggle.checked = mobileEnabled;
+}
+
+function setTrialEditStatus(message, isError, platform){
+    const id =
+        platform === "tv"
+            ? "trialTVEditStatus"
+            : "trialMobileEditStatus";
+
+    const el = document.getElementById(id);
     if(!el) return;
 
     el.style.background = isError ? "#fee2e2" : "#dcfce7";
@@ -2857,38 +3004,120 @@ function setTrialEditStatus(message, isError){
 }
 
 function loadTrialConfigFromData(data){
-    const oldDays = Number(data.trialDays);
-    const savedValue = Number(data.trialValue);
+    const oldDays =
+        Number(data.trialDays);
 
-    let unit = normalizeTrialUnit(data.trialUnit);
-    let value =
-        Number.isFinite(savedValue) && savedValue > 0
-            ? Math.floor(savedValue)
-            : (Number.isFinite(oldDays) && oldDays > 0
-                ? Math.floor(oldDays) : 1);
+    const oldValue =
+        Number(data.trialValue);
 
-    if(!data.trialUnit && data.trialValue == null){
-        unit = "DAY";
-    }
+    const oldUnit =
+        normalizeTrialUnit(data.trialUnit);
+
+    const fallbackValue =
+        Number.isFinite(oldValue) && oldValue > 0
+            ? Math.floor(oldValue)
+            : (
+                Number.isFinite(oldDays) && oldDays > 0
+                    ? Math.floor(oldDays)
+                    : 1
+            );
+
+    // Mobile: use new fields; fallback to old shared fields.
+    const mobileValueRaw =
+        Number(data.trialMobileValue);
+
+    const mobileValue =
+        Number.isFinite(mobileValueRaw) && mobileValueRaw > 0
+            ? Math.floor(mobileValueRaw)
+            : fallbackValue;
+
+    const mobileUnit =
+        data.trialMobileUnit
+            ? normalizeTrialUnit(data.trialMobileUnit)
+            : oldUnit;
+
+    const mobileDaysRaw =
+        Number(data.trialMobileDays);
+
+    const mobileDays =
+        Number.isFinite(mobileDaysRaw) && mobileDaysRaw > 0
+            ? Math.floor(mobileDaysRaw)
+            : (
+                mobileUnit === "MONTH"
+                    ? mobileValue * 30
+                    : mobileValue
+            );
+
+    // TV: use new fields; fallback to old shared fields.
+    const tvValueRaw =
+        Number(data.trialTVValue);
+
+    const tvValue =
+        Number.isFinite(tvValueRaw) && tvValueRaw > 0
+            ? Math.floor(tvValueRaw)
+            : fallbackValue;
+
+    const tvUnit =
+        data.trialTVUnit
+            ? normalizeTrialUnit(data.trialTVUnit)
+            : oldUnit;
+
+    const tvDaysRaw =
+        Number(data.trialTVDays);
+
+    const tvDays =
+        Number.isFinite(tvDaysRaw) && tvDaysRaw > 0
+            ? Math.floor(tvDaysRaw)
+            : (
+                tvUnit === "MONTH"
+                    ? tvValue * 30
+                    : tvValue
+            );
+
+    const oldEnabled =
+        trialEnabledValue(data.trialEnabled);
 
     trialConfig = {
-        trialEnabled:
-            String(data.trialEnabled || "ON").toUpperCase() === "OFF"
-                ? "OFF" : "ON",
-
+        // Legacy
+        trialEnabled: oldEnabled,
         trialDays:
             Number.isFinite(oldDays) && oldDays > 0
                 ? Math.floor(oldDays)
-                : (unit === "MONTH" ? value * 30 : value),
+                : fallbackValue,
+        trialValue: fallbackValue,
+        trialUnit: oldUnit,
 
-        trialValue: value,
-        trialUnit: unit
+        // Mobile
+        trialMobileEnabled:
+            trialEnabledValue(
+                data.trialMobileEnabled != null
+                    ? data.trialMobileEnabled
+                    : oldEnabled
+            ),
+        trialMobileDays: mobileDays,
+        trialMobileValue: mobileValue,
+        trialMobileUnit: mobileUnit,
+
+        // TV
+        trialTVEnabled:
+            trialEnabledValue(
+                data.trialTVEnabled != null
+                    ? data.trialTVEnabled
+                    : oldEnabled
+            ),
+        trialTVDays: tvDays,
+        trialTVValue: tvValue,
+        trialTVUnit: tvUnit
     };
 
     fillTrialEditor();
 }
 
-async function toggleTrial(){
+async function toggleTrial(platform){
+
+    if(platform !== "mobile" && platform !== "tv"){
+        return;
+    }
 
     if(controlWriteBusy) return;
     controlWriteBusy = true;
@@ -2906,15 +3135,36 @@ async function toggleTrial(){
     }
 
     const current =
-        String(trialConfig.trialEnabled || "ON").toUpperCase();
+        platform === "tv"
+            ? trialEnabledValue(trialConfig.trialTVEnabled)
+            : trialEnabledValue(trialConfig.trialMobileEnabled);
 
-    const next = current === "ON" ? "OFF" : "ON";
+    const next =
+        current === "ON" ? "OFF" : "ON";
+
+    const prefix =
+        platform === "tv" ? "TV" : "Mobile";
 
     const button =
-        document.getElementById("trialToggleButton");
+        document.getElementById(
+            "trial" + prefix + "ToggleButton"
+        );
 
     if(button){
         button.disabled = true;
+    }
+
+    const payload = {
+        trialUpdatedAt:
+            firebase.firestore.FieldValue.serverTimestamp(),
+
+        trialUpdatedBy: user.email
+    };
+
+    if(platform === "tv"){
+        payload.trialTVEnabled = next;
+    }else{
+        payload.trialMobileEnabled = next;
     }
 
     try{
@@ -2922,29 +3172,28 @@ async function toggleTrial(){
         await db
             .collection("premium_config")
             .doc("system")
-            .set({
-                trialEnabled: next,
+            .set(payload,{merge:true});
 
-                trialUpdatedAt:
-                    firebase.firestore.FieldValue.serverTimestamp(),
-
-                trialUpdatedBy: user.email
-            },{merge:true});
-
-        trialConfig.trialEnabled = next;
+        if(platform === "tv"){
+            trialConfig.trialTVEnabled = next;
+        }else{
+            trialConfig.trialMobileEnabled = next;
+        }
 
         fillTrialEditor();
 
         setTrialEditStatus(
             next === "ON"
-                ? "✅ Đã BẬT dùng thử."
-                : "🔴 Đã TẮT dùng thử."
+                ? "✅ Đã BẬT dùng thử " + prefix + "."
+                : "🔴 Đã TẮT dùng thử " + prefix + ".",
+            false,
+            platform
         );
 
         showStatus(
             next === "ON"
-                ? "🟢 Đã BẬT dùng thử cho hệ thống."
-                : "🔴 Đã TẮT dùng thử cho hệ thống.",
+                ? "🟢 Đã BẬT dùng thử " + prefix + "."
+                : "🔴 Đã TẮT dùng thử " + prefix + ".",
             next === "ON" ? "success" : "info"
         );
 
@@ -2953,10 +3202,11 @@ async function toggleTrial(){
         console.error(error);
 
         const message =
-            "❌ Không thể thay đổi trạng thái dùng thử:\n" +
+            "❌ Không thể thay đổi Trial " +
+            prefix + ":\n" +
             getFirebaseError(error);
 
-        setTrialEditStatus(message,true);
+        setTrialEditStatus(message,true,platform);
         showStatus(message,"error");
 
         fillTrialEditor();
@@ -2971,16 +3221,16 @@ async function toggleTrial(){
     }
 }
 
-async function saveTrialSettings(){
-    const enabled =
-        String(
-            document.getElementById("trialEnabledSelect")?.value || "ON"
-        ).toUpperCase() === "OFF"
-            ? "OFF"
-            : "ON";
+async function saveTrialSettings(platform){
 
+    if(platform !== "mobile" && platform !== "tv"){
+        return;
+    }
 
-    if(controlWriteBusy) return;
+    if(controlWriteBusy){
+        return;
+    }
+
     controlWriteBusy = true;
 
     const user = auth.currentUser;
@@ -2990,56 +3240,88 @@ async function saveTrialSettings(){
         !user.email ||
         user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()
     ){
-        showStatus("Tài khoản không có quyền Admin.","error");
+        showStatus(
+            "Tài khoản không có quyền Admin.",
+            "error"
+        );
+
         controlWriteBusy = false;
         return;
     }
 
+    const prefix =
+        platform === "tv" ? "TV" : "Mobile";
+
+    const valueInput =
+        document.getElementById(
+            "trial" + prefix + "Value"
+        );
+
+    const unitSelect =
+        document.getElementById(
+            "trial" + prefix + "Unit"
+        );
+
     const value =
-        Math.floor(Number(
-            document.getElementById("trialValue")?.value || 0
-        ));
+        Math.max(
+            1,
+            Math.min(
+                3650,
+                parseInt(
+                    valueInput ? valueInput.value : "1",
+                    10
+                ) || 1
+            )
+        );
 
     const unit =
         normalizeTrialUnit(
-            document.getElementById("trialUnit")?.value
+            unitSelect ? unitSelect.value : "DAY"
         );
 
-    if(!Number.isFinite(value) || value < 1){
-        setTrialEditStatus(
-            "⚠️ Số lượng phải lớn hơn hoặc bằng 1.",
-            true
-        );
-        controlWriteBusy = false;
-        return;
-    }
-
-    if(value > 3650){
-        setTrialEditStatus(
-            "⚠️ Số lượng tối đa là 3650.",
-            true
-        );
-        controlWriteBusy = false;
-        return;
-    }
+    const enabled =
+        platform === "tv"
+            ? trialEnabledValue(trialConfig.trialTVEnabled)
+            : trialEnabledValue(trialConfig.trialMobileEnabled);
 
     /*
-     * Giữ trialDays để APK hiện tại không bị lỗi.
-     * Ngày  -> đúng số ngày.
+     * Giữ trialDays tương thích:
+     * Ngày -> số ngày.
      * Tháng -> 30 ngày/tháng cho APK cũ.
-     *
-     * APK mới có thể dùng trialValue + trialUnit
-     * để tính tháng theo lịch chính xác.
      */
     const compatibilityDays =
         unit === "MONTH" ? value * 30 : value;
 
-    const saveButton =
-        document.getElementById("saveTrialSettingsButton");
+    const button =
+        document.getElementById(
+            "saveTrial" + prefix + "Button"
+        );
 
-    if(saveButton){
-        saveButton.disabled = true;
-        saveButton.innerText = "💾 ĐANG LƯU...";
+    if(button){
+        button.disabled = true;
+        button.innerText = "💾 ĐANG LƯU...";
+    }
+
+    const payload = {
+        trialUpdatedAt:
+            firebase.firestore.FieldValue.serverTimestamp(),
+
+        trialUpdatedBy: user.email
+    };
+
+    if(platform === "tv"){
+
+        payload.trialTVEnabled = enabled;
+        payload.trialTVValue = value;
+        payload.trialTVUnit = unit;
+        payload.trialTVDays = compatibilityDays;
+
+    }else{
+
+        payload.trialMobileEnabled = enabled;
+        payload.trialMobileValue = value;
+        payload.trialMobileUnit = unit;
+        payload.trialMobileDays = compatibilityDays;
     }
 
     try{
@@ -3047,31 +3329,35 @@ async function saveTrialSettings(){
         await db
             .collection("premium_config")
             .doc("system")
-            .set({
-                trialEnabled: enabled,
-                trialValue: value,
-                trialUnit: unit,
-                trialDays: compatibilityDays,
+            .set(payload,{merge:true});
 
-                trialUpdatedAt:
-                    firebase.firestore.FieldValue.serverTimestamp(),
+        if(platform === "tv"){
 
-                trialUpdatedBy: user.email
-            },{merge:true});
+            trialConfig.trialTVEnabled = enabled;
+            trialConfig.trialTVValue = value;
+            trialConfig.trialTVUnit = unit;
+            trialConfig.trialTVDays = compatibilityDays;
 
-        trialConfig.trialEnabled = enabled;
-        trialConfig.trialValue = value;
-        trialConfig.trialUnit = unit;
-        trialConfig.trialDays = compatibilityDays;
+        }else{
+
+            trialConfig.trialMobileEnabled = enabled;
+            trialConfig.trialMobileValue = value;
+            trialConfig.trialMobileUnit = unit;
+            trialConfig.trialMobileDays = compatibilityDays;
+        }
 
         fillTrialEditor();
 
         setTrialEditStatus(
-            "✅ Đã lưu thời gian dùng thử vào Firebase."
+            "✅ Đã lưu thời gian dùng thử " +
+            prefix + " vào Firebase.",
+            false,
+            platform
         );
 
         showStatus(
-            "✅ Đã cập nhật thời gian dùng thử.",
+            "✅ Đã cập nhật Trial " +
+            prefix + ".",
             "success"
         );
 
@@ -3080,23 +3366,40 @@ async function saveTrialSettings(){
         console.error(error);
 
         const message =
-            "❌ Không thể lưu thời gian dùng thử:\n" +
+            "❌ Không thể lưu Trial " +
+            prefix + ":\n" +
             getFirebaseError(error);
 
-        setTrialEditStatus(message,true);
-        showStatus(message,"error");
+        setTrialEditStatus(
+            message,
+            true,
+            platform
+        );
+
+        showStatus(
+            message,
+            "error"
+        );
 
     }finally{
 
-        if(saveButton){
-            saveButton.disabled = false;
-            saveButton.innerText =
-                "💾 LƯU THỜI GIAN DÙNG THỬ";
+        if(button){
+            button.disabled = false;
+            button.innerText =
+                platform === "tv"
+                    ? "💾 LƯU TRIAL TV"
+                    : "💾 LƯU TRIAL MOBILE";
         }
 
         controlWriteBusy = false;
     }
 }
+
+/*
+ * Tương thích với code cũ nếu có nơi nào đó vẫn gọi
+ * saveTrialSettings() hoặc toggleTrial() không truyền platform.
+ * Không tự ghi dữ liệu khi không xác định được platform.
+ */
 
 async function toggleNotification(platform){
 
