@@ -2144,30 +2144,32 @@ async function saveM3UServerConfig(patch){
 }
 
 async function toggleM3UServer(server){
+
     const button = document.getElementById(
         server === "github"
             ? "m3uGithubButton"
             : "m3uGitlabButton"
     );
 
-    if(button) button.disabled = true;
+    if(!button) return;
 
-    const current =
-        server === "github"
-            ? m3uServerConfig.githubEnabled === "ON"
-            : m3uServerConfig.gitlabEnabled === "ON";
+    /* Lấy trạng thái trực tiếp từ công tắc vừa bấm: ON/OFF. */
+    const next = button.checked ? "ON" : "OFF";
 
-    const next = current ? "OFF" : "ON";
+    button.disabled = true;
 
     const patch =
         server === "github"
-            ? {githubEnabled:next}
-            : {gitlabEnabled:next};
+            ? {githubEnabled: next}
+            : {gitlabEnabled: next};
 
     try{
-        await saveM3UServerConfig(patch);
+        const saved = await saveM3UServerConfig(patch);
+        if(saved){
+            await loadM3UServerConfig();
+        }
     }finally{
-        if(button) button.disabled = false;
+        button.disabled = false;
     }
 }
 
