@@ -3,6 +3,8 @@
 
 <!DOCTYPE html>
 
+
+html
 <html lang="vi">
 <head>
 <meta charset="utf-8"/>
@@ -1214,7 +1216,6 @@ html, body, button, input, select, textarea, label {
     }
 }
 </style>
-<style>
 /* ===== M3U SERVER CONTROL - BỔ SUNG, KHÔNG ĐỤNG UI CŨ ===== */
 .m3u-server-control-panel{
     margin:0 0 22px;
@@ -1265,7 +1266,6 @@ html, body, button, input, select, textarea, label {
     .m3u-server-control-grid{grid-template-columns:1fr;}
     .m3u-server-control-panel{width:100%;max-width:100%;padding:10px;overflow:hidden;}
 }
-</style>
 </head>
 <body>
 <div class="header">
@@ -1691,7 +1691,7 @@ html, body, button, input, select, textarea, label {
     </div>
 </div>
 </div>
-
+ MODAL CHI TIẾT 
 <div class="modal-backdrop hidden" id="detailModal">
 <div class="modal">
 <h3>📋 Chi tiết thiết bị</h3>
@@ -2115,51 +2115,18 @@ async function saveM3UServerConfig(patch){
     updateM3UServerControlUI();
 
     try{
-        const serverRef = db
+        await db
             .collection("m3u_config")
-            .doc("server");
+            .doc("server")
+            .set({
+                ...patch,
+                updatedAt:
+                    firebase.firestore.FieldValue.serverTimestamp(),
+                updatedBy:
+                    user.email
+            },{merge:true});
 
-        await serverRef.set({
-            ...patch,
-            updatedAt:
-                firebase.firestore.FieldValue.serverTimestamp(),
-            updatedBy:
-                user.email
-        },{merge:true});
-
-        // Đọc lại ngay sau khi ghi để chắc chắn Firebase đã lưu.
-        const verifySnap = await serverRef.get();
-        const verifyData = verifySnap.data() || {};
-
-        const fieldName = Object.prototype.hasOwnProperty.call(patch, "github")
-            ? "github"
-            : "gitlab";
-
-        const expected = patch[fieldName];
-        const actual = normalizeOnOff(verifyData[fieldName], "__INVALID__");
-
-        if(actual !== expected){
-            throw new Error(
-                "Firebase không xác nhận được " +
-                fieldName +
-                ' = "' +
-                expected +
-                '". Giá trị hiện tại: "' +
-                verifyData[fieldName] +
-                '"'
-            );
-        }
-
-        // Đồng bộ lại toàn bộ trạng thái từ Firebase sau khi ghi.
-        m3uServerConfig = {
-            github: normalizeOnOff(verifyData.github,"ON"),
-            gitlab: normalizeOnOff(verifyData.gitlab,"OFF"),
-            mode: normalizeM3UMode(verifyData.mode)
-        };
-        updateM3UServerControlUI();
-
-        showStatus("✅ Firebase đã lưu " + fieldName.toUpperCase() +
-                   ' = "' + expected + '".',"success");
+        showStatus("✅ Đã cập nhật trạng thái máy chủ M3U.","success");
         return true;
 
     }catch(error){
