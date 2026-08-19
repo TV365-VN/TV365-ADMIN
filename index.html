@@ -1215,7 +1215,58 @@ html, body, button, input, select, textarea, label {
         grid-template-columns: 1fr !important;
     }
 }
-</style></head>
+</style>
+/* ===== M3U SERVER CONTROL - BỔ SUNG, KHÔNG ĐỤNG UI CŨ ===== */
+.m3u-server-control-panel{
+    margin:0 0 22px;
+    padding:14px;
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    border-radius:12px;
+}
+.m3u-server-control-title{
+    margin:0 0 12px;
+    font-size:16px;
+    font-weight:bold;
+    color:#334155;
+}
+.m3u-server-control-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+}
+.m3u-server-mode{
+    margin-top:10px;
+    padding:10px 12px;
+    border:1px solid #e2e8f0;
+    border-radius:10px;
+    background:#fff;
+}
+.m3u-server-mode label{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin:7px 0 0;
+    font-weight:normal;
+}
+.m3u-server-mode input{
+    width:auto;
+    margin:0;
+}
+.m3u-server-control-status{
+    margin-top:10px;
+    padding:10px 12px;
+    border-radius:8px;
+    background:#f1f5f9;
+    color:#475569;
+    font-size:13px;
+    white-space:pre-line;
+}
+@media(max-width:700px){
+    .m3u-server-control-grid{grid-template-columns:1fr;}
+    .m3u-server-control-panel{width:100%;max-width:100%;padding:10px;overflow:hidden;}
+}
+</head>
 <body>
 <div class="header">
 <div>📺 TV365 ADMIN</div>
@@ -1249,7 +1300,40 @@ html, body, button, input, select, textarea, label {
 <h2>⚙️ Quản lý Premium &amp; Thiết bị</h2>
 <div class="user-info">
         👤 Admin: <strong id="adminEmail"></strong>
-</div><div class="card" style="padding:18px;background:#fafafa;box-shadow:none;border:1px solid #e2e8f0;"><div class="notification-control-panel">
+</div>
+<div class="m3u-server-control-panel">
+<div class="m3u-server-control-title">🖥️ QUẢN LÝ MÁY CHỦ M3U</div>
+<div class="m3u-server-control-grid">
+<div class="admin-switch-row">
+<span class="admin-switch-name">🟣 GITHUB M3U</span>
+<div class="admin-switch-right">
+<label class="admin-switch">
+<input id="m3uGithubButton" onchange="toggleM3UServer('github')" type="checkbox"/>
+<span class="admin-switch-slider"></span>
+</label>
+<span class="admin-switch-status" id="m3uGithubSwitchStatus">ĐANG BẬT</span>
+</div>
+</div>
+<div class="admin-switch-row">
+<span class="admin-switch-name">🟢 GITLAB M3U</span>
+<div class="admin-switch-right">
+<label class="admin-switch">
+<input id="m3uGitlabButton" onchange="toggleM3UServer('gitlab')" type="checkbox"/>
+<span class="admin-switch-slider"></span>
+</label>
+<span class="admin-switch-status" id="m3uGitlabSwitchStatus">ĐANG TẮT</span>
+</div>
+</div>
+</div>
+<div class="m3u-server-mode">
+<strong>Chế độ chuyển máy chủ</strong>
+<label><input type="radio" name="m3uServerMode" value="AUTO" onchange="changeM3UServerMode('AUTO')"/> AUTO — GitHub trước, lỗi thì GitLab</label>
+<label><input type="radio" name="m3uServerMode" value="GITHUB_ONLY" onchange="changeM3UServerMode('GITHUB_ONLY')"/> GITHUB ONLY — chỉ GitHub</label>
+<label><input type="radio" name="m3uServerMode" value="GITLAB_ONLY" onchange="changeM3UServerMode('GITLAB_ONLY')"/> GITLAB ONLY — chỉ GitLab</label>
+</div>
+<div class="m3u-server-control-status" id="m3uServerControlStatus">Đang đọc trạng thái máy chủ...</div>
+</div>
+<div class="card" style="padding:18px;background:#fafafa;box-shadow:none;border:1px solid #e2e8f0;"><div class="notification-control-panel">
 <div class="notification-control-title">🔔 QUẢN LÝ THÔNG BÁO ỨNG DỤNG</div>
 <div class="notification-control-grid">
 <div class="admin-switch-row">
@@ -1861,6 +1945,7 @@ function showAdminPanel(user){
     loadDashboard();
     loadFreeConfig();
     loadNotificationConfig();
+    loadM3UServerConfig();
 }
 
 function logout(){
@@ -1888,6 +1973,216 @@ function logout(){
             "info"
         );
     });
+}
+
+/* =========================================================
+   M3U SERVER CONTROL
+   Dùng collection riêng để KHÔNG ảnh hưởng dữ liệu cũ.
+   Cả Admin GitHub và Admin GitLab sau này sẽ dùng chung doc này.
+   ========================================================= */
+
+let m3uServerConfig = {
+    githubEnabled: "ON",
+    gitlabEnabled: "OFF",
+    mode: "AUTO"
+};
+
+function normalizeM3UMode(value){
+    const mode = String(value || "AUTO").toUpperCase();
+    if(mode === "GITHUB_ONLY") return "GITHUB_ONLY";
+    if(mode === "GITLAB_ONLY") return "GITLAB_ONLY";
+    return "AUTO";
+}
+
+function updateM3UServerControlUI(){
+    const githubOn =
+        m3uServerConfig.githubEnabled === "ON";
+
+    const gitlabOn =
+        m3uServerConfig.gitlabEnabled === "ON";
+
+    const githubButton =
+        document.getElementById("m3uGithubButton");
+
+    const gitlabButton =
+        document.getElementById("m3uGitlabButton");
+
+    if(githubButton){
+        githubButton.checked = githubOn;
+    }
+
+    if(gitlabButton){
+        gitlabButton.checked = gitlabOn;
+    }
+
+    const githubStatus =
+        document.getElementById("m3uGithubSwitchStatus");
+
+    const gitlabStatus =
+        document.getElementById("m3uGitlabSwitchStatus");
+
+    if(githubStatus){
+        githubStatus.innerText =
+            githubOn ? "ĐANG BẬT" : "ĐANG TẮT";
+        githubStatus.classList.toggle("on",githubOn);
+    }
+
+    if(gitlabStatus){
+        gitlabStatus.innerText =
+            gitlabOn ? "ĐANG BẬT" : "ĐANG TẮT";
+        gitlabStatus.classList.toggle("on",gitlabOn);
+    }
+
+    const mode = normalizeM3UMode(m3uServerConfig.mode);
+    document.querySelectorAll('input[name="m3uServerMode"]').forEach(input => {
+        input.checked = input.value === mode;
+    });
+
+    const status =
+        document.getElementById("m3uServerControlStatus");
+
+    if(status){
+        status.className = "m3u-server-control-status";
+        status.innerText =
+            "GitHub: " + (githubOn ? "ĐANG BẬT" : "ĐANG TẮT") +
+            "\nGitLab: " + (gitlabOn ? "ĐANG BẬT" : "ĐANG TẮT") +
+            "\nChế độ: " + mode;
+    }
+}
+
+async function loadM3UServerConfig(){
+    try{
+        const doc = await db
+            .collection("m3u_config")
+            .doc("server")
+            .get();
+
+        if(!doc.exists){
+            m3uServerConfig = {
+                githubEnabled: "ON",
+                gitlabEnabled: "OFF",
+                mode: "AUTO"
+            };
+            updateM3UServerControlUI();
+            return;
+        }
+
+        const data = doc.data() || {};
+
+        m3uServerConfig = {
+            githubEnabled:
+                normalizeOnOff(data.githubEnabled,"ON"),
+            gitlabEnabled:
+                normalizeOnOff(data.gitlabEnabled,"OFF"),
+            mode:
+                normalizeM3UMode(data.mode)
+        };
+
+        updateM3UServerControlUI();
+
+    }catch(error){
+        console.error(error);
+        const status =
+            document.getElementById("m3uServerControlStatus");
+        if(status){
+            status.className = "m3u-server-control-status";
+            status.style.background = "#fee2e2";
+            status.style.color = "#991b1b";
+            status.innerText =
+                "❌ Không đọc được trạng thái máy chủ M3U:\n" +
+                getFirebaseError(error);
+        }
+    }
+}
+
+async function saveM3UServerConfig(patch){
+    const user = auth.currentUser;
+
+    if(!user ||
+       !user.email ||
+       user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()){
+        updateM3UServerControlUI();
+        showStatus("Tài khoản không có quyền Admin.","error");
+        return false;
+    }
+
+    const previous = {...m3uServerConfig};
+    m3uServerConfig = {
+        ...m3uServerConfig,
+        ...patch
+    };
+
+    updateM3UServerControlUI();
+
+    try{
+        await db
+            .collection("m3u_config")
+            .doc("server")
+            .set({
+                ...patch,
+                updatedAt:
+                    firebase.firestore.FieldValue.serverTimestamp(),
+                updatedBy:
+                    user.email
+            },{merge:true});
+
+        showStatus("✅ Đã cập nhật trạng thái máy chủ M3U.","success");
+        return true;
+
+    }catch(error){
+        console.error(error);
+        m3uServerConfig = previous;
+        updateM3UServerControlUI();
+
+        const message =
+            "❌ Không thể cập nhật máy chủ M3U:\n" +
+            getFirebaseError(error);
+
+        showStatus(message,"error");
+        return false;
+    }
+}
+
+async function toggleM3UServer(server){
+    const button = document.getElementById(
+        server === "github"
+            ? "m3uGithubButton"
+            : "m3uGitlabButton"
+    );
+
+    if(button) button.disabled = true;
+
+    const current =
+        server === "github"
+            ? m3uServerConfig.githubEnabled === "ON"
+            : m3uServerConfig.gitlabEnabled === "ON";
+
+    const next = current ? "OFF" : "ON";
+
+    const patch =
+        server === "github"
+            ? {githubEnabled:next}
+            : {gitlabEnabled:next};
+
+    try{
+        await saveM3UServerConfig(patch);
+    }finally{
+        if(button) button.disabled = false;
+    }
+}
+
+async function changeM3UServerMode(mode){
+    const normalized = normalizeM3UMode(mode);
+    const radios =
+        document.querySelectorAll('input[name="m3uServerMode"]');
+
+    radios.forEach(input => input.disabled = true);
+
+    try{
+        await saveM3UServerConfig({mode:normalized});
+    }finally{
+        radios.forEach(input => input.disabled = false);
+    }
 }
 
 /* =========================================================
