@@ -1982,8 +1982,8 @@ function logout(){
    ========================================================= */
 
 let m3uServerConfig = {
-    githubEnabled: "ON",
-    gitlabEnabled: "OFF",
+    github: "ON",
+    gitlab: "OFF",
     mode: "AUTO"
 };
 
@@ -1996,10 +1996,10 @@ function normalizeM3UMode(value){
 
 function updateM3UServerControlUI(){
     const githubOn =
-        m3uServerConfig.githubEnabled === "ON";
+        m3uServerConfig.github === "ON";
 
     const gitlabOn =
-        m3uServerConfig.gitlabEnabled === "ON";
+        m3uServerConfig.gitlab === "ON";
 
     const githubButton =
         document.getElementById("m3uGithubButton");
@@ -2059,8 +2059,8 @@ async function loadM3UServerConfig(){
 
         if(!doc.exists){
             m3uServerConfig = {
-                githubEnabled: "ON",
-                gitlabEnabled: "OFF",
+                github: "ON",
+                gitlab: "OFF",
                 mode: "AUTO"
             };
             updateM3UServerControlUI();
@@ -2070,10 +2070,10 @@ async function loadM3UServerConfig(){
         const data = doc.data() || {};
 
         m3uServerConfig = {
-            githubEnabled:
-                normalizeOnOff(data.githubEnabled,"ON"),
-            gitlabEnabled:
-                normalizeOnOff(data.gitlabEnabled,"OFF"),
+            github:
+                normalizeOnOff(data.github,"ON"),
+            gitlab:
+                normalizeOnOff(data.gitlab,"OFF"),
             mode:
                 normalizeM3UMode(data.mode)
         };
@@ -2160,8 +2160,8 @@ async function toggleM3UServer(server){
 
     const patch =
         server === "github"
-            ? {githubEnabled: next}
-            : {gitlabEnabled: next};
+            ? {github: next}
+            : {gitlab: next};
 
     try{
         const saved = await saveM3UServerConfig(patch);
