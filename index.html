@@ -1271,7 +1271,6 @@ html, body, button, input, select, textarea, label {
 </div>
 </div>
 <div class="container">
- LOGIN 
 <div class="card" id="loginCard">
 <h2>🔐 Đăng nhập Admin 🔐</h2>
 <p>Chỉ tài khoản quản trị TV365 mới được sử dụng hệ thống.</p>
@@ -1289,7 +1288,6 @@ html, body, button, input, select, textarea, label {
         Vui lòng đăng nhập.
     </div>
 </div>
- ADMIN 
 <div class="card hidden" id="adminCard">
 <button class="logout" onclick="logout()">ĐĂNG XUẤT</button>
 <h2>⚙️ Quản lý Premium &amp; Thiết bị</h2>
@@ -1310,21 +1308,21 @@ html, body, button, input, select, textarea, label {
 </div>
 </div>
 <div class="admin-switch-row">
-<span class="admin-switch-name">🟢 Máy Chủ Dự Phòng - GITLAB</span>
+<span class="admin-switch-name">🟢 Máy Chủ Dự Phòng - CODEBERG</span>
 <div class="admin-switch-right">
 <label class="admin-switch">
-<input id="m3uGitlabButton" onchange="toggleM3UServer('gitlab')" type="checkbox"/>
+<input id="m3uCodebergButton" onchange="toggleM3UServer('codeberg')" type="checkbox"/>
 <span class="admin-switch-slider"></span>
 </label>
-<span class="admin-switch-status" id="m3uGitlabSwitchStatus">ĐANG TẮT</span>
+<span class="admin-switch-status" id="m3uCodebergSwitchStatus">ĐANG TẮT</span>
 </div>
 </div>
 </div>
 <div class="m3u-server-mode">
 <strong>Chế độ chuyển máy chủ</strong>
-<label><input type="radio" name="m3uServerMode" value="AUTO" onchange="changeM3UServerMode('AUTO')"/> AUTO — GitHub trước, lỗi thì GitLab</label>
+<label><input type="radio" name="m3uServerMode" value="AUTO" onchange="changeM3UServerMode('AUTO')"/> AUTO — GitHub trước, lỗi thì Codeberg</label>
 <label><input type="radio" name="m3uServerMode" value="GITHUB_ONLY" onchange="changeM3UServerMode('GITHUB_ONLY')"/> GITHUB ONLY — chỉ GitHub</label>
-<label><input type="radio" name="m3uServerMode" value="GITLAB_ONLY" onchange="changeM3UServerMode('GITLAB_ONLY')"/> GITLAB ONLY — chỉ GitLab</label>
+<label><input type="radio" name="m3uServerMode" value="CODEBERG_ONLY" onchange="changeM3UServerMode('CODEBERG_ONLY')"/> CODEBERG ONLY — chỉ Codeberg</label>
 </div>
 <div class="m3u-server-control-status" id="m3uServerControlStatus">Đang đọc trạng thái máy chủ...</div>
 </div>
@@ -1686,7 +1684,6 @@ html, body, button, input, select, textarea, label {
     </div>
 </div>
 </div>
- MODAL CHI TIẾT 
 <div class="modal-backdrop hidden" id="detailModal">
 <div class="modal">
 <h3>📋 Chi tiết thiết bị</h3>
@@ -1973,19 +1970,19 @@ function logout(){
 /* =========================================================
    M3U SERVER CONTROL
    Dùng collection riêng để KHÔNG ảnh hưởng dữ liệu cũ.
-   Cả Admin GitHub và Admin GitLab sau này sẽ dùng chung doc này.
+   Admin GitHub và Admin Codeberg dùng chung doc này.
    ========================================================= */
 
 let m3uServerConfig = {
     github: "ON",
-    gitlab: "OFF",
+    codeberg: "OFF",
     mode: "AUTO"
 };
 
 function normalizeM3UMode(value){
     const mode = String(value || "AUTO").toUpperCase();
     if(mode === "GITHUB_ONLY") return "GITHUB_ONLY";
-    if(mode === "GITLAB_ONLY") return "GITLAB_ONLY";
+    if(mode === "CODEBERG_ONLY") return "CODEBERG_ONLY";
     return "AUTO";
 }
 
@@ -1993,28 +1990,28 @@ function updateM3UServerControlUI(){
     const githubOn =
         m3uServerConfig.github === "ON";
 
-    const gitlabOn =
-        m3uServerConfig.gitlab === "ON";
+    const codebergOn =
+        m3uServerConfig.codeberg === "ON";
 
     const githubButton =
         document.getElementById("m3uGithubButton");
 
-    const gitlabButton =
-        document.getElementById("m3uGitlabButton");
+    const codebergButton =
+        document.getElementById("m3uCodebergButton");
 
     if(githubButton){
         githubButton.checked = githubOn;
     }
 
-    if(gitlabButton){
-        gitlabButton.checked = gitlabOn;
+    if(codebergButton){
+        codebergButton.checked = codebergOn;
     }
 
     const githubStatus =
         document.getElementById("m3uGithubSwitchStatus");
 
-    const gitlabStatus =
-        document.getElementById("m3uGitlabSwitchStatus");
+    const codebergStatus =
+        document.getElementById("m3uCodebergSwitchStatus");
 
     if(githubStatus){
         githubStatus.innerText =
@@ -2022,10 +2019,10 @@ function updateM3UServerControlUI(){
         githubStatus.classList.toggle("on",githubOn);
     }
 
-    if(gitlabStatus){
-        gitlabStatus.innerText =
-            gitlabOn ? "ĐANG BẬT" : "ĐANG TẮT";
-        gitlabStatus.classList.toggle("on",gitlabOn);
+    if(codebergStatus){
+        codebergStatus.innerText =
+            codebergOn ? "ĐANG BẬT" : "ĐANG TẮT";
+        codebergStatus.classList.toggle("on",codebergOn);
     }
 
     const mode = normalizeM3UMode(m3uServerConfig.mode);
@@ -2040,7 +2037,7 @@ function updateM3UServerControlUI(){
         status.className = "m3u-server-control-status";
         status.innerText =
             "GitHub: " + (githubOn ? "ĐANG BẬT" : "ĐANG TẮT") +
-            "\nGitLab: " + (gitlabOn ? "ĐANG BẬT" : "ĐANG TẮT") +
+            "\nCodeberg: " + (codebergOn ? "ĐANG BẬT" : "ĐANG TẮT") +
             "\nChế độ: " + mode;
     }
 }
@@ -2055,7 +2052,7 @@ async function loadM3UServerConfig(){
         if(!doc.exists){
             m3uServerConfig = {
                 github: "ON",
-                gitlab: "OFF",
+                codeberg: "OFF",
                 mode: "AUTO"
             };
             updateM3UServerControlUI();
@@ -2067,8 +2064,8 @@ async function loadM3UServerConfig(){
         m3uServerConfig = {
             github:
                 normalizeOnOff(data.github,"ON"),
-            gitlab:
-                normalizeOnOff(data.gitlab,"OFF"),
+            codeberg:
+                normalizeOnOff(data.codeberg,"OFF"),
             mode:
                 normalizeM3UMode(data.mode)
         };
@@ -2143,7 +2140,7 @@ async function toggleM3UServer(server){
     const button = document.getElementById(
         server === "github"
             ? "m3uGithubButton"
-            : "m3uGitlabButton"
+            : "m3uCodebergButton"
     );
 
     if(!button) return;
@@ -2156,7 +2153,7 @@ async function toggleM3UServer(server){
     const patch =
         server === "github"
             ? {github: next}
-            : {gitlab: next};
+            : {codeberg: next};
 
     try{
         const saved = await saveM3UServerConfig(patch);
