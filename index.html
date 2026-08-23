@@ -294,10 +294,12 @@ button:disabled{opacity:.5;cursor:not-allowed}
 }
 .premium-channel-toolbar{
     display:grid;
-    grid-template-columns:1fr auto;
+    grid-template-columns:minmax(0,1fr) auto auto;
     gap:10px;
     margin-bottom:12px;
 }
+.premium-channel-search{background:#2563eb}
+.premium-channel-search:active{transform:translateY(1px)}
 .premium-channel-toolbar input{
     width:100%;
     padding:12px;
@@ -417,6 +419,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:700px){
     .premium-global-grid{grid-template-columns:1fr}
     .premium-channel-toolbar{grid-template-columns:1fr}
+    .premium-channel-search,.premium-channel-refresh{width:100%}
     .premium-channel-header{display:none}
     .premium-channel-row{
         grid-template-columns:1fr;
@@ -567,6 +570,15 @@ async function loadPremiumChannels(){
         if(count) count.innerText = "Không tải được danh sách.";
     }finally{
         if(button) button.disabled = false;
+    }
+}
+
+function searchPremiumChannels(){
+    renderPremiumChannels();
+    const input = document.getElementById("premiumChannelSearch");
+    if(input){
+        input.focus();
+        input.select();
     }
 }
 
@@ -2122,7 +2134,8 @@ html, body, button, input, select, textarea, label {
 </div>
 <div class="premium-global-status" id="premiumChannelsGlobalStatus">Đang đọc cấu hình kênh Premium...</div>
 <div class="premium-channel-toolbar">
-<input id="premiumChannelSearch" oninput="renderPremiumChannels()" placeholder="🔎 Tìm kênh Premium..." type="text"/>
+<input id="premiumChannelSearch" oninput="renderPremiumChannels()" onkeydown="if(event.key==='Enter'){searchPremiumChannels();}" placeholder="🔎 Nhập tên kênh cần tìm..." type="text"/>
+<button class="premium-channel-search" id="premiumChannelSearchButton" onclick="searchPremiumChannels()" type="button">🔎 TÌM KIẾM KÊNH</button>
 <button class="premium-channel-refresh" id="premiumChannelRefreshButton" onclick="loadPremiumChannels()" type="button">🔄 LÀM MỚI KÊNH</button>
 </div>
 <div class="premium-channel-list" id="premiumChannelList">
