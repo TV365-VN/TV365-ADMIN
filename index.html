@@ -1,7 +1,4 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
-
-<!DOCTYPE html>
 
 <html lang="vi">
 <head>
@@ -437,436 +434,6 @@ button:disabled{opacity:.5;cursor:not-allowed}
 }
 
 
-/* =========================================================
-   PREMIUM CHANNEL CONTROL
-   Collection: premium_channels
-   Document ví dụ: HBO
-   enabled: true
-   name: "HBO"
-   tvPremium: true
-   mobilePremium: false
-
-   FREE TOÀN BỘ:
-   - Khi bật: lưu trạng thái cũ vào từng document rồi set Premium=false.
-   - Khi tắt: khôi phục đúng trạng thái đã lưu.
-   ========================================================= */
-
-function premiumBool(value, fallback = false){
-    if(typeof value === "boolean") return value;
-    if(typeof value === "string"){
-        const v = value.toUpperCase();
-        if(v === "TRUE" || v === "ON" || v === "1") return true;
-        if(v === "FALSE" || v === "OFF" || v === "0") return false;
-    }
-    return fallback;
-}
-
-function premiumChannelName(data, id){
-    return String(
-        data?.name || data?.channelName || data?.title || id || "Kênh không tên"
-    );
-}
-
-function updatePremiumGlobalSwitch(id, isOn){
-    const input = document.getElementById(id);
-    if(input) input.checked = isOn;
-    const map = {
-        premiumChannelsFreeTVButton: "premiumChannelsFreeTVStatus",
-        premiumChannelsFreeMobileButton: "premiumChannelsFreeMobileStatus"
-    };
-    const status = document.getElementById(map[id]);
-    if(status){
-        status.innerText = isOn ? "ĐANG BẬT" : "ĐANG TẮT";
-        status.classList.toggle("on", isOn);
-    }
-}
-
-function updatePremiumGlobalUI(){
-    // Tivi + Mobile là MỘT công tắc tổng.
-    // Nếu một bên đang ON thì giao diện hiển thị cả hai cùng ON.
-    const freeOn =
-        premiumChannelsFreeConfig.freeTV === "ON" ||
-        premiumChannelsFreeConfig.freeMobile === "ON";
-
-    updatePremiumGlobalSwitch("premiumChannelsFreeTVButton", freeOn);
-    updatePremiumGlobalSwitch("premiumChannelsFreeMobileButton", freeOn);
-
-    const status = document.getElementById("premiumChannelsGlobalStatus");
-    if(!status) return;
-
-    if(freeOn){
-        status.className = "premium-global-status on";
-        status.innerText =
-            "🟢 ĐANG FREE TOÀN BỘ KÊNH PREMIUM: TIVI + MOBILE\n" +
-            "Bấm một công tắc sẽ đồng bộ cả hai. Trạng thái Premium cũ của từng kênh được giữ để khôi phục.";
-    }else{
-        status.className = "premium-global-status";
-        status.innerText =
-            "⚪ FREE TOÀN BỘ KÊNH PREMIUM đang tắt. Tivi + Mobile dùng trạng thái Premium riêng của từng kênh.";
-    }
-}
-
-async function loadPremiumChannelGlobalConfig(){
-    try{
-        const snap = await db.collection("premium_config").doc("system").get();
-        const data = snap.exists ? (snap.data() || {}) : {};
-
-        // Đọc ĐÚNG hai field mà Admin cũ đã sử dụng.
-        // Không ghi gì vào Firebase khi F5.
-        const tv = normalizeOnOff(data.premiumChannelsFreeTV, "OFF");
-        const mobile = normalizeOnOff(data.premiumChannelsFreeMobile, "OFF");
-
-        // Hai công tắc được thiết kế đồng bộ. Nếu dữ liệu cũ bị lệch,
-        // giao diện lấy trạng thái ON nếu một trong hai đang ON.
-        const freeOn = tv === "ON" || mobile === "ON";
-
-        premiumChannelsFreeConfig = {
-            freeTV: freeOn ? "ON" : "OFF",
-            freeMobile: freeOn ? "ON" : "OFF"
-        };
-
-        updatePremiumGlobalUI();
-        return data;
-    }catch(error){
-        console.error(error);
-        const status = document.getElementById("premiumChannelsGlobalStatus");
-        if(status){
-            status.className = "premium-global-status";
-            status.style.background = "#fee2e2";
-            status.style.color = "#991b1b";
-            status.innerText = "❌ Không đọc được cấu hình Premium: " + getFirebaseError(error);
-        }
-        return {};
-    }
-}
-
-async function loadPremiumChannels(){
-    const list = document.getElementById("premiumChannelList");
-    const count = document.getElementById("premiumChannelCount");
-    const button = document.getElementById("premiumChannelRefreshButton");
-
-    if(list) list.innerHTML = '<div class="premium-channel-empty">Đang tải danh sách kênh Premium...</div>';
-    if(button) button.disabled = true;
-
-    try{
-        await loadPremiumChannelGlobalConfig();
-
-        const snapshot = await db.collection("premium_channels").get();
-        premiumChannels = [];
-
-        snapshot.forEach(doc => {
-            const data = doc.data() || {};
-            premiumChannels.push({
-                id: doc.id,
-                data: data,
-                name: premiumChannelName(data, doc.id),
-                enabled: premiumBool(data.enabled, true),
-                tvPremium: premiumBool(data.tvPremium, false),
-                mobilePremium: premiumBool(data.mobilePremium, false)
-            });
-        });
-
-        premiumChannels.sort((a,b) =>
-            a.name.localeCompare(b.name, "vi", {numeric:true, sensitivity:"base"})
-        );
-
-        renderPremiumChannels();
-
-    }catch(error){
-        console.error(error);
-        if(list){
-            list.innerHTML = '<div class="premium-channel-empty">❌ Không đọc được collection premium_channels.<br>' + escapeHtml(getFirebaseError(error)) + '</div>';
-        }
-        if(count) count.innerText = "Không tải được danh sách.";
-    }finally{
-        if(button) button.disabled = false;
-    }
-}
-
-function searchPremiumChannels(){
-    renderPremiumChannels();
-    const input = document.getElementById("premiumChannelSearch");
-    if(input){
-        input.focus();
-        input.select();
-    }
-}
-
-function renderPremiumChannels(){
-    const list = document.getElementById("premiumChannelList");
-    const count = document.getElementById("premiumChannelCount");
-    const searchInput = document.getElementById("premiumChannelSearch");
-    if(!list) return;
-
-    const q = String(searchInput?.value || "").trim().toLowerCase();
-    const filtered = premiumChannels.filter(item => {
-        if(!q) return true;
-        return item.name.toLowerCase().includes(q) || item.id.toLowerCase().includes(q);
-    });
-
-    if(!filtered.length){
-        list.innerHTML = '<div class="premium-channel-empty">Không tìm thấy kênh phù hợp.</div>';
-        if(count){
-            count.innerText = q
-                ? `Hiển thị 0 / ${premiumChannels.length} kênh.`
-                : "Chưa có kênh trong premium_channels.";
-        }
-        return;
-    }
-
-    const globalTV = premiumChannelsFreeConfig.freeTV === "ON";
-    const globalMobile = premiumChannelsFreeConfig.freeMobile === "ON";
-
-    let html = `
-        <div class="premium-channel-header">
-            <div>KÊNH</div>
-            <div style="text-align:center">BẬT KÊNH</div>
-            <div style="text-align:center">TIVI PREMIUM</div>
-            <div style="text-align:center">MOBILE PREMIUM</div>
-        </div>`;
-
-    html += filtered.map(item => {
-        const tvChecked = item.tvPremium;
-        const mobileChecked = item.mobilePremium;
-        const tvDisabled = !item.enabled || globalTV;
-        const mobileDisabled = !item.enabled || globalMobile;
-
-        return `
-        <div class="premium-channel-row">
-            <div>
-                <div class="premium-channel-name">${escapeHtml(item.name)}</div>
-                <div class="premium-channel-id">ID: ${escapeHtml(item.id)}</div>
-            </div>
-            <div class="premium-channel-enabled">
-                <label class="premium-mini-switch" title="${item.enabled ? "Kênh đang bật" : "Kênh đang tắt"}">
-                    <input type="checkbox" ${item.enabled ? "checked" : ""}
-                        onchange="togglePremiumChannel('${escapeJs(item.id)}','enabled',this.checked)"/>
-                    <span class="premium-mini-slider"></span>
-                </label>
-            </div>
-            <div style="text-align:center">
-                <label class="premium-mini-switch" title="${globalTV ? "FREE toàn bộ Tivi đang bật" : "Premium Tivi"}">
-                    <input type="checkbox" ${tvChecked ? "checked" : ""} ${tvDisabled ? "disabled" : ""}
-                        onchange="togglePremiumChannel('${escapeJs(item.id)}','tvPremium',this.checked)"/>
-                    <span class="premium-mini-slider"></span>
-                </label>
-                <div><span class="premium-onoff ${tvChecked ? "on" : "off"}">${tvChecked ? "ON" : "OFF"}</span></div>
-            </div>
-            <div style="text-align:center">
-                <label class="premium-mini-switch" title="${globalMobile ? "FREE toàn bộ Mobile đang bật" : "Premium Mobile"}">
-                    <input type="checkbox" ${mobileChecked ? "checked" : ""} ${mobileDisabled ? "disabled" : ""}
-                        onchange="togglePremiumChannel('${escapeJs(item.id)}','mobilePremium',this.checked)"/>
-                    <span class="premium-mini-slider"></span>
-                </label>
-                <div><span class="premium-onoff ${mobileChecked ? "on" : "off"}">${mobileChecked ? "ON" : "OFF"}</span></div>
-            </div>
-        </div>`;
-    }).join("");
-
-    list.innerHTML = html;
-
-    if(count){
-        const tvPremiumCount = premiumChannels.filter(x => x.enabled && x.tvPremium).length;
-        const mobilePremiumCount = premiumChannels.filter(x => x.enabled && x.mobilePremium).length;
-        count.innerText =
-            `Tổng ${premiumChannels.length} kênh • Hiển thị ${filtered.length} • Premium Tivi: ${tvPremiumCount} • Premium Mobile: ${mobilePremiumCount}`;
-    }
-}
-
-async function commitPremiumChannelUpdates(updates){
-    const entries = Object.entries(updates);
-    for(let i = 0; i < entries.length; i += 400){
-        const batch = db.batch();
-        entries.slice(i, i + 400).forEach(([id, data]) => {
-            batch.set(db.collection("premium_channels").doc(id), data, {merge:true});
-        });
-        await batch.commit();
-    }
-}
-
-async function togglePremiumChannel(channelId, field, value){
-    if(premiumChannelsWriteBusy) return;
-
-    const user = auth.currentUser;
-    if(!user || !user.email || user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()){
-        showStatus("Tài khoản không có quyền Admin.", "error");
-        await loadPremiumChannels();
-        return;
-    }
-
-    if((field === "tvPremium" && premiumChannelsFreeConfig.freeTV === "ON") ||
-       (field === "mobilePremium" && premiumChannelsFreeConfig.freeMobile === "ON")){
-        showStatus("Không thể sửa Premium nền tảng này khi FREE TOÀN BỘ đang bật. Hãy tắt FREE TOÀN BỘ trước.", "info");
-        await loadPremiumChannels();
-        return;
-    }
-
-    const item = premiumChannels.find(x => x.id === channelId);
-    if(!item) return;
-
-    premiumChannelsWriteBusy = true;
-    try{
-        const patch = {};
-        patch[field] = !!value;
-        patch.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-        patch.updatedBy = user.email;
-
-        await db.collection("premium_channels").doc(channelId).set(patch, {merge:true});
-
-        item[field] = !!value;
-        renderPremiumChannels();
-
-        showStatus(
-            `✅ ${item.name}: ${field === "enabled" ? "Kênh" : field === "tvPremium" ? "Premium Tivi" : "Premium Mobile"} đã ${value ? "BẬT (ON)" : "TẮT (OFF)"}.`,
-            "success"
-        );
-    }catch(error){
-        console.error(error);
-        showStatus("❌ Không thể cập nhật kênh: " + getFirebaseError(error), "error");
-        await loadPremiumChannels();
-    }finally{
-        premiumChannelsWriteBusy = false;
-    }
-}
-
-async function togglePremiumChannelsFree(platform){
-    if(premiumChannelsWriteBusy){
-        updatePremiumGlobalUI();
-        return;
-    }
-
-    const user = auth.currentUser;
-    if(!user || !user.email || user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()){
-        showStatus("Tài khoản không có quyền Admin.", "error");
-        await loadPremiumChannelGlobalConfig();
-        return;
-    }
-
-    const tvInput = document.getElementById("premiumChannelsFreeTVButton");
-    const mobileInput = document.getElementById("premiumChannelsFreeMobileButton");
-    if(tvInput) tvInput.disabled = true;
-    if(mobileInput) mobileInput.disabled = true;
-
-    premiumChannelsWriteBusy = true;
-
-    try{
-        // Hai công tắc là MỘT cấu hình tổng:
-        // bấm một nút -> cả Tivi và Mobile cùng ON/OFF.
-        // Dùng trạng thái Firebase hiện tại làm nguồn sự thật, không lấy
-        // trạng thái của nút bên cạnh để quyết định.
-        const currentlyOn =
-            premiumChannelsFreeConfig.freeTV === "ON" ||
-            premiumChannelsFreeConfig.freeMobile === "ON";
-
-        const nextFree = !currentlyOn;
-        const snapshot = await db.collection("premium_channels").get();
-
-        const updates = {};
-
-        if(nextFree){
-            // FREE: lưu trạng thái Premium cũ của CẢ Tivi + Mobile,
-            // sau đó tạm tắt Premium của cả hai nền tảng.
-            snapshot.forEach(doc => {
-                const data = doc.data() || {};
-                const currentTV = premiumBool(data.tvPremium, false);
-                const currentMobile = premiumBool(data.mobilePremium, false);
-
-                const patch = {};
-                patch.freeBackupTvPremium = currentTV;
-                patch.freeBackupMobilePremium = currentMobile;
-                patch.tvPremium = false;
-                patch.mobilePremium = false;
-                patch.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-                patch.updatedBy = user.email;
-                updates[doc.id] = patch;
-            });
-
-            await commitPremiumChannelUpdates(updates);
-
-            await db.collection("premium_config").doc("system").set({
-                premiumChannelsFreeTV: "ON",
-                premiumChannelsFreeMobile: "ON",
-                premiumChannelsFreeTVUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                premiumChannelsFreeTVUpdatedBy: user.email,
-                premiumChannelsFreeMobileUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                premiumChannelsFreeMobileUpdatedBy: user.email
-            }, {merge:true});
-
-            premiumChannelsFreeConfig = {
-                freeTV: "ON",
-                freeMobile: "ON"
-            };
-
-            showStatus(
-                `🎁 Đã FREE TOÀN BỘ PREMIUM TIVI + MOBILE.\n\n` +
-                `Đã lưu trạng thái Premium cũ của ${snapshot.size} kênh.\n` +
-                `Khi TẮT, cả Tivi và Mobile sẽ được khôi phục đúng trạng thái trước đó.`,
-                "success"
-            );
-        }else{
-            // KHÔI PHỤC: lấy đúng trạng thái đã backup trước khi FREE.
-            snapshot.forEach(doc => {
-                const data = doc.data() || {};
-                const patch = {};
-
-                if(Object.prototype.hasOwnProperty.call(data, "freeBackupTvPremium")){
-                    patch.tvPremium = premiumBool(data.freeBackupTvPremium, false);
-                    patch.freeBackupTvPremium = firebase.firestore.FieldValue.delete();
-                }
-
-                if(Object.prototype.hasOwnProperty.call(data, "freeBackupMobilePremium")){
-                    patch.mobilePremium = premiumBool(data.freeBackupMobilePremium, false);
-                    patch.freeBackupMobilePremium = firebase.firestore.FieldValue.delete();
-                }
-
-                if(Object.keys(patch).length){
-                    patch.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-                    patch.updatedBy = user.email;
-                    updates[doc.id] = patch;
-                }
-            });
-
-            await commitPremiumChannelUpdates(updates);
-
-            await db.collection("premium_config").doc("system").set({
-                premiumChannelsFreeTV: "OFF",
-                premiumChannelsFreeMobile: "OFF",
-                premiumChannelsFreeTVUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                premiumChannelsFreeTVUpdatedBy: user.email,
-                premiumChannelsFreeMobileUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                premiumChannelsFreeMobileUpdatedBy: user.email
-            }, {merge:true});
-
-            premiumChannelsFreeConfig = {
-                freeTV: "OFF",
-                freeMobile: "OFF"
-            };
-
-            showStatus(
-                `✅ Đã TẮT FREE TOÀN BỘ PREMIUM TIVI + MOBILE.\n\n` +
-                `Các kênh đã khôi phục đúng trạng thái Premium trước khi Free.`,
-                "success"
-            );
-        }
-
-        // Đọc lại Firebase sau khi ghi để F5 luôn lấy đúng dữ liệu đã lưu.
-        await loadPremiumChannelGlobalConfig();
-        await loadPremiumChannels();
-
-    }catch(error){
-        console.error(error);
-        await loadPremiumChannelGlobalConfig();
-        showStatus(
-            "❌ Không thể thay đổi FREE toàn bộ kênh Premium: " +
-            getFirebaseError(error),
-            "error"
-        );
-    }finally{
-        premiumChannelsWriteBusy = false;
-        if(tvInput) tvInput.disabled = false;
-        if(mobileInput) mobileInput.disabled = false;
-    }
-}
 /* NOTIFICATION CONTROL */
 .notification-control-panel{
     margin:0 0 22px;
@@ -1914,7 +1481,7 @@ html, body, button, input, select, textarea, label {
 <input id="m3uGithubButton" onchange="toggleM3UServer('github')" type="checkbox"/>
 <span class="admin-switch-slider"></span>
 </label>
-<span class="admin-switch-status" id="m3uGithubSwitchStatus">ĐANG BẬT</span>
+<span class="admin-switch-status" id="m3uGithubSwitchStatus">ĐANG ĐỌC...</span>
 </div>
 </div>
 <div class="admin-switch-row">
@@ -1924,7 +1491,7 @@ html, body, button, input, select, textarea, label {
 <input id="m3uCodebergButton" onchange="toggleM3UServer('codeberg')" type="checkbox"/>
 <span class="admin-switch-slider"></span>
 </label>
-<span class="admin-switch-status" id="m3uCodebergSwitchStatus">ĐANG TẮT</span>
+<span class="admin-switch-status" id="m3uCodebergSwitchStatus">ĐANG ĐỌC...</span>
 </div>
 </div>
 </div>
@@ -1947,7 +1514,7 @@ html, body, button, input, select, textarea, label {
 <span class="admin-switch-slider"></span>
 </label>
 <span class="admin-switch-status" id="notificationMobileSwitchStatus">
-                            ĐANG TẮT
+                            ĐANG ĐỌC...
                         </span>
 </div>
 </div>
@@ -1959,7 +1526,7 @@ html, body, button, input, select, textarea, label {
 <span class="admin-switch-slider"></span>
 </label>
 <span class="admin-switch-status" id="notificationTVSwitchStatus">
-                            ĐANG TẮT
+                            ĐANG ĐỌC...
                         </span>
 </div>
 </div>
@@ -2167,7 +1734,7 @@ html, body, button, input, select, textarea, label {
 <input id="premiumChannelsFreeTVButton" onchange="togglePremiumChannelsFree('tv')" type="checkbox"/>
 <span class="admin-switch-slider"></span>
 </label>
-<span class="admin-switch-status" id="premiumChannelsFreeTVStatus">ĐANG TẮT</span>
+<span class="admin-switch-status" id="premiumChannelsFreeTVStatus">ĐANG ĐỌC...</span>
 </div>
 </div>
 <div class="admin-switch-row">
@@ -2177,7 +1744,7 @@ html, body, button, input, select, textarea, label {
 <input id="premiumChannelsFreeMobileButton" onchange="togglePremiumChannelsFree('mobile')" type="checkbox"/>
 <span class="admin-switch-slider"></span>
 </label>
-<span class="admin-switch-status" id="premiumChannelsFreeMobileStatus">ĐANG TẮT</span>
+<span class="admin-switch-status" id="premiumChannelsFreeMobileStatus">ĐANG ĐỌC...</span>
 </div>
 </div>
 </div>
@@ -2443,6 +2010,350 @@ let notificationConfig = {
 let controlWriteBusy = false;
 
 /* =========================================================
+   PREMIUM CHANNEL CONTROL
+   Collection: premium_channels
+   ========================================================= */
+
+function premiumBool(value, fallback = false){
+    if(typeof value === "boolean") return value;
+    if(typeof value === "string"){
+        const v = value.toUpperCase();
+        if(v === "TRUE" || v === "ON" || v === "1") return true;
+        if(v === "FALSE" || v === "OFF" || v === "0") return false;
+    }
+    return fallback;
+}
+
+function premiumChannelName(data, id){
+    return String(
+        data?.name || data?.channelName || data?.title || id || "Kênh không tên"
+    );
+}
+
+function updatePremiumGlobalSwitch(id, isOn){
+    const input = document.getElementById(id);
+    if(input) input.checked = !!isOn;
+
+    const map = {
+        premiumChannelsFreeTVButton: "premiumChannelsFreeTVStatus",
+        premiumChannelsFreeMobileButton: "premiumChannelsFreeMobileStatus"
+    };
+
+    const status = document.getElementById(map[id]);
+    if(status){
+        status.innerText = isOn ? "ĐANG BẬT" : "ĐANG TẮT";
+        status.classList.toggle("on", !!isOn);
+    }
+}
+
+function updatePremiumGlobalUI(){
+    // HAI CÔNG TẮC HOÀN TOÀN ĐỘC LẬP.
+    const tvFree = premiumChannelsFreeConfig.freeTV === "ON";
+    const mobileFree = premiumChannelsFreeConfig.freeMobile === "ON";
+
+    updatePremiumGlobalSwitch("premiumChannelsFreeTVButton", tvFree);
+    updatePremiumGlobalSwitch("premiumChannelsFreeMobileButton", mobileFree);
+
+    const status = document.getElementById("premiumChannelsGlobalStatus");
+    if(!status) return;
+
+    const active = [];
+    if(tvFree) active.push("Tivi");
+    if(mobileFree) active.push("Mobile");
+
+    if(active.length){
+        status.className = "premium-global-status on";
+        status.innerText =
+            "🟢 ĐANG MIỄN PHÍ TOÀN BỘ KÊNH PREMIUM: " + active.join(" + ") +
+            "\nHai công tắc hoạt động độc lập.";
+    }else{
+        status.className = "premium-global-status";
+        status.innerText =
+            "🔐 Premium tổng đang hoạt động. Tivi và Mobile dùng trạng thái Premium riêng.";
+    }
+}
+
+async function loadPremiumChannelGlobalConfig(){
+    try{
+        const snap = await db.collection("premium_config").doc("system").get();
+        const data = snap.exists ? (snap.data() || {}) : {};
+
+        // Firebase là nguồn sự thật khi F5. Không dùng localStorage.
+        // premiumGlobalTV ON  = Premium Tivi ON  = FREE Tivi OFF.
+        // premiumGlobalTV OFF = Premium Tivi OFF = FREE Tivi ON.
+        // premiumGlobalMobile được đọc riêng, không tự đồng bộ với Tivi.
+        const tvGlobal = normalizeOnOff(data.premiumGlobalTV, "ON");
+        const mobileGlobal = normalizeOnOff(data.premiumGlobalMobile, "ON");
+
+        premiumChannelsFreeConfig = {
+            freeTV: tvGlobal === "OFF" ? "ON" : "OFF",
+            freeMobile: mobileGlobal === "OFF" ? "ON" : "OFF"
+        };
+
+        updatePremiumGlobalUI();
+        return data;
+    }catch(error){
+        console.error(error);
+        const status = document.getElementById("premiumChannelsGlobalStatus");
+        if(status){
+            status.className = "premium-global-status";
+            status.style.background = "#fee2e2";
+            status.style.color = "#991b1b";
+            status.innerText = "❌ Không đọc được cấu hình Premium: " + getFirebaseError(error);
+        }
+        return {};
+    }
+}
+
+async function loadPremiumChannels(){
+    const list = document.getElementById("premiumChannelList");
+    const count = document.getElementById("premiumChannelCount");
+    const button = document.getElementById("premiumChannelRefreshButton");
+
+    if(list) list.innerHTML = '<div class="premium-channel-empty">Đang tải danh sách kênh Premium...</div>';
+    if(button) button.disabled = true;
+
+    try{
+        await loadPremiumChannelGlobalConfig();
+
+        const snapshot = await db.collection("premium_channels").get();
+        premiumChannels = [];
+
+        snapshot.forEach(doc => {
+            const data = doc.data() || {};
+            premiumChannels.push({
+                id: doc.id,
+                data: data,
+                name: premiumChannelName(data, doc.id),
+                enabled: premiumBool(data.enabled, true),
+                tvPremium: premiumBool(data.tvPremium, false),
+                mobilePremium: premiumBool(data.mobilePremium, false)
+            });
+        });
+
+        premiumChannels.sort((a,b) =>
+            a.name.localeCompare(b.name, "vi", {numeric:true, sensitivity:"base"})
+        );
+
+        renderPremiumChannels();
+    }catch(error){
+        console.error(error);
+        if(list){
+            list.innerHTML = '<div class="premium-channel-empty">❌ Không đọc được collection premium_channels.<br>' + escapeHtml(getFirebaseError(error)) + '</div>';
+        }
+        if(count) count.innerText = "Không tải được danh sách.";
+    }finally{
+        if(button) button.disabled = false;
+    }
+}
+
+function searchPremiumChannels(){
+    renderPremiumChannels();
+    const input = document.getElementById("premiumChannelSearch");
+    if(input){
+        input.focus();
+        input.select();
+    }
+}
+
+function renderPremiumChannels(){
+    const list = document.getElementById("premiumChannelList");
+    const count = document.getElementById("premiumChannelCount");
+    const searchInput = document.getElementById("premiumChannelSearch");
+    if(!list) return;
+
+    const q = String(searchInput?.value || "").trim().toLowerCase();
+    const filtered = premiumChannels.filter(item => {
+        if(!q) return true;
+        return item.name.toLowerCase().includes(q) || item.id.toLowerCase().includes(q);
+    });
+
+    if(!filtered.length){
+        list.innerHTML = '<div class="premium-channel-empty">Không tìm thấy kênh phù hợp.</div>';
+        if(count){
+            count.innerText = q
+                ? `Hiển thị 0 / ${premiumChannels.length} kênh.`
+                : "Chưa có kênh trong premium_channels.";
+        }
+        return;
+    }
+
+    const globalTV = premiumChannelsFreeConfig.freeTV === "ON";
+    const globalMobile = premiumChannelsFreeConfig.freeMobile === "ON";
+
+    let html = `
+        <div class="premium-channel-header">
+            <div>KÊNH</div>
+            <div style="text-align:center">BẬT KÊNH</div>
+            <div style="text-align:center">TIVI PREMIUM</div>
+            <div style="text-align:center">MOBILE PREMIUM</div>
+        </div>`;
+
+    html += filtered.map(item => {
+        const tvChecked = item.tvPremium;
+        const mobileChecked = item.mobilePremium;
+        const tvDisabled = !item.enabled || globalTV;
+        const mobileDisabled = !item.enabled || globalMobile;
+
+        return `
+        <div class="premium-channel-row">
+            <div>
+                <div class="premium-channel-name">${escapeHtml(item.name)}</div>
+                <div class="premium-channel-id">ID: ${escapeHtml(item.id)}</div>
+            </div>
+            <div class="premium-channel-enabled">
+                <label class="premium-mini-switch" title="${item.enabled ? "Kênh đang bật" : "Kênh đang tắt"}">
+                    <input type="checkbox" ${item.enabled ? "checked" : ""}
+                        onchange="togglePremiumChannel('${escapeJs(item.id)}','enabled',this.checked)"/>
+                    <span class="premium-mini-slider"></span>
+                </label>
+            </div>
+            <div style="text-align:center">
+                <label class="premium-mini-switch" title="${globalTV ? "FREE toàn bộ Tivi đang bật" : "Premium Tivi"}">
+                    <input type="checkbox" ${tvChecked ? "checked" : ""} ${tvDisabled ? "disabled" : ""}
+                        onchange="togglePremiumChannel('${escapeJs(item.id)}','tvPremium',this.checked)"/>
+                    <span class="premium-mini-slider"></span>
+                </label>
+                <div><span class="premium-onoff ${tvChecked ? "on" : "off"}">${tvChecked ? "ON" : "OFF"}</span></div>
+            </div>
+            <div style="text-align:center">
+                <label class="premium-mini-switch" title="${globalMobile ? "FREE toàn bộ Mobile đang bật" : "Premium Mobile"}">
+                    <input type="checkbox" ${mobileChecked ? "checked" : ""} ${mobileDisabled ? "disabled" : ""}
+                        onchange="togglePremiumChannel('${escapeJs(item.id)}','mobilePremium',this.checked)"/>
+                    <span class="premium-mini-slider"></span>
+                </label>
+                <div><span class="premium-onoff ${mobileChecked ? "on" : "off"}">${mobileChecked ? "ON" : "OFF"}</span></div>
+            </div>
+        </div>`;
+    }).join("");
+
+    list.innerHTML = html;
+
+    if(count){
+        const tvPremiumCount = premiumChannels.filter(x => x.enabled && x.tvPremium).length;
+        const mobilePremiumCount = premiumChannels.filter(x => x.enabled && x.mobilePremium).length;
+        count.innerText =
+            `Tổng ${premiumChannels.length} kênh • Hiển thị ${filtered.length} • Premium Tivi: ${tvPremiumCount} • Premium Mobile: ${mobilePremiumCount}`;
+    }
+}
+
+async function commitPremiumChannelUpdates(updates){
+    const entries = Object.entries(updates);
+    for(let i = 0; i < entries.length; i += 400){
+        const batch = db.batch();
+        entries.slice(i, i + 400).forEach(([id, data]) => {
+            batch.set(db.collection("premium_channels").doc(id), data, {merge:true});
+        });
+        await batch.commit();
+    }
+}
+
+async function togglePremiumChannel(channelId, field, value){
+    if(premiumChannelsWriteBusy) return;
+
+    const user = auth.currentUser;
+    if(!user || !user.email || user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()){
+        showStatus("Tài khoản không có quyền Admin.", "error");
+        await loadPremiumChannels();
+        return;
+    }
+
+    if((field === "tvPremium" && premiumChannelsFreeConfig.freeTV === "ON") ||
+       (field === "mobilePremium" && premiumChannelsFreeConfig.freeMobile === "ON")){
+        showStatus("Không thể sửa Premium nền tảng này khi FREE TOÀN BỘ đang bật. Hãy tắt FREE TOÀN BỘ trước.", "info");
+        await loadPremiumChannels();
+        return;
+    }
+
+    const item = premiumChannels.find(x => x.id === channelId);
+    if(!item) return;
+
+    premiumChannelsWriteBusy = true;
+    try{
+        const patch = {};
+        patch[field] = !!value;
+        patch.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+        patch.updatedBy = user.email;
+
+        await db.collection("premium_channels").doc(channelId).set(patch, {merge:true});
+        item[field] = !!value;
+        renderPremiumChannels();
+
+        showStatus(
+            `✅ ${item.name}: ${field === "enabled" ? "Kênh" : field === "tvPremium" ? "Premium Tivi" : "Premium Mobile"} đã ${value ? "BẬT (ON)" : "TẮT (OFF)"}.`,
+            "success"
+        );
+    }catch(error){
+        console.error(error);
+        showStatus("❌ Không thể cập nhật kênh: " + getFirebaseError(error), "error");
+        await loadPremiumChannels();
+    }finally{
+        premiumChannelsWriteBusy = false;
+    }
+}
+
+async function togglePremiumChannelsFree(platform){
+    if(premiumChannelsWriteBusy) return;
+
+    const user = auth.currentUser;
+    if(!user || !user.email || user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()){
+        await loadPremiumChannelGlobalConfig();
+        showStatus("Tài khoản không có quyền Admin.", "error");
+        return;
+    }
+
+    // TV và MOBILE là 2 công tắc độc lập.
+    const inputId = platform === "tv" ? "premiumChannelsFreeTVButton" : "premiumChannelsFreeMobileButton";
+    const input = document.getElementById(inputId);
+    if(!input) return;
+
+    const globalField = platform === "tv" ? "premiumGlobalTV" : "premiumGlobalMobile";
+    const freeField = platform === "tv" ? "freeTV" : "freeMobile";
+    const nextFree = !!input.checked;
+    const nextGlobal = nextFree ? "OFF" : "ON";
+
+    input.disabled = true;
+    premiumChannelsWriteBusy = true;
+
+    try{
+        const ref = db.collection("premium_config").doc("system");
+
+        // Chỉ ghi field vừa bấm. Field còn lại không bị thay đổi.
+        await ref.set({
+            [globalField]: nextGlobal,
+            [globalField + "UpdatedAt"]: firebase.firestore.FieldValue.serverTimestamp(),
+            [globalField + "UpdatedBy"]: user.email
+        }, {merge:true});
+
+        const verifySnap = await ref.get();
+        const verifyData = verifySnap.exists ? (verifySnap.data() || {}) : {};
+        const actual = normalizeOnOff(verifyData[globalField], "__INVALID__");
+
+        if(actual !== nextGlobal){
+            throw new Error("Firebase chưa xác nhận " + globalField + ' = "' + nextGlobal + '".');
+        }
+
+        premiumChannelsFreeConfig[freeField] = actual === "OFF" ? "ON" : "OFF";
+        updatePremiumGlobalUI();
+        renderPremiumChannels();
+
+        showStatus(
+            nextFree
+                ? "🟢 Đã BẬT FREE " + (platform === "tv" ? "TIVI" : "MOBILE") + ". Nút còn lại không thay đổi."
+                : "🔐 Đã TẮT FREE " + (platform === "tv" ? "TIVI" : "MOBILE") + ". Nút còn lại không thay đổi.",
+            "success"
+        );
+    }catch(error){
+        console.error(error);
+        await loadPremiumChannelGlobalConfig();
+        showStatus("❌ Không thể thay đổi Premium tổng:\n" + getFirebaseError(error), "error");
+    }finally{
+        premiumChannelsWriteBusy = false;
+        input.disabled = false;
+    }
+}
+
+/* =========================================================
    LOGIN
 ========================================================= */
 
@@ -2501,6 +2412,21 @@ function login(){
             button.innerText = "ĐĂNG NHẬP";
         });
 }
+
+// ENTER = ĐĂNG NHẬP
+document.addEventListener("DOMContentLoaded", () => {
+    ["email", "password"].forEach(id => {
+        const input = document.getElementById(id);
+        if(!input) return;
+        input.addEventListener("keydown", event => {
+            if(event.key === "Enter"){
+                event.preventDefault();
+                const button = document.getElementById("loginButton");
+                if(button && !button.disabled) login();
+            }
+        });
+    });
+});
 
 async function forgotPassword(){
 
