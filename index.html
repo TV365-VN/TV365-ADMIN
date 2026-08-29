@@ -1866,7 +1866,7 @@ html, body, button, input, select, textarea, label {
 <div class="premium-channel-panel">
 <div class="premium-channel-title">📺 QUẢN LÝ KÊNH PREMIUM</div>
 <div class="premium-channel-desc">
-    Danh sách được đọc trực tiếp từ <b>premium_channels</b>. Bạn chỉ cần thêm kênh trong Admin/Firebase, sau đó bấm làm mới để danh sách xuất hiện.
+    Danh sách được tự đồng bộ từ M3U GitHub (nguồn chính). Nếu GitHub lỗi và Codeberg đang bật ở chế độ AUTO, hệ thống sẽ tự dùng Codeberg làm nguồn dự phòng. Kênh đã có trong <b>premium_channels</b> sẽ giữ nguyên trạng thái Premium.
     Công tắc FREE bên dưới sẽ tạm mở miễn phí toàn bộ các kênh Premium và tự khôi phục trạng thái cũ khi tắt.
 </div>
 <div class="premium-global-grid">
@@ -1895,7 +1895,7 @@ html, body, button, input, select, textarea, label {
 <div class="premium-channel-toolbar">
 <input id="premiumChannelSearch" oninput="renderPremiumChannels()" onkeydown="if(event.key==='Enter'){searchPremiumChannels();}" placeholder="🔎 Nhập tên kênh cần tìm..." type="text"/>
 <button class="premium-channel-search" id="premiumChannelSearchButton" onclick="searchPremiumChannels()" type="button">🔎 TÌM KIẾM KÊNH</button>
-<button class="premium-channel-refresh" id="premiumChannelRefreshButton" onclick="loadPremiumChannels()" type="button">🔄 LÀM MỚI KÊNH</button>
+<button class="premium-channel-refresh" id="premiumChannelRefreshButton" onclick="loadPremiumChannels()" type="button">🔄 ĐỒNG BỘ KÊNH TỪ M3U</button>
 </div>
 <div class="premium-channel-list" id="premiumChannelList">
 <div class="premium-channel-empty">Đang tải danh sách kênh Premium...</div>
@@ -2111,6 +2111,195 @@ async function loadPremiumChannelGlobalConfig(){
     }
 }
 
+
+/* =========================================================
+   AUTO SYNC PREMIUM CHANNELS FROM M3U
+   GitHub = nguồn chính
+   Codeberg = nguồn dự phòng
+   ========================================================= */
+const PREMIUM_M3U_PRIMARY_URL =
+    "https://raw.githubusercontent.com/VIET-NAM-VIP/TOI-YEU-VIET-NAM/refs/heads/main/VIETNAM";
+const PREMIUM_M3U_BACKUP_URL =
+    "https://codeberg.org/TV365/TV365-STREAM/raw/branch/main/VIETNAM.m3u";
+
+function parseM3UAttributes(line){
+    const attrs = {};
+    const re = /([A-Za-z0-9_-]+)=("[^"]*"|'[^']*'|[^\s,]+)/g;
+    let m;
+    while((m = re.exec(line)) !== null){
+        let value = m[2] || "";
+        if((value.startsWith('"') && value.endsWith('"')) ||
+           (value.startsWith("'") && value.endsWith("'"))){
+            value = value.slice(1,-1);
+        }
+        attrs[m[1].toLowerCase()] = value;
+    }
+    return attrs;
+}
+
+function premiumChannelDocId(name, tvgId){
+    const source = String(tvgId || name || "channel").trim();
+    const id = source
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^A-Za-z0-9_-]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 120);
+    return id || "channel";
+}
+
+function parsePremiumM3U(text){
+    const lines = String(text || "")
+        .replace(/^\uFEFF/, "")
+        .split(/\r?\n/);
+    const result = [];
+
+    for(let i = 0; i < lines.length; i++){
+        const line = lines[i].trim();
+        if(!line.toUpperCase().startsWith("#EXTINF:")) continue;
+
+        const attrs = parseM3UAttributes(line);
+        const commaIndex = line.indexOf(",");
+        let name = commaIndex >= 0 ? line.slice(commaIndex + 1).trim() : "";
+        name = name || attrs["tvg-name"] || attrs["name"] || attrs["tvg-id"] || "Kênh không tên";
+
+        // Dòng URL thường nằm ngay sau #EXTINF. Không bắt buộc phải dùng,
+        // nhưng lưu lại để nhận diện nguồn M3U nếu cần về sau.
+        const url = (lines[i + 1] || "").trim();
+
+        const tvgId = attrs["tvg-id"] || attrs["tvg-name"] || "";
+        const id = premiumChannelDocId(name, tvgId);
+
+        result.push({
+            id,
+            name,
+            tvgId,
+            groupTitle: attrs["group-title"] || "",
+            logo: attrs["tvg-logo"] || "",
+            url
+        });
+    }
+
+    // Khử trùng theo ID, giữ kênh đầu tiên.
+    const unique = new Map();
+    result.forEach(channel => {
+        if(!unique.has(channel.id)) unique.set(channel.id, channel);
+    });
+    return Array.from(unique.values());
+}
+
+async function fetchM3UText(url, label){
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15000);
+    try{
+        const response = await fetch(url, {
+            method: "GET",
+            cache: "no-store",
+            signal: controller.signal,
+            headers: {"Accept": "text/plain,*/*"}
+        });
+        if(!response.ok){
+            throw new Error(label + " HTTP " + response.status);
+        }
+        const text = await response.text();
+        if(!text || !text.includes("#EXTINF")){
+            throw new Error(label + " không chứa danh sách #EXTINF hợp lệ");
+        }
+        return text;
+    }finally{
+        clearTimeout(timer);
+    }
+}
+
+async function getPremiumM3UChannels(){
+    const mode = normalizeM3UMode(m3uServerConfig.mode);
+    const githubEnabled = m3uServerConfig.github === "ON";
+    const codebergEnabled = m3uServerConfig.codeberg === "ON";
+    const attempts = [];
+
+    if(mode !== "CODEBERG_ONLY" && githubEnabled){
+        attempts.push({url: PREMIUM_M3U_PRIMARY_URL, label: "GitHub"});
+    }
+
+    // Codeberg là nguồn dự phòng: trong AUTO chỉ dùng khi GitHub lỗi.
+    if(mode === "CODEBERG_ONLY" || (mode === "AUTO" && codebergEnabled)){
+        attempts.push({url: PREMIUM_M3U_BACKUP_URL, label: "Codeberg"});
+    }
+
+    if(mode === "GITHUB_ONLY" && !githubEnabled){
+        throw new Error("Chế độ GITHUB ONLY nhưng máy chủ GitHub đang TẮT.");
+    }
+    if(mode === "CODEBERG_ONLY" && !codebergEnabled){
+        throw new Error("Chế độ CODEBERG ONLY nhưng máy chủ Codeberg đang TẮT.");
+    }
+    if(!attempts.length){
+        throw new Error("Không có máy chủ M3U nào đang được bật.");
+    }
+
+    const errors = [];
+    for(const attempt of attempts){
+        try{
+            const text = await fetchM3UText(attempt.url, attempt.label);
+            const channels = parsePremiumM3U(text);
+            if(!channels.length){
+                throw new Error(attempt.label + " không có kênh hợp lệ.");
+            }
+            return {source: attempt.label, url: attempt.url, channels};
+        }catch(error){
+            console.warn("M3U " + attempt.label + " thất bại:", error);
+            errors.push(attempt.label + ": " + (error.message || error));
+        }
+    }
+
+    throw new Error("Không tải được M3U. " + errors.join(" | "));
+}
+
+async function syncPremiumChannelsFromM3U(){
+    const result = await getPremiumM3UChannels();
+    const snapshot = await db.collection("premium_channels").get();
+    const existing = new Map();
+
+    snapshot.forEach(doc => existing.set(doc.id, doc.data() || {}));
+
+    const updates = {};
+    let created = 0;
+    let matched = 0;
+
+    result.channels.forEach(channel => {
+        if(existing.has(channel.id)){
+            matched++;
+            return;
+        }
+
+        // Kênh mới: mặc định chỉ bật kênh, chưa phải Premium.
+        updates[channel.id] = {
+            name: channel.name,
+            tvgId: channel.tvgId || null,
+            groupTitle: channel.groupTitle || null,
+            logo: channel.logo || null,
+            streamUrl: channel.url || null,
+            enabled: true,
+            tvPremium: false,
+            mobilePremium: false,
+            savedTvPremium: false,
+            savedMobilePremium: false,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            source: result.source
+        };
+        created++;
+    });
+
+    await commitPremiumChannelUpdates(updates);
+
+    return {
+        source: result.source,
+        total: result.channels.length,
+        created,
+        matched
+    };
+}
+
 async function loadPremiumChannels(){
     const list = document.getElementById("premiumChannelList");
     const count = document.getElementById("premiumChannelCount");
@@ -2120,6 +2309,13 @@ async function loadPremiumChannels(){
     if(button) button.disabled = true;
 
     try{
+        await loadM3UServerConfig();
+
+        // Mỗi lần bấm LÀM MỚI KÊNH: đọc M3U GitHub trước,
+        // nếu GitHub lỗi và AUTO + Codeberg đang bật thì dùng Codeberg.
+        // Chỉ tạo kênh chưa có; tuyệt đối không ghi đè trạng thái Premium cũ.
+        const sync = await syncPremiumChannelsFromM3U();
+
         await loadPremiumChannelGlobalConfig();
 
         const snapshot = await db.collection("premium_channels").get();
@@ -2144,6 +2340,12 @@ async function loadPremiumChannels(){
         );
 
         renderPremiumChannels();
+
+        const sourceText = sync && sync.source ? sync.source : "Firebase";
+        showStatus(
+            `✅ Đã đồng bộ ${sync.total} kênh từ ${sourceText}. Tạo mới ${sync.created} kênh, giữ nguyên ${sync.matched} kênh đã có.`,
+            "success"
+        );
     }catch(error){
         console.error(error);
         if(list){
