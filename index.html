@@ -307,33 +307,39 @@ button:disabled{opacity:.5;cursor:not-allowed}
 }
 .premium-channel-refresh{background:#0f766e}
 .premium-channel-list{
-    border:1px solid #e2e8f0;
-    border-radius:10px;
-    overflow:hidden;
-    background:#fff;
-}
-.premium-channel-header,
-.premium-channel-row{
     display:grid;
-    grid-template-columns:minmax(180px,1fr) 120px 120px 90px;
-    gap:10px;
-    align-items:center;
-    padding:11px 12px;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:12px;
+    background:transparent;
 }
 .premium-channel-header{
-    background:#f1f5f9;
-    color:#475569;
-    font-size:12px;
-    font-weight:bold;
-    text-transform:uppercase;
+    display:none;
 }
 .premium-channel-row{
-    border-top:1px solid #e2e8f0;
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    grid-template-rows:auto auto;
+    gap:10px;
+    align-items:center;
+    padding:14px;
+    border:1px solid #e2e8f0;
+    border-radius:12px;
+    background:#fff;
+    box-shadow:0 2px 7px rgba(15,23,42,.05);
+    min-width:0;
+}
+.premium-channel-row > div:first-child{
+    grid-column:1 / -1;
+    min-width:0;
+    padding-bottom:8px;
+    border-bottom:1px solid #eef2f7;
 }
 .premium-channel-name{
     font-weight:800;
     color:#1e293b;
     word-break:break-word;
+    font-size:15px;
+    line-height:1.35;
 }
 .premium-channel-id{
     margin-top:3px;
@@ -341,9 +347,28 @@ button:disabled{opacity:.5;cursor:not-allowed}
     font-size:11px;
     word-break:break-all;
 }
-.premium-channel-enabled{
+.premium-channel-enabled,
+.premium-channel-row > div:nth-child(3),
+.premium-channel-row > div:nth-child(4){
     text-align:center;
+    background:#f8fafc;
+    border:1px solid #eef2f7;
+    border-radius:10px;
+    padding:8px 5px;
 }
+.premium-channel-enabled:before,
+.premium-channel-row > div:nth-child(3):before,
+.premium-channel-row > div:nth-child(4):before{
+    display:block;
+    margin-bottom:5px;
+    font-size:10px;
+    font-weight:800;
+    color:#64748b;
+    text-transform:uppercase;
+}
+.premium-channel-enabled:before{content:"Bật kênh"}
+.premium-channel-row > div:nth-child(3):before{content:"Tivi Premium"}
+.premium-channel-row > div:nth-child(4):before{content:"Mobile Premium"}
 .premium-channel-count{
     margin-top:10px;
     padding:10px 12px;
@@ -353,6 +378,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
     font-size:13px;
 }
 .premium-channel-empty{
+    grid-column:1 / -1;
     padding:22px;
     text-align:center;
     color:#64748b;
@@ -413,24 +439,18 @@ button:disabled{opacity:.5;cursor:not-allowed}
     white-space:pre-line;
 }
 .premium-global-status.on{background:#dcfce7;color:#166534;font-weight:bold}
-@media(max-width:700px){
+@media(max-width:1100px){
+    .premium-channel-list{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:800px){
     .premium-global-grid{grid-template-columns:1fr}
     .premium-channel-toolbar{grid-template-columns:1fr}
     .premium-channel-search,.premium-channel-refresh{width:100%}
-    .premium-channel-header{display:none}
-    .premium-channel-row{
-        grid-template-columns:1fr;
-        gap:8px;
-        padding:13px;
-    }
-    .premium-channel-row > div:nth-child(n+2){
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-    }
-    .premium-channel-row > div:nth-child(2):before{content:"Bật kênh";font-size:12px;color:#64748b;font-weight:bold}
-    .premium-channel-row > div:nth-child(3):before{content:"Tivi Premium";font-size:12px;color:#64748b;font-weight:bold}
-    .premium-channel-row > div:nth-child(4):before{content:"Mobile Premium";font-size:12px;color:#64748b;font-weight:bold}
+    .premium-channel-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:560px){
+    .premium-channel-list{grid-template-columns:1fr}
+    .premium-channel-row{grid-template-columns:repeat(3,minmax(0,1fr));padding:12px}
 }
 
 
@@ -2167,15 +2187,7 @@ function renderPremiumChannels(){
         return;
     }
 
-    let html = `
-        <div class="premium-channel-header">
-            <div>KÊNH</div>
-            <div style="text-align:center">BẬT KÊNH</div>
-            <div style="text-align:center">TIVI PREMIUM</div>
-            <div style="text-align:center">MOBILE PREMIUM</div>
-        </div>`;
-
-    html += filtered.map(item => {
+    let html = filtered.map(item => {
         const tvChecked = item.tvPremium;
         const mobileChecked = item.mobilePremium;
         const tvDisabled = !item.enabled;
