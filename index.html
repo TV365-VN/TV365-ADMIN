@@ -2478,26 +2478,57 @@ function parsePremiumM3U(text){
 }
 
 async function fetchM3UText(url, label){
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 15000);
-    try{
-        const response = await fetch(url, {
-            method: "GET",
-            cache: "no-store",
-            signal: controller.signal,
-            headers: {"Accept": "text/plain,*/*"}
+    const candidates = [
+        {url, label, proxy:false}
+    ];
+
+    // Codeberg raw thường bị trình duyệt chặn CORS.
+    // Chỉ khi nguồn là Codeberg và fetch trực tiếp thất bại,
+    // thử qua proxy đọc công khai để Admin vẫn lấy được M3U.
+    if(String(label).toLowerCase() === "codeberg"){
+        candidates.push({
+            url: "https://api.allorigins.win/raw?url=" + encodeURIComponent(url),
+            label: "Codeberg (CORS fallback)",
+            proxy:true
         });
-        if(!response.ok){
-            throw new Error(label + " HTTP " + response.status);
-        }
-        const text = await response.text();
-        if(!text || !text.includes("#EXTINF")){
-            throw new Error(label + " không chứa danh sách #EXTINF hợp lệ");
-        }
-        return text;
-    }finally{
-        clearTimeout(timer);
     }
+
+    let lastError = null;
+
+    for(const candidate of candidates){
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 15000);
+
+        try{
+            const response = await fetch(candidate.url, {
+                method: "GET",
+                cache: "no-store",
+                signal: controller.signal,
+                headers: {"Accept": "text/plain,*/*"}
+            });
+
+            if(!response.ok){
+                throw new Error(candidate.label + " HTTP " + response.status);
+            }
+
+            const text = await response.text();
+
+            if(!text || !text.includes("#EXTINF")){
+                throw new Error(
+                    candidate.label + " không chứa danh sách #EXTINF hợp lệ"
+                );
+            }
+
+            return text;
+        }catch(error){
+            console.warn(candidate.label + " thất bại:", error);
+            lastError = error;
+        }finally{
+            clearTimeout(timer);
+        }
+    }
+
+    throw lastError || new Error(label + " không tải được M3U.");
 }
 
 async function getPremiumM3UChannels(){
@@ -2594,23 +2625,30 @@ async function loadPremiumChannels(){
     const count = document.getElementById("premiumChannelCount");
     const button = document.getElementById("premiumChannelRefreshButton");
 
-    if(list) list.innerHTML = '<div class="premium-channel-empty">Đang tải danh sách kênh Premium...</div>';
+    if(list){
+        list.innerHTML =
+            '<div class="premium-channel-empty">Đang tải danh sách kênh Premium...</div>';
+    }
     if(button) button.disabled = true;
 
+    let syncResult = null;
+    let m3uError = null;
+
     try{
+        // Đọc cấu hình máy chủ trước.
         await loadM3UServerConfig();
-
-        // Mỗi lần bấm LÀM MỚI KÊNH: đọc M3U GitHub trước,
-        // nếu GitHub lỗi và AUTO + Codeberg đang bật thì dùng Codeberg.
-        // Chỉ tạo kênh chưa có; tuyệt đối không ghi đè trạng thái Premium cũ.
-        const sync = await syncPremiumChannelsFromM3U();
-
         await loadPremiumChannelGlobalConfig();
 
-        const snapshot = await db.collection("premium_channels").get();
+        // QUAN TRỌNG:
+        // Luôn đọc premium_channels từ Firebase trước.
+        // Vì vậy nếu GitHub tắt và Codeberg bị CORS/lỗi mạng,
+        // Admin vẫn nhìn thấy danh sách kênh đã lưu và vẫn chỉnh Premium bình thường.
+        const snapshotBeforeM3U =
+            await db.collection("premium_channels").get();
+
         premiumChannels = [];
 
-        snapshot.forEach(doc => {
+        snapshotBeforeM3U.forEach(doc => {
             const data = doc.data() || {};
             premiumChannels.push({
                 id: doc.id,
@@ -2619,34 +2657,121 @@ async function loadPremiumChannels(){
                 enabled: premiumBool(data.enabled, true),
                 tvPremium: premiumBool(data.tvPremium, false),
                 mobilePremium: premiumBool(data.mobilePremium, false),
-                savedTvPremium: premiumBool(data.savedTvPremium, premiumBool(data.tvPremium, false)),
-                savedMobilePremium: premiumBool(data.savedMobilePremium, premiumBool(data.mobilePremium, false))
+                savedTvPremium: premiumBool(
+                    data.savedTvPremium,
+                    premiumBool(data.tvPremium, false)
+                ),
+                savedMobilePremium: premiumBool(
+                    data.savedMobilePremium,
+                    premiumBool(data.mobilePremium, false)
+                )
             });
         });
 
         premiumChannels.sort((a,b) =>
-            a.name.localeCompare(b.name, "vi", {numeric:true, sensitivity:"base"})
+            a.name.localeCompare(
+                b.name,
+                "vi",
+                {numeric:true, sensitivity:"base"}
+            )
         );
 
         premiumChannelPage = 1;
         renderPremiumChannels();
 
-        const sourceText = sync && sync.source ? sync.source : "Firebase";
-        showStatus(
-            `✅ Đã đồng bộ ${sync.total} kênh từ ${sourceText}. Tạo mới ${sync.created} kênh, giữ nguyên ${sync.matched} kênh đã có.`,
-            "success"
-        );
+        // Sau khi danh sách Firebase đã hiện, mới thử đồng bộ M3U.
+        // M3U lỗi tuyệt đối không được xóa/ẩn danh sách hiện có.
+        try{
+            syncResult = await syncPremiumChannelsFromM3U();
+
+            // Đồng bộ xong thì đọc lại Firebase để nhận kênh mới/logo mới.
+            const snapshotAfterM3U =
+                await db.collection("premium_channels").get();
+
+            premiumChannels = [];
+
+            snapshotAfterM3U.forEach(doc => {
+                const data = doc.data() || {};
+                premiumChannels.push({
+                    id: doc.id,
+                    data: data,
+                    name: premiumChannelName(data, doc.id),
+                    enabled: premiumBool(data.enabled, true),
+                    tvPremium: premiumBool(data.tvPremium, false),
+                    mobilePremium: premiumBool(data.mobilePremium, false),
+                    savedTvPremium: premiumBool(
+                        data.savedTvPremium,
+                        premiumBool(data.tvPremium, false)
+                    ),
+                    savedMobilePremium: premiumBool(
+                        data.savedMobilePremium,
+                        premiumBool(data.mobilePremium, false)
+                    )
+                });
+            });
+
+            premiumChannels.sort((a,b) =>
+                a.name.localeCompare(
+                    b.name,
+                    "vi",
+                    {numeric:true, sensitivity:"base"}
+                )
+            );
+
+            premiumChannelPage = 1;
+            renderPremiumChannels();
+
+            showStatus(
+                `✅ Đã đồng bộ ${syncResult.total} kênh từ ${syncResult.source}. ` +
+                `Tạo mới ${syncResult.created} kênh, giữ nguyên ${syncResult.matched} kênh đã có.`,
+                "success"
+            );
+        }catch(error){
+            m3uError = error;
+
+            console.warn(
+                "M3U không tải được, giữ nguyên danh sách Firebase:",
+                error
+            );
+
+            // Không xóa danh sách đã đọc từ Firebase.
+            renderPremiumChannels();
+
+            const sourceMode =
+                normalizeM3UMode(m3uServerConfig.mode);
+            showStatus(
+                `⚠️ Không đồng bộ được M3U (${sourceMode}). ` +
+                `Danh sách Firebase hiện tại vẫn được giữ nguyên. ` +
+                `Chi tiết: ${error.message || error}`,
+                "info"
+            );
+        }
+
+        if(count && !premiumChannels.length){
+            count.innerText =
+                m3uError
+                    ? "Chưa có kênh trong premium_channels và M3U chưa tải được."
+                    : "Chưa có kênh trong premium_channels.";
+        }
+
     }catch(error){
         console.error(error);
+
+        // Chỉ báo lỗi toàn bộ khi Firebase collection thực sự không đọc được.
         if(list){
-            list.innerHTML = '<div class="premium-channel-empty">❌ Không đọc được collection premium_channels.<br>' + escapeHtml(getFirebaseError(error)) + '</div>';
+            list.innerHTML =
+                '<div class="premium-channel-empty">❌ Không đọc được collection premium_channels.<br>' +
+                escapeHtml(getFirebaseError(error)) +
+                '</div>';
         }
-        if(count) count.innerText = "Không tải được danh sách.";
+
+        if(count){
+            count.innerText = "Không tải được danh sách.";
+        }
     }finally{
         if(button) button.disabled = false;
     }
 }
-
 function searchPremiumChannels(){
     renderPremiumChannels();
     const input = document.getElementById("premiumChannelSearch");
