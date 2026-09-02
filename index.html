@@ -3088,17 +3088,58 @@ async function togglePremiumChannel(channelId, field, value){
         savedMobilePremium: !!item.savedMobilePremium
     };
 
-    // QUAN TRỌNG:
-    // - BẬT/TẮT KÊNH là một lớp riêng.
-    // - TIVI PREMIUM và MOBILE PREMIUM là hai lớp riêng.
-    // Không ép KÊNH phải có Premium mới được BẬT.
-    // Không tắt Premium khi BẬT/TẮT KÊNH.
-    const patch = {[field]: !!value};
+    /*
+     * LOGIC 3 CÔNG TẮC:
+     *
+     * 1. BẬT KÊNH ON/OFF là công tắc cha.
+     * 2. TIVI PREMIUM + MOBILE PREMIUM là trạng thái con.
+     *
+     * Khi BẬT KÊNH -> OFF:
+     *   - lưu lại trạng thái Premium hiện tại vào savedTvPremium/savedMobilePremium
+     *   - tắt cả Tivi Premium và Mobile Premium trên giao diện + Firebase
+     *
+     * Khi BẬT KÊNH -> ON:
+     *   - khôi phục đúng trạng thái Premium đã lưu trước khi tắt
+     *
+     * Khi BẬT KÊNH đang OFF mà admin bật thủ công Tivi/Mobile Premium:
+     *   - tự động bật BẬT KÊNH ON
+     *   - Premium vừa chọn ON
+     *   - Premium còn lại giữ trạng thái hiện tại
+     *
+     * Không tự tắt BẬT KÊNH khi admin tắt một Premium.
+     */
+    let patch = {};
 
-    if(field === "tvPremium"){
+    if(field === "enabled"){
+        if(!!value){
+            // BẬT KÊNH: khôi phục trạng thái Premium trước lần tắt gần nhất.
+            patch.enabled = true;
+            patch.tvPremium = !!item.savedTvPremium;
+            patch.mobilePremium = !!item.savedMobilePremium;
+        }else{
+            // TẮT KÊNH: lưu trạng thái hiện tại trước khi ép 2 Premium OFF.
+            patch.savedTvPremium = !!item.tvPremium;
+            patch.savedMobilePremium = !!item.mobilePremium;
+            patch.enabled = false;
+            patch.tvPremium = false;
+            patch.mobilePremium = false;
+        }
+    }else if(field === "tvPremium"){
+        patch.tvPremium = !!value;
         patch.savedTvPremium = !!value;
+
+        // Nếu đang tắt BẬT KÊNH mà bật Premium bằng tay -> tự bật KÊNH.
+        if(value && !item.enabled){
+            patch.enabled = true;
+        }
     }else if(field === "mobilePremium"){
+        patch.mobilePremium = !!value;
         patch.savedMobilePremium = !!value;
+
+        // Nếu đang tắt BẬT KÊNH mà bật Premium bằng tay -> tự bật KÊNH.
+        if(value && !item.enabled){
+            patch.enabled = true;
+        }
     }
 
     premiumChannelsWriteBusy = true;
@@ -3123,22 +3164,29 @@ async function togglePremiumChannel(channelId, field, value){
         item.mobilePremium = premiumBool(verifyData.mobilePremium, !!item.mobilePremium);
         item.savedTvPremium = premiumBool(
             verifyData.savedTvPremium,
-            !!item.tvPremium
+            !!item.savedTvPremium
         );
         item.savedMobilePremium = premiumBool(
             verifyData.savedMobilePremium,
-            !!item.mobilePremium
+            !!item.savedMobilePremium
         );
 
         renderPremiumChannels();
 
         let message;
         if(field === "enabled"){
-            message = `✅ ${item.name}: KÊNH đã ${item.enabled ? "BẬT" : "TẮT"}. ` +
-                `Tivi Premium=${item.tvPremium ? "ON" : "OFF"}, Mobile Premium=${item.mobilePremium ? "ON" : "OFF"}.`;
+            if(item.enabled){
+                message = `✅ ${item.name}: KÊNH đã BẬT. Khôi phục Premium trước đó — Tivi=${item.tvPremium ? "ON" : "OFF"}, Mobile=${item.mobilePremium ? "ON" : "OFF"}.`;
+            }else{
+                message = `✅ ${item.name}: KÊNH đã TẮT. Tivi Premium và Mobile Premium đã OFF; trạng thái trước đó đã được lưu để khôi phục khi bật lại.`;
+            }
         }else{
-            message = `✅ ${item.name}: ${field === "tvPremium" ? "Premium Tivi" : "Premium Mobile"} đã ${value ? "BẬT (ON)" : "TẮT (OFF)"}. ` +
-                `KÊNH vẫn ${item.enabled ? "BẬT" : "TẮT"}.`;
+            const platformName = field === "tvPremium" ? "Premium Tivi" : "Premium Mobile";
+            if(value && old.enabled === false){
+                message = `✅ ${item.name}: ${platformName} đã BẬT và KÊNH tự động BẬT theo.`;
+            }else{
+                message = `✅ ${item.name}: ${platformName} đã ${value ? "BẬT (ON)" : "TẮT (OFF)"}. KÊNH vẫn ${item.enabled ? "BẬT" : "TẮT"}.`;
+            }
         }
 
         showStatus(message, "success");
