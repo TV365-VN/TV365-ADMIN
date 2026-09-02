@@ -3091,33 +3091,36 @@ async function togglePremiumChannel(channelId, field, value){
     /*
      * LOGIC 3 CÔNG TẮC:
      *
-     * 1. BẬT KÊNH ON/OFF là công tắc cha.
-     * 2. TIVI PREMIUM + MOBILE PREMIUM là trạng thái con.
+     * - BẬT KÊNH là công tắc tổng.
+     * - TIVI PREMIUM + MOBILE PREMIUM là 2 trạng thái con.
      *
-     * Khi BẬT KÊNH -> OFF:
-     *   - lưu lại trạng thái Premium hiện tại vào savedTvPremium/savedMobilePremium
-     *   - tắt cả Tivi Premium và Mobile Premium trên giao diện + Firebase
-     *
-     * Khi BẬT KÊNH -> ON:
-     *   - khôi phục đúng trạng thái Premium đã lưu trước khi tắt
-     *
-     * Khi BẬT KÊNH đang OFF mà admin bật thủ công Tivi/Mobile Premium:
-     *   - tự động bật BẬT KÊNH ON
-     *   - Premium vừa chọn ON
-     *   - Premium còn lại giữ trạng thái hiện tại
-     *
-     * Không tự tắt BẬT KÊNH khi admin tắt một Premium.
+     * QUY TẮC AN TOÀN:
+     * 1) BẬT KÊNH OFF  -> bắt buộc Tivi OFF + Mobile OFF.
+     * 2) BẬT KÊNH ON   -> khôi phục đúng 2 Premium trước lần tắt.
+     * 3) Nếu đang OFF mà bật thủ công một Premium -> KÊNH tự ON.
+     * 4) Nếu đang ON và tắt Premium cuối cùng -> KÊNH tự OFF,
+     *    đồng thời lưu trạng thái Premium trước khi bị tắt để lần sau
+     *    bật KÊNH có thể khôi phục lại.
+     * 5) Nếu chỉ tắt một Premium mà Premium còn lại vẫn ON -> KÊNH vẫn ON.
+     * 6) Tắt một Premium KHÔNG làm mất trạng thái Premium còn lại.
      */
     let patch = {};
 
     if(field === "enabled"){
         if(!!value){
-            // BẬT KÊNH: khôi phục trạng thái Premium trước lần tắt gần nhất.
+            // BẬT KÊNH: khôi phục trạng thái Premium trước lần tắt.
             patch.enabled = true;
             patch.tvPremium = !!item.savedTvPremium;
             patch.mobilePremium = !!item.savedMobilePremium;
+
+            // Trường hợp chưa từng có trạng thái lưu nhưng dữ liệu hiện tại
+            // vẫn có Premium, giữ dữ liệu hiện tại thay vì làm mất Premium.
+            if(!item.savedTvPremium && !item.savedMobilePremium && (item.tvPremium || item.mobilePremium)){
+                patch.tvPremium = !!item.tvPremium;
+                patch.mobilePremium = !!item.mobilePremium;
+            }
         }else{
-            // TẮT KÊNH: lưu trạng thái hiện tại trước khi ép 2 Premium OFF.
+            // TẮT KÊNH: lưu trạng thái Premium hiện tại rồi ép cả 2 OFF.
             patch.savedTvPremium = !!item.tvPremium;
             patch.savedMobilePremium = !!item.mobilePremium;
             patch.enabled = false;
@@ -3125,20 +3128,51 @@ async function togglePremiumChannel(channelId, field, value){
             patch.mobilePremium = false;
         }
     }else if(field === "tvPremium"){
-        patch.tvPremium = !!value;
-        patch.savedTvPremium = !!value;
-
-        // Nếu đang tắt BẬT KÊNH mà bật Premium bằng tay -> tự bật KÊNH.
-        if(value && !item.enabled){
-            patch.enabled = true;
+        if(!!value){
+            // Bật Tivi Premium bằng tay.
+            patch.tvPremium = true;
+            patch.savedTvPremium = true;
+            if(!item.enabled){
+                patch.enabled = true;
+            }
+        }else{
+            // Tắt Tivi Premium.
+            // Nếu Mobile cũng đang OFF thì phải tắt luôn KÊNH để tránh
+            // trường hợp KÊNH ON nhưng cả 2 Premium đều OFF.
+            if(!item.mobilePremium){
+                patch.savedTvPremium = true; // nhớ trạng thái trước khi tắt
+                patch.savedMobilePremium = !!item.mobilePremium;
+                patch.tvPremium = false;
+                patch.mobilePremium = false;
+                patch.enabled = false;
+            }else{
+                patch.tvPremium = false;
+                patch.savedTvPremium = false;
+                patch.enabled = true;
+            }
         }
     }else if(field === "mobilePremium"){
-        patch.mobilePremium = !!value;
-        patch.savedMobilePremium = !!value;
-
-        // Nếu đang tắt BẬT KÊNH mà bật Premium bằng tay -> tự bật KÊNH.
-        if(value && !item.enabled){
-            patch.enabled = true;
+        if(!!value){
+            // Bật Mobile Premium bằng tay.
+            patch.mobilePremium = true;
+            patch.savedMobilePremium = true;
+            if(!item.enabled){
+                patch.enabled = true;
+            }
+        }else{
+            // Tắt Mobile Premium.
+            // Nếu Tivi cũng đang OFF thì phải tắt luôn KÊNH.
+            if(!item.tvPremium){
+                patch.savedTvPremium = !!item.tvPremium;
+                patch.savedMobilePremium = true; // nhớ trạng thái trước khi tắt
+                patch.tvPremium = false;
+                patch.mobilePremium = false;
+                patch.enabled = false;
+            }else{
+                patch.mobilePremium = false;
+                patch.savedMobilePremium = false;
+                patch.enabled = true;
+            }
         }
     }
 
@@ -3162,14 +3196,14 @@ async function togglePremiumChannel(channelId, field, value){
         item.enabled = premiumBool(verifyData.enabled, !!item.enabled);
         item.tvPremium = premiumBool(verifyData.tvPremium, !!item.tvPremium);
         item.mobilePremium = premiumBool(verifyData.mobilePremium, !!item.mobilePremium);
-        item.savedTvPremium = premiumBool(
-            verifyData.savedTvPremium,
-            !!item.savedTvPremium
-        );
-        item.savedMobilePremium = premiumBool(
-            verifyData.savedMobilePremium,
-            !!item.savedMobilePremium
-        );
+        item.savedTvPremium = premiumBool(verifyData.savedTvPremium, !!item.savedTvPremium);
+        item.savedMobilePremium = premiumBool(verifyData.savedMobilePremium, !!item.savedMobilePremium);
+
+        // Quy tắc an toàn cuối cùng: nếu cả 2 Premium OFF thì KÊNH phải OFF.
+        if(!item.tvPremium && !item.mobilePremium && item.enabled){
+            item.enabled = false;
+            await ref.set({enabled:false}, {merge:true});
+        }
 
         renderPremiumChannels();
 
@@ -3184,6 +3218,8 @@ async function togglePremiumChannel(channelId, field, value){
             const platformName = field === "tvPremium" ? "Premium Tivi" : "Premium Mobile";
             if(value && old.enabled === false){
                 message = `✅ ${item.name}: ${platformName} đã BẬT và KÊNH tự động BẬT theo.`;
+            }else if(!value && !item.tvPremium && !item.mobilePremium){
+                message = `✅ ${item.name}: ${platformName} đã TẮT. Vì cả Tivi Premium và Mobile Premium đều OFF nên KÊNH cũng tự động TẮT. Trạng thái trước đó đã được lưu.`;
             }else{
                 message = `✅ ${item.name}: ${platformName} đã ${value ? "BẬT (ON)" : "TẮT (OFF)"}. KÊNH vẫn ${item.enabled ? "BẬT" : "TẮT"}.`;
             }
@@ -3199,6 +3235,7 @@ async function togglePremiumChannel(channelId, field, value){
         premiumChannelsWriteBusy = false;
     }
 }
+
 async function togglePremiumChannelsFree(platform){
     if(premiumChannelsWriteBusy) return;
 
