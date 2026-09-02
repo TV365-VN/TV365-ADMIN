@@ -1505,6 +1505,230 @@ html, body, button, input, select, textarea, label {
     .m3u-server-control-grid{grid-template-columns:1fr;}
     .m3u-server-control-panel{width:100%;max-width:100%;padding:10px;overflow:hidden;}
 }
+
+/* =========================================================
+   TV365 ADMIN - RESPONSIVE MOBILE + GRID 4 CỘT DESKTOP
+   Giữ nguyên logo, chỉ tối ưu bố cục.
+   ========================================================= */
+
+/* PC: đúng 4 kênh mỗi hàng */
+.premium-channel-grid{
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+}
+
+/* Không cho input/button gây tràn ngang */
+.premium-channel-toolbar > *{
+    min-width:0;
+}
+.premium-channel-toolbar input{
+    box-sizing:border-box;
+    min-width:0;
+}
+
+/* Tablet */
+@media (max-width: 1000px){
+    .container{
+        max-width:100%;
+        width:100%;
+        margin:16px auto;
+        padding:14px;
+    }
+
+    .card{
+        padding:18px;
+    }
+
+    .premium-channel-grid{
+        grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+        gap:12px;
+    }
+}
+
+/* MOBILE */
+@media (max-width: 600px){
+    html, body{
+        width:100%;
+        max-width:100%;
+        overflow-x:hidden;
+    }
+
+    .header{
+        padding:12px 14px;
+        font-size:18px;
+        gap:10px;
+    }
+
+    .header-brand img{
+        width:36px;
+        height:36px;
+    }
+
+    .header-brand span{
+        font-size:18px;
+    }
+
+    .container{
+        width:100%;
+        max-width:100%;
+        margin:8px auto;
+        padding:8px;
+    }
+
+    .card{
+        width:100%;
+        max-width:100%;
+        padding:14px;
+        margin-bottom:12px;
+        border-radius:12px;
+    }
+
+    h2{
+        font-size:21px;
+        line-height:1.25;
+    }
+
+    /* Các nút đăng nhập / quản trị tự co theo màn hình */
+    .buttons{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:8px;
+    }
+
+    .custom-row{
+        grid-template-columns:1fr;
+    }
+
+    .stats-grid{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+
+    .notification-control-grid{
+        grid-template-columns:1fr;
+    }
+
+    /* FREE TIVI / FREE MOBILE */
+    .premium-global-grid{
+        grid-template-columns:1fr !important;
+        gap:10px;
+    }
+
+    /* QUAN TRỌNG:
+       Trên mobile ô tìm kiếm chiếm toàn bộ chiều ngang.
+       Hai nút nằm hàng dưới nên không bị mất/đẩy ra ngoài màn hình. */
+    .premium-channel-toolbar{
+        display:grid !important;
+        grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+        gap:8px !important;
+        width:100%;
+    }
+
+    .premium-channel-toolbar input{
+        grid-column:1 / -1 !important;
+        width:100% !important;
+        min-width:0 !important;
+        height:48px;
+        font-size:16px;
+        padding:11px 12px;
+    }
+
+    .premium-channel-toolbar button{
+        width:100% !important;
+        min-width:0 !important;
+        height:48px;
+        padding:8px 6px;
+        font-size:13px;
+        white-space:normal;
+        line-height:1.15;
+    }
+
+    /* Mobile: 1 kênh / hàng, card tự co theo chiều ngang */
+    .premium-channel-grid{
+        grid-template-columns:1fr !important;
+        gap:10px;
+        width:100%;
+    }
+
+    .premium-channel-row{
+        width:100%;
+        min-width:0;
+    }
+
+    .premium-channel-top{
+        min-height:128px;
+        padding:12px 10px;
+    }
+
+    /* GIỮ NGUYÊN LOGO */
+    .premium-channel-logo,
+    .premium-channel-logo-fallback{
+        width:82px;
+        height:60px;
+        flex-shrink:0;
+    }
+
+    .premium-channel-name{
+        font-size:15px;
+    }
+
+    .premium-channel-id{
+        max-width:100%;
+        font-size:10px;
+    }
+
+    .premium-channel-controls{
+        width:100%;
+    }
+
+    .premium-channel-control{
+        min-width:0;
+        padding:10px 12px;
+    }
+
+    .premium-channel-control-label{
+        min-width:0;
+        max-width:60%;
+    }
+
+    .premium-pagination{
+        flex-direction:column;
+        align-items:stretch;
+        gap:8px;
+    }
+
+    .premium-pagination-buttons{
+        justify-content:center;
+        flex-wrap:wrap;
+    }
+
+    .premium-page-info{
+        text-align:center;
+    }
+
+    .premium-channel-count{
+        font-size:14px;
+        line-height:1.5;
+        word-break:break-word;
+    }
+}
+
+/* Điện thoại rất nhỏ */
+@media (max-width: 390px){
+    .container{
+        padding:6px;
+    }
+
+    .card{
+        padding:11px;
+    }
+
+    .premium-channel-toolbar button{
+        font-size:12px;
+    }
+
+    .premium-channel-control-label{
+        font-size:12px;
+    }
+}
+
 </style>
 </head>
 <body data-tv365-admin-version="PREMIUM-LOGIC-V3">
@@ -2470,8 +2694,8 @@ function renderPremiumChannels(){
         ${pageItems.map(item => {
             const tvChecked = item.enabled && item.tvPremium;
             const mobileChecked = item.enabled && item.mobilePremium;
-            const tvDisabled = !item.enabled;
-            const mobileDisabled = !item.enabled;
+            const tvDisabled = globalTV;
+            const mobileDisabled = globalMobile;
             const logo = String(item.data?.logo || "").trim();
             const logoHtml = logo
                 ? `<img class="premium-channel-logo" src="${escapeHtml(logo)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"><div class="premium-channel-logo-fallback" style="display:none">📺</div>`
@@ -2584,6 +2808,14 @@ async function togglePremiumChannel(channelId, field, value){
 
     if(!["enabled","tvPremium","mobilePremium"].includes(field)) return;
 
+    // FREE Tivi/Mobile chỉ là quyền vào nền tảng, không khóa Premium từng kênh.
+    if(field === "tvPremium" && premiumChannelsFreeConfig.freeTV === "ON"){
+        showStatus("FREE TIVI đang bật: trạng thái Premium Tivi của kênh vẫn được phép chỉnh.", "info");
+    }
+    if(field === "mobilePremium" && premiumChannelsFreeConfig.freeMobile === "ON"){
+        showStatus("FREE MOBILE đang bật: trạng thái Premium Mobile của kênh vẫn được phép chỉnh.", "info");
+    }
+
     const item = premiumChannels.find(x => x.id === channelId);
     if(!item) return;
 
@@ -2601,54 +2833,55 @@ async function togglePremiumChannel(channelId, field, value){
         const nextEnabled = !!value;
 
         if(!nextEnabled){
-            // BẬT KÊNH OFF = TIVI PREMIUM + MOBILE PREMIUM bắt buộc OFF.
+            // Tắt KÊNH => cả 2 Premium cũng OFF, nhưng nhớ trạng thái cũ để khôi phục.
             patch = {
                 enabled: false,
                 tvPremium: false,
                 mobilePremium: false,
-                savedTvPremium: false,
-                savedMobilePremium: false
+                savedTvPremium: old.tvPremium,
+                savedMobilePremium: old.mobilePremium
             };
         }else{
-            // Chỉ được BẬT KÊNH khi ít nhất một nền tảng Premium đang ON.
-            // Nếu cả hai Premium đang OFF thì giữ BẬT KÊNH OFF.
-            const hasPremium = !!item.tvPremium || !!item.mobilePremium;
-            if(!hasPremium){
-                patch = {
-                    enabled: false,
-                    tvPremium: false,
-                    mobilePremium: false,
-                    savedTvPremium: false,
-                    savedMobilePremium: false
-                };
-                showStatus(`ℹ️ ${item.name}: Tivi Premium và Mobile Premium đều OFF nên KÊNH vẫn OFF.`, "info");
-            }else{
-                patch = { enabled: true };
+            // Muốn BẬT KÊNH thì phải có ít nhất 1 Premium.
+            // Nếu trạng thái lưu cũ có Premium thì khôi phục.
+            const restoreTv = old.savedTvPremium;
+            const restoreMobile = old.savedMobilePremium;
+
+            if(!restoreTv && !restoreMobile){
+                showStatus(
+                    "⚠️ Chưa thể BẬT KÊNH: hãy bật TIVI PREMIUM hoặc MOBILE PREMIUM trước.",
+                    "info"
+                );
+                renderPremiumChannels();
+                return;
             }
+
+            patch = {
+                enabled: true,
+                tvPremium: restoreTv,
+                mobilePremium: restoreMobile
+            };
         }
     }else{
-        // Tivi và Mobile là 2 công tắc độc lập.
-        // FREE TIVI / FREE MOBILE không khóa chỉnh Premium từng kênh.
-        if(!item.enabled){
-            showStatus("Hãy bật Kênh trước khi chỉnh Premium Tivi/Mobile.", "info");
-            return;
-        }
+        // Premium từng nền tảng có thể chỉnh ngay cả khi KÊNH đang OFF.
+        // Điều này tránh deadlock: KÊNH OFF + 2 Premium OFF thì không còn nút nào để mở.
+        const nextTv = field === "tvPremium" ? !!value : old.tvPremium;
+        const nextMobile = field === "mobilePremium" ? !!value : old.mobilePremium;
 
         patch[field] = !!value;
 
-        // Nếu cả 2 Premium đều OFF -> BẬT KÊNH tự động OFF.
-        const nextTv = field === "tvPremium" ? !!value : !!item.tvPremium;
-        const nextMobile = field === "mobilePremium" ? !!value : !!item.mobilePremium;
+        // Luôn lưu trạng thái Premium cuối cùng.
+        if(field === "tvPremium") patch.savedTvPremium = !!value;
+        if(field === "mobilePremium") patch.savedMobilePremium = !!value;
 
-        if(!nextTv && !nextMobile){
+        if(nextTv || nextMobile){
+            // Có ít nhất 1 Premium => KÊNH phải ON.
+            patch.enabled = true;
+        }else{
+            // Cả 2 Premium OFF => KÊNH bắt buộc OFF.
             patch.enabled = false;
             patch.tvPremium = false;
             patch.mobilePremium = false;
-            patch.savedTvPremium = false;
-            patch.savedMobilePremium = false;
-        }else{
-            if(field === "tvPremium") patch.savedTvPremium = !!value;
-            if(field === "mobilePremium") patch.savedMobilePremium = !!value;
         }
     }
 
@@ -2666,47 +2899,38 @@ async function togglePremiumChannel(channelId, field, value){
 
         const verifySnap = await ref.get();
         const verifyData = verifySnap.exists ? (verifySnap.data() || {}) : {};
-        let actual = {
-            enabled: premiumBool(verifyData.enabled, !!item.enabled),
-            tvPremium: premiumBool(verifyData.tvPremium, !!item.tvPremium),
-            mobilePremium: premiumBool(verifyData.mobilePremium, !!item.mobilePremium),
-            savedTvPremium: premiumBool(verifyData.savedTvPremium, !!item.savedTvPremium),
-            savedMobilePremium: premiumBool(verifyData.savedMobilePremium, !!item.savedMobilePremium)
-        };
 
-        // Luật cuối cùng: cả 2 Premium OFF thì KÊNH phải OFF.
-        if(!actual.tvPremium && !actual.mobilePremium){
-            actual.enabled = false;
-            actual.savedTvPremium = false;
-            actual.savedMobilePremium = false;
-            await ref.set({
-                enabled: false,
-                tvPremium: false,
-                mobilePremium: false,
-                savedTvPremium: false,
-                savedMobilePremium: false,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                updatedBy: user.email
-            }, {merge:true});
-        }
+        const actualTv = premiumBool(verifyData.tvPremium, !!item.tvPremium);
+        const actualMobile = premiumBool(verifyData.mobilePremium, !!item.mobilePremium);
+        const actualEnabled = actualTv || actualMobile
+            ? premiumBool(verifyData.enabled, !!item.enabled)
+            : false;
 
-        item.enabled = actual.enabled;
-        item.tvPremium = actual.tvPremium;
-        item.mobilePremium = actual.mobilePremium;
-        item.savedTvPremium = actual.savedTvPremium;
-        item.savedMobilePremium = actual.savedMobilePremium;
+        item.tvPremium = actualTv;
+        item.mobilePremium = actualMobile;
+        item.enabled = actualEnabled;
+        item.savedTvPremium = premiumBool(
+            verifyData.savedTvPremium,
+            !!item.savedTvPremium
+        );
+        item.savedMobilePremium = premiumBool(
+            verifyData.savedMobilePremium,
+            !!item.savedMobilePremium
+        );
+
         renderPremiumChannels();
 
         let message;
         if(field === "enabled"){
             message = item.enabled
-                ? `✅ ${item.name}: KÊNH đã BẬT.`
-                : `✅ ${item.name}: KÊNH OFF → Tivi Premium OFF + Mobile Premium OFF.`;
+                ? `✅ ${item.name}: KÊNH đã BẬT. Tivi=${item.tvPremium ? "ON" : "OFF"}, Mobile=${item.mobilePremium ? "ON" : "OFF"}.`
+                : `✅ ${item.name}: KÊNH đã TẮT. Tivi Premium OFF + Mobile Premium OFF.`;
         }else if(!item.enabled){
-            message = `✅ ${item.name}: Tivi Premium và Mobile Premium đều OFF → KÊNH tự động OFF.`;
+            message = `✅ ${item.name}: Tivi Premium OFF + Mobile Premium OFF → KÊNH tự động OFF.`;
         }else{
             message = `✅ ${item.name}: ${field === "tvPremium" ? "Premium Tivi" : "Premium Mobile"} đã ${value ? "BẬT (ON)" : "TẮT (OFF)"}.`;
         }
+
         showStatus(message, "success");
     }catch(error){
         console.error(error);
