@@ -2152,8 +2152,8 @@ html, body, button, input, select, textarea, label {
 <div class="premium-channel-panel">
 <div class="premium-channel-title">📺 QUẢN LÝ KÊNH PREMIUM</div>
 <div class="premium-channel-desc">
-    Danh sách được tự đồng bộ từ M3U GitHub (nguồn chính). Nếu GitHub lỗi và Codeberg đang bật ở chế độ AUTO, hệ thống sẽ tự dùng Codeberg làm nguồn dự phòng. Kênh đã có trong <b>premium_channels</b> sẽ giữ nguyên trạng thái Premium.
-    Công tắc FREE bên dưới sẽ tạm mở miễn phí toàn bộ các kênh Premium và tự khôi phục trạng thái cũ khi tắt.
+    GitHub và Codeberg có danh sách kênh RIÊNG. Bật máy chủ nào thì Admin chỉ hiển thị và đồng bộ danh sách của máy chủ đó. Trạng thái Premium của từng máy chủ được lưu riêng.
+    FREE Tivi/Mobile chỉ điều khiển quyền vào nền tảng; không tự tắt hoặc thay đổi Premium riêng của từng kênh.
 </div>
 <div class="premium-global-grid">
 <div class="admin-switch-row">
@@ -2181,7 +2181,7 @@ html, body, button, input, select, textarea, label {
 <div class="premium-channel-toolbar">
 <input id="premiumChannelSearch" oninput="premiumChannelPage=1;renderPremiumChannels()" onkeydown="if(event.key==='Enter'){searchPremiumChannels();}" placeholder="🔎 Nhập tên kênh cần tìm..." type="text"/>
 <button class="premium-channel-search" id="premiumChannelSearchButton" onclick="searchPremiumChannels()" type="button">🔎 TÌM KIẾM KÊNH</button>
-<button class="premium-channel-refresh" id="premiumChannelRefreshButton" onclick="loadPremiumChannels()" type="button">🔄 ĐỒNG BỘ KÊNH TỪ M3U</button>
+<button class="premium-channel-refresh" id="premiumChannelRefreshButton" onclick="loadPremiumChannels()" type="button" style="display:inline-flex;visibility:visible;opacity:1;">🔄 ĐỒNG BỘ KÊNH TỪ M3U</button>
 </div>
 <div class="premium-channel-list" id="premiumChannelList">
 <div class="premium-channel-empty">Đang tải danh sách kênh Premium...</div>
@@ -2265,6 +2265,7 @@ let freeConfig = {
 
 
 let premiumChannels = [];
+let activePremiumServer = null;
 let premiumChannelsFreeConfig = {
     freeTV: "OFF",
     freeMobile: "OFF"
@@ -2411,6 +2412,100 @@ const PREMIUM_M3U_PRIMARY_URL =
 const PREMIUM_M3U_BACKUP_URL =
     "https://codeberg.org/TV365/TV365-STREAM/raw/branch/main/VIETNAM.m3u";
 
+/* =========================================================
+   PREMIUM CHANNELS THEO TỪNG MÁY CHỦ
+   GitHub và Codeberg có 2 danh sách RIÊNG.
+   Không trộn kênh giữa 2 máy chủ.
+   ========================================================= */
+function premiumServerKey(source){
+    const s = String(source || "").toLowerCase();
+    return s.includes("codeberg") ? "codeberg" : "github";
+}
+
+function premiumServerLabel(server){
+    return premiumServerKey(server) === "codeberg" ? "Codeberg" : "GitHub";
+}
+
+function premiumServerCollection(server){
+    const key = premiumServerKey(server);
+    return db.collection(
+        key === "codeberg" ? "premium_channels_codeberg" : "premium_channels_github"
+    );
+}
+
+function getConfiguredPremiumServer(){
+    const mode = normalizeM3UMode(m3uServerConfig.mode);
+    const githubEnabled = m3uServerConfig.github === "ON";
+    const codebergEnabled = m3uServerConfig.codeberg === "ON";
+
+    if(mode === "CODEBERG_ONLY" && codebergEnabled) return "codeberg";
+    if(mode === "GITHUB_ONLY" && githubEnabled) return "github";
+
+    // AUTO: GitHub là máy chủ đang dùng trước; nếu GitHub tắt thì Codeberg.
+    if(githubEnabled) return "github";
+    if(codebergEnabled) return "codeberg";
+    return null;
+}
+
+async function readPremiumChannelsForServer(server){
+    const collection = premiumServerCollection(server);
+    const snapshot = await collection.get();
+    const rows = [];
+
+    snapshot.forEach(doc => {
+        const data = doc.data() || {};
+        rows.push({
+            id: doc.id,
+            data: data,
+            name: premiumChannelName(data, doc.id),
+            enabled: premiumBool(data.enabled, true),
+            tvPremium: premiumBool(data.tvPremium, false),
+            mobilePremium: premiumBool(data.mobilePremium, false),
+            savedTvPremium: premiumBool(
+                data.savedTvPremium,
+                premiumBool(data.tvPremium, false)
+            ),
+            savedMobilePremium: premiumBool(
+                data.savedMobilePremium,
+                premiumBool(data.mobilePremium, false)
+            )
+        });
+    });
+
+    rows.sort((a,b) => a.name.localeCompare(
+        b.name, "vi", {numeric:true, sensitivity:"base"}
+    ));
+    return rows;
+}
+
+/* Chuyển dữ liệu cũ một lần theo trường source nếu danh sách server mới còn trống. */
+async function migrateLegacyPremiumChannelsToServer(server){
+    const target = premiumServerCollection(server);
+    const targetSnap = await target.limit(1).get();
+    if(!targetSnap.empty) return 0;
+
+    const legacySnap = await db.collection("premium_channels").get();
+    if(legacySnap.empty) return 0;
+
+    const key = premiumServerKey(server);
+    const writes = [];
+    legacySnap.forEach(doc => {
+        const data = doc.data() || {};
+        const sourceKey = premiumServerKey(data.source || "github");
+        if(sourceKey !== key) return;
+        writes.push({id:doc.id, data:{...data, source:premiumServerLabel(server)}});
+    });
+
+    for(let i=0;i<writes.length;i+=400){
+        const batch = db.batch();
+        writes.slice(i,i+400).forEach(({id,data}) => {
+            batch.set(target.doc(id), data, {merge:true});
+        });
+        await batch.commit();
+    }
+    return writes.length;
+}
+
 function parseM3UAttributes(line){
     const attrs = {};
     const re = /([A-Za-z0-9_-]+)=("[^"]*"|'[^']*'|[^\s,]+)/g;
@@ -2478,18 +2573,35 @@ function parsePremiumM3U(text){
 }
 
 async function fetchM3UText(url, label){
+    const isCodeberg = String(label || "").toLowerCase() === "codeberg";
     const candidates = [
         {url, label, proxy:false}
     ];
 
-    // Codeberg raw thường bị trình duyệt chặn CORS.
-    // Chỉ khi nguồn là Codeberg và fetch trực tiếp thất bại,
-    // thử qua proxy đọc công khai để Admin vẫn lấy được M3U.
-    if(String(label).toLowerCase() === "codeberg"){
+    if(isCodeberg){
+        // 1) Codeberg API raw endpoint. Một số môi trường trình duyệt chặn
+        // raw URL vì CORS, nên thử API của Forgejo/Codeberg trước.
+        candidates.push({
+            url: "https://codeberg.org/api/v1/repos/TV365/TV365-STREAM/raw/VIETNAM.m3u?ref=main",
+            label: "Codeberg API",
+            proxy:true,
+            mode:"text"
+        });
+
+        // 2) Public CORS fallback cho raw Codeberg.
         candidates.push({
             url: "https://api.allorigins.win/raw?url=" + encodeURIComponent(url),
             label: "Codeberg (CORS fallback)",
-            proxy:true
+            proxy:true,
+            mode:"text"
+        });
+
+        // 3) CORS fallback thứ hai nếu AllOrigins đang lỗi.
+        candidates.push({
+            url: "https://corsproxy.io/?url=" + encodeURIComponent(url),
+            label: "Codeberg (CORS fallback 2)",
+            proxy:true,
+            mode:"text"
         });
     }
 
@@ -2504,14 +2616,30 @@ async function fetchM3UText(url, label){
                 method: "GET",
                 cache: "no-store",
                 signal: controller.signal,
-                headers: {"Accept": "text/plain,*/*"}
+                headers: {"Accept": "text/plain, application/json, */*"}
             });
 
             if(!response.ok){
                 throw new Error(candidate.label + " HTTP " + response.status);
             }
 
-            const text = await response.text();
+            const contentType = String(response.headers.get("content-type") || "").toLowerCase();
+            let text = await response.text();
+
+            // Codeberg Forgejo API có thể trả JSON {content: base64...}.
+            if(candidate.mode === "json" || contentType.includes("application/json")){
+                try{
+                    const json = JSON.parse(text);
+                    if(json && typeof json.content === "string"){
+                        const clean = json.content.replace(/\s/g, "");
+                        const binary = atob(clean);
+                        const bytes = Uint8Array.from(binary, ch => ch.charCodeAt(0));
+                        text = new TextDecoder("utf-8").decode(bytes);
+                    }
+                }catch(jsonError){
+                    // Nếu không phải JSON thì giữ nguyên text để kiểm tra #EXTINF.
+                }
+            }
 
             if(!text || !text.includes("#EXTINF")){
                 throw new Error(
@@ -2519,6 +2647,7 @@ async function fetchM3UText(url, label){
                 );
             }
 
+            console.info("M3U tải thành công từ " + candidate.label);
             return text;
         }catch(error){
             console.warn(candidate.label + " thất bại:", error);
@@ -2530,28 +2659,30 @@ async function fetchM3UText(url, label){
 
     throw lastError || new Error(label + " không tải được M3U.");
 }
-
 async function getPremiumM3UChannels(){
     const mode = normalizeM3UMode(m3uServerConfig.mode);
     const githubEnabled = m3uServerConfig.github === "ON";
     const codebergEnabled = m3uServerConfig.codeberg === "ON";
     const attempts = [];
 
-    if(mode !== "CODEBERG_ONLY" && githubEnabled){
+    // Nếu chỉ có 1 máy chủ đang BẬT, máy chủ đó là nguồn hiện hành,
+    // bất kể radio mode trước đó đang ở AUTO/GITHUB ONLY/CODEBERG ONLY.
+    if(githubEnabled && !codebergEnabled){
         attempts.push({url: PREMIUM_M3U_PRIMARY_URL, label: "GitHub"});
-    }
-
-    // Codeberg là nguồn dự phòng: trong AUTO chỉ dùng khi GitHub lỗi.
-    if(mode === "CODEBERG_ONLY" || (mode === "AUTO" && codebergEnabled)){
+    }else if(codebergEnabled && !githubEnabled){
         attempts.push({url: PREMIUM_M3U_BACKUP_URL, label: "Codeberg"});
+    }else if(githubEnabled && codebergEnabled){
+        // Chỉ khi cả hai cùng BẬT (trạng thái cũ) mới dùng mode để chọn.
+        if(mode === "CODEBERG_ONLY"){
+            attempts.push({url: PREMIUM_M3U_BACKUP_URL, label: "Codeberg"});
+        }else if(mode === "GITHUB_ONLY"){
+            attempts.push({url: PREMIUM_M3U_PRIMARY_URL, label: "GitHub"});
+        }else{
+            attempts.push({url: PREMIUM_M3U_PRIMARY_URL, label: "GitHub"});
+            attempts.push({url: PREMIUM_M3U_BACKUP_URL, label: "Codeberg"});
+        }
     }
 
-    if(mode === "GITHUB_ONLY" && !githubEnabled){
-        throw new Error("Chế độ GITHUB ONLY nhưng máy chủ GitHub đang TẮT.");
-    }
-    if(mode === "CODEBERG_ONLY" && !codebergEnabled){
-        throw new Error("Chế độ CODEBERG ONLY nhưng máy chủ Codeberg đang TẮT.");
-    }
     if(!attempts.length){
         throw new Error("Không có máy chủ M3U nào đang được bật.");
     }
@@ -2576,7 +2707,9 @@ async function getPremiumM3UChannels(){
 
 async function syncPremiumChannelsFromM3U(){
     const result = await getPremiumM3UChannels();
-    const snapshot = await db.collection("premium_channels").get();
+    const server = premiumServerKey(result.source);
+    const collection = premiumServerCollection(server);
+    const snapshot = await collection.get();
     const existing = new Map();
 
     snapshot.forEach(doc => existing.set(doc.id, doc.data() || {}));
@@ -2591,7 +2724,8 @@ async function syncPremiumChannelsFromM3U(){
             return;
         }
 
-        // Kênh mới: mặc định chỉ bật kênh, chưa phải Premium.
+        // Kênh mới: mặc định BẬT KÊNH, nhưng Premium Tivi/Mobile đều OFF.
+        // Ba trạng thái này độc lập nhau.
         updates[channel.id] = {
             name: channel.name,
             tvgId: channel.tvgId || null,
@@ -2605,7 +2739,8 @@ async function syncPremiumChannelsFromM3U(){
             savedMobilePremium: false,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            source: result.source
+            source: result.source,
+            server: server
         };
         created++;
     });
@@ -2627,151 +2762,112 @@ async function loadPremiumChannels(){
 
     if(list){
         list.innerHTML =
-            '<div class="premium-channel-empty">Đang tải danh sách kênh Premium...</div>';
+            '<div class="premium-channel-empty">Đang xác định máy chủ M3U...</div>';
     }
-    if(button) button.disabled = true;
+    if(button){
+        button.style.display = "inline-flex";
+        button.style.visibility = "visible";
+        button.style.opacity = "1";
+        button.disabled = true;
+    }
 
-    let syncResult = null;
     let m3uError = null;
+    let sourceResult = null;
 
     try{
-        // Đọc cấu hình máy chủ trước.
         await loadM3UServerConfig();
         await loadPremiumChannelGlobalConfig();
 
-        // QUAN TRỌNG:
-        // Luôn đọc premium_channels từ Firebase trước.
-        // Vì vậy nếu GitHub tắt và Codeberg bị CORS/lỗi mạng,
-        // Admin vẫn nhìn thấy danh sách kênh đã lưu và vẫn chỉnh Premium bình thường.
-        const snapshotBeforeM3U =
-            await db.collection("premium_channels").get();
+        /*
+         * MỖI MÁY CHỦ = MỘT DANH SÁCH FIRESTORE RIÊNG:
+         *   premium_channels_github
+         *   premium_channels_codeberg
+         *
+         * Không bao giờ lấy danh sách GitHub rồi hiển thị khi Codeberg đang là nguồn active.
+         */
+        try{
+            sourceResult = await getPremiumM3UChannels();
+            activePremiumServer = premiumServerKey(sourceResult.source);
+        }catch(error){
+            m3uError = error;
+            activePremiumServer = getConfiguredPremiumServer();
+        }
 
-        premiumChannels = [];
+        if(!activePremiumServer){
+            throw new Error("Không có máy chủ M3U nào đang được bật.");
+        }
 
-        snapshotBeforeM3U.forEach(doc => {
-            const data = doc.data() || {};
-            premiumChannels.push({
-                id: doc.id,
-                data: data,
-                name: premiumChannelName(data, doc.id),
-                enabled: premiumBool(data.enabled, true),
-                tvPremium: premiumBool(data.tvPremium, false),
-                mobilePremium: premiumBool(data.mobilePremium, false),
-                savedTvPremium: premiumBool(
-                    data.savedTvPremium,
-                    premiumBool(data.tvPremium, false)
-                ),
-                savedMobilePremium: premiumBool(
-                    data.savedMobilePremium,
-                    premiumBool(data.mobilePremium, false)
-                )
-            });
-        });
+        // Nếu danh sách server mới chưa có, thử lấy dữ liệu cũ đúng theo source để chuyển một lần.
+        try{
+            await migrateLegacyPremiumChannelsToServer(activePremiumServer);
+        }catch(migrateError){
+            console.warn("Không thể migrate premium_channels cũ:", migrateError);
+        }
 
-        premiumChannels.sort((a,b) =>
-            a.name.localeCompare(
-                b.name,
-                "vi",
-                {numeric:true, sensitivity:"base"}
-            )
-        );
-
+        premiumChannels = await readPremiumChannelsForServer(activePremiumServer);
         premiumChannelPage = 1;
         renderPremiumChannels();
 
-        // Sau khi danh sách Firebase đã hiện, mới thử đồng bộ M3U.
-        // M3U lỗi tuyệt đối không được xóa/ẩn danh sách hiện có.
-        try{
-            syncResult = await syncPremiumChannelsFromM3U();
+        if(!m3uError){
+            // M3U tải được: đồng bộ CHỈ vào collection của máy chủ vừa chọn.
+            try{
+                const syncResult = await syncPremiumChannelsFromM3U();
+                premiumChannels = await readPremiumChannelsForServer(activePremiumServer);
+                premiumChannelPage = 1;
+                renderPremiumChannels();
 
-            // Đồng bộ xong thì đọc lại Firebase để nhận kênh mới/logo mới.
-            const snapshotAfterM3U =
-                await db.collection("premium_channels").get();
-
-            premiumChannels = [];
-
-            snapshotAfterM3U.forEach(doc => {
-                const data = doc.data() || {};
-                premiumChannels.push({
-                    id: doc.id,
-                    data: data,
-                    name: premiumChannelName(data, doc.id),
-                    enabled: premiumBool(data.enabled, true),
-                    tvPremium: premiumBool(data.tvPremium, false),
-                    mobilePremium: premiumBool(data.mobilePremium, false),
-                    savedTvPremium: premiumBool(
-                        data.savedTvPremium,
-                        premiumBool(data.tvPremium, false)
-                    ),
-                    savedMobilePremium: premiumBool(
-                        data.savedMobilePremium,
-                        premiumBool(data.mobilePremium, false)
-                    )
-                });
-            });
-
-            premiumChannels.sort((a,b) =>
-                a.name.localeCompare(
-                    b.name,
-                    "vi",
-                    {numeric:true, sensitivity:"base"}
-                )
-            );
-
-            premiumChannelPage = 1;
+                showStatus(
+                    `✅ Đang quản lý danh sách ${premiumServerLabel(activePremiumServer)}. ` +
+                    `Đã đồng bộ ${syncResult.total} kênh từ ${syncResult.source}. ` +
+                    `Tạo mới ${syncResult.created}, giữ nguyên ${syncResult.matched} kênh.`,
+                    "success"
+                );
+            }catch(syncError){
+                m3uError = syncError;
+                console.warn("Không đồng bộ được M3U:", syncError);
+                renderPremiumChannels();
+                showStatus(
+                    `⚠️ ${premiumServerLabel(activePremiumServer)} đang được chọn nhưng M3U chưa tải được. ` +
+                    `Danh sách riêng của ${premiumServerLabel(activePremiumServer)} vẫn được giữ nguyên. ` +
+                    `Chi tiết: ${syncError.message || syncError}`,
+                    "info"
+                );
+            }
+        }else{
+            // M3U lỗi nhưng collection riêng của server vẫn phải hiện.
             renderPremiumChannels();
-
             showStatus(
-                `✅ Đã đồng bộ ${syncResult.total} kênh từ ${syncResult.source}. ` +
-                `Tạo mới ${syncResult.created} kênh, giữ nguyên ${syncResult.matched} kênh đã có.`,
-                "success"
-            );
-        }catch(error){
-            m3uError = error;
-
-            console.warn(
-                "M3U không tải được, giữ nguyên danh sách Firebase:",
-                error
-            );
-
-            // Không xóa danh sách đã đọc từ Firebase.
-            renderPremiumChannels();
-
-            const sourceMode =
-                normalizeM3UMode(m3uServerConfig.mode);
-            showStatus(
-                `⚠️ Không đồng bộ được M3U (${sourceMode}). ` +
-                `Danh sách Firebase hiện tại vẫn được giữ nguyên. ` +
-                `Chi tiết: ${error.message || error}`,
+                `⚠️ Không tải được M3U của máy chủ đang chọn. ` +
+                `Vẫn hiển thị danh sách riêng của ${premiumServerLabel(activePremiumServer)}. ` +
+                `Chi tiết: ${m3uError.message || m3uError}`,
                 "info"
             );
         }
 
         if(count && !premiumChannels.length){
             count.innerText =
-                m3uError
-                    ? "Chưa có kênh trong premium_channels và M3U chưa tải được."
-                    : "Chưa có kênh trong premium_channels.";
+                `Máy chủ ${premiumServerLabel(activePremiumServer)} chưa có kênh trong danh sách riêng.`;
         }
 
     }catch(error){
         console.error(error);
-
-        // Chỉ báo lỗi toàn bộ khi Firebase collection thực sự không đọc được.
         if(list){
             list.innerHTML =
-                '<div class="premium-channel-empty">❌ Không đọc được collection premium_channels.<br>' +
+                '<div class="premium-channel-empty">❌ Không đọc được danh sách kênh của máy chủ.<br>' +
                 escapeHtml(getFirebaseError(error)) +
                 '</div>';
         }
-
-        if(count){
-            count.innerText = "Không tải được danh sách.";
-        }
+        if(count) count.innerText = "Không tải được danh sách.";
     }finally{
-        if(button) button.disabled = false;
+        if(button){
+            button.style.display = "inline-flex";
+            button.style.visibility = "visible";
+            button.style.opacity = "1";
+            button.disabled = false;
+        }
     }
 }
+
 function searchPremiumChannels(){
     renderPremiumChannels();
     const input = document.getElementById("premiumChannelSearch");
@@ -2817,10 +2913,12 @@ function renderPremiumChannels(){
     const html = `
         <div class="premium-channel-grid">
         ${pageItems.map(item => {
-            const tvChecked = item.enabled && item.tvPremium;
-            const mobileChecked = item.enabled && item.mobilePremium;
-            const tvDisabled = globalTV;
-            const mobileDisabled = globalMobile;
+            const tvChecked = !!item.tvPremium;
+            const mobileChecked = !!item.mobilePremium;
+            // FREE Tivi/Mobile chỉ là quyền vào nền tảng, không khóa
+            // công tắc Premium riêng của từng kênh.
+            const tvDisabled = false;
+            const mobileDisabled = false;
             const logo = String(item.data?.logo || "").trim();
             const logoHtml = logo
                 ? `<img class="premium-channel-logo" src="${escapeHtml(logo)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"><div class="premium-channel-logo-fallback" style="display:none">📺</div>`
@@ -2846,7 +2944,7 @@ function renderPremiumChannels(){
                         <span class="premium-channel-control-label tv">TIVI PREMIUM</span>
                         <div style="display:flex;align-items:center;gap:5px">
                             <span class="premium-onoff ${tvChecked ? "on" : "off"}">${tvChecked ? "ON" : "OFF"}</span>
-                            <label class="premium-mini-switch" title="${globalTV ? "FREE toàn bộ Tivi đang bật" : "Premium Tivi"}">
+                            <label class="premium-mini-switch" title="${globalTV ? "FREE Tivi đang bật nhưng vẫn chỉnh Premium riêng của kênh" : "Premium Tivi"}">
                                 <input type="checkbox" ${tvChecked ? "checked" : ""} ${tvDisabled ? "disabled" : ""}
                                     onchange="togglePremiumChannel('${escapeJs(item.id)}','tvPremium',this.checked)"/>
                                 <span class="premium-mini-slider"></span>
@@ -2857,7 +2955,7 @@ function renderPremiumChannels(){
                         <span class="premium-channel-control-label mobile">MOBILE PREMIUM</span>
                         <div style="display:flex;align-items:center;gap:5px">
                             <span class="premium-onoff ${mobileChecked ? "on" : "off"}">${mobileChecked ? "ON" : "OFF"}</span>
-                            <label class="premium-mini-switch" title="${globalMobile ? "FREE toàn bộ Mobile đang bật" : "Premium Mobile"}">
+                            <label class="premium-mini-switch" title="${globalMobile ? "FREE Mobile đang bật nhưng vẫn chỉnh Premium riêng của kênh" : "Premium Mobile"}">
                                 <input type="checkbox" ${mobileChecked ? "checked" : ""} ${mobileDisabled ? "disabled" : ""}
                                     onchange="togglePremiumChannel('${escapeJs(item.id)}','mobilePremium',this.checked)"/>
                                 <span class="premium-mini-slider"></span>
@@ -2915,7 +3013,7 @@ async function commitPremiumChannelUpdates(updates){
     for(let i = 0; i < entries.length; i += 400){
         const batch = db.batch();
         entries.slice(i, i + 400).forEach(([id, data]) => {
-            batch.set(db.collection("premium_channels").doc(id), data, {merge:true});
+            batch.set(premiumServerCollection(activePremiumServer).doc(id), data, {merge:true});
         });
         await batch.commit();
     }
@@ -2933,14 +3031,6 @@ async function togglePremiumChannel(channelId, field, value){
 
     if(!["enabled","tvPremium","mobilePremium"].includes(field)) return;
 
-    // FREE Tivi/Mobile chỉ là quyền vào nền tảng, không khóa Premium từng kênh.
-    if(field === "tvPremium" && premiumChannelsFreeConfig.freeTV === "ON"){
-        showStatus("FREE TIVI đang bật: trạng thái Premium Tivi của kênh vẫn được phép chỉnh.", "info");
-    }
-    if(field === "mobilePremium" && premiumChannelsFreeConfig.freeMobile === "ON"){
-        showStatus("FREE MOBILE đang bật: trạng thái Premium Mobile của kênh vẫn được phép chỉnh.", "info");
-    }
-
     const item = premiumChannels.find(x => x.id === channelId);
     if(!item) return;
 
@@ -2952,66 +3042,20 @@ async function togglePremiumChannel(channelId, field, value){
         savedMobilePremium: !!item.savedMobilePremium
     };
 
-    let patch = {};
+    // QUAN TRỌNG:
+    // - BẬT/TẮT KÊNH là một lớp riêng.
+    // - TIVI PREMIUM và MOBILE PREMIUM là hai lớp riêng.
+    // Không ép KÊNH phải có Premium mới được BẬT.
+    // Không tắt Premium khi BẬT/TẮT KÊNH.
+    const patch = {[field]: !!value};
 
-    if(field === "enabled"){
-        const nextEnabled = !!value;
-
-        if(!nextEnabled){
-            // Tắt KÊNH => cả 2 Premium cũng OFF, nhưng nhớ trạng thái cũ để khôi phục.
-            patch = {
-                enabled: false,
-                tvPremium: false,
-                mobilePremium: false,
-                savedTvPremium: old.tvPremium,
-                savedMobilePremium: old.mobilePremium
-            };
-        }else{
-            // Muốn BẬT KÊNH thì phải có ít nhất 1 Premium.
-            // Nếu trạng thái lưu cũ có Premium thì khôi phục.
-            const restoreTv = old.savedTvPremium;
-            const restoreMobile = old.savedMobilePremium;
-
-            if(!restoreTv && !restoreMobile){
-                showStatus(
-                    "⚠️ Chưa thể BẬT KÊNH: hãy bật TIVI PREMIUM hoặc MOBILE PREMIUM trước.",
-                    "info"
-                );
-                renderPremiumChannels();
-                return;
-            }
-
-            patch = {
-                enabled: true,
-                tvPremium: restoreTv,
-                mobilePremium: restoreMobile
-            };
-        }
-    }else{
-        // Premium từng nền tảng có thể chỉnh ngay cả khi KÊNH đang OFF.
-        // Điều này tránh deadlock: KÊNH OFF + 2 Premium OFF thì không còn nút nào để mở.
-        const nextTv = field === "tvPremium" ? !!value : old.tvPremium;
-        const nextMobile = field === "mobilePremium" ? !!value : old.mobilePremium;
-
-        patch[field] = !!value;
-
-        // Luôn lưu trạng thái Premium cuối cùng.
-        if(field === "tvPremium") patch.savedTvPremium = !!value;
-        if(field === "mobilePremium") patch.savedMobilePremium = !!value;
-
-        if(nextTv || nextMobile){
-            // Có ít nhất 1 Premium => KÊNH phải ON.
-            patch.enabled = true;
-        }else{
-            // Cả 2 Premium OFF => KÊNH bắt buộc OFF.
-            patch.enabled = false;
-            patch.tvPremium = false;
-            patch.mobilePremium = false;
-        }
+    if(field === "tvPremium"){
+        patch.savedTvPremium = !!value;
+    }else if(field === "mobilePremium"){
+        patch.savedMobilePremium = !!value;
     }
 
     premiumChannelsWriteBusy = true;
-
     Object.assign(item, patch);
     renderPremiumChannels();
 
@@ -3019,41 +3063,36 @@ async function togglePremiumChannel(channelId, field, value){
         patch.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
         patch.updatedBy = user.email;
 
-        const ref = db.collection("premium_channels").doc(channelId);
+        const ref = premiumServerCollection(activePremiumServer).doc(channelId);
         await ref.set(patch, {merge:true});
 
         const verifySnap = await ref.get();
-        const verifyData = verifySnap.exists ? (verifySnap.data() || {}) : {};
+        if(!verifySnap.exists){
+            throw new Error("Không tìm thấy lại dữ liệu kênh sau khi ghi Firebase.");
+        }
 
-        const actualTv = premiumBool(verifyData.tvPremium, !!item.tvPremium);
-        const actualMobile = premiumBool(verifyData.mobilePremium, !!item.mobilePremium);
-        const actualEnabled = actualTv || actualMobile
-            ? premiumBool(verifyData.enabled, !!item.enabled)
-            : false;
-
-        item.tvPremium = actualTv;
-        item.mobilePremium = actualMobile;
-        item.enabled = actualEnabled;
+        const verifyData = verifySnap.data() || {};
+        item.enabled = premiumBool(verifyData.enabled, !!item.enabled);
+        item.tvPremium = premiumBool(verifyData.tvPremium, !!item.tvPremium);
+        item.mobilePremium = premiumBool(verifyData.mobilePremium, !!item.mobilePremium);
         item.savedTvPremium = premiumBool(
             verifyData.savedTvPremium,
-            !!item.savedTvPremium
+            !!item.tvPremium
         );
         item.savedMobilePremium = premiumBool(
             verifyData.savedMobilePremium,
-            !!item.savedMobilePremium
+            !!item.mobilePremium
         );
 
         renderPremiumChannels();
 
         let message;
         if(field === "enabled"){
-            message = item.enabled
-                ? `✅ ${item.name}: KÊNH đã BẬT. Tivi=${item.tvPremium ? "ON" : "OFF"}, Mobile=${item.mobilePremium ? "ON" : "OFF"}.`
-                : `✅ ${item.name}: KÊNH đã TẮT. Tivi Premium OFF + Mobile Premium OFF.`;
-        }else if(!item.enabled){
-            message = `✅ ${item.name}: Tivi Premium OFF + Mobile Premium OFF → KÊNH tự động OFF.`;
+            message = `✅ ${item.name}: KÊNH đã ${item.enabled ? "BẬT" : "TẮT"}. ` +
+                `Tivi Premium=${item.tvPremium ? "ON" : "OFF"}, Mobile Premium=${item.mobilePremium ? "ON" : "OFF"}.`;
         }else{
-            message = `✅ ${item.name}: ${field === "tvPremium" ? "Premium Tivi" : "Premium Mobile"} đã ${value ? "BẬT (ON)" : "TẮT (OFF)"}.`;
+            message = `✅ ${item.name}: ${field === "tvPremium" ? "Premium Tivi" : "Premium Mobile"} đã ${value ? "BẬT (ON)" : "TẮT (OFF)"}. ` +
+                `KÊNH vẫn ${item.enabled ? "BẬT" : "TẮT"}.`;
         }
 
         showStatus(message, "success");
@@ -3076,36 +3115,28 @@ async function togglePremiumChannelsFree(platform){
         return;
     }
 
-    // Tivi và Mobile hoạt động độc lập.
-    const inputId = platform === "tv" ? "premiumChannelsFreeTVButton" : "premiumChannelsFreeMobileButton";
+    const inputId = platform === "tv"
+        ? "premiumChannelsFreeTVButton"
+        : "premiumChannelsFreeMobileButton";
     const input = document.getElementById(inputId);
     if(!input) return;
 
-    const globalField = platform === "tv" ? "premiumGlobalTV" : "premiumGlobalMobile";
+    const globalField = platform === "tv"
+        ? "premiumGlobalTV"
+        : "premiumGlobalMobile";
     const freeField = platform === "tv" ? "freeTV" : "freeMobile";
     const nextFree = !!input.checked;
     const nextGlobal = nextFree ? "OFF" : "ON";
-    const backupField = platform === "tv" ? "savedTvPremium" : "savedMobilePremium";
-    const premiumField = platform === "tv" ? "tvPremium" : "mobilePremium";
+    const oldFree = premiumChannelsFreeConfig[freeField];
 
     input.disabled = true;
     premiumChannelsWriteBusy = true;
 
-    // Lưu snapshot để nếu tắt FREE có thể khôi phục đúng trạng thái trước đó.
-    const oldChannels = premiumChannels.map(item => ({
-        item,
-        enabled: !!item.enabled,
-        tvPremium: !!item.tvPremium,
-        mobilePremium: !!item.mobilePremium,
-        savedTvPremium: !!item.savedTvPremium,
-        savedMobilePremium: !!item.savedMobilePremium
-    }));
-    const oldFree = premiumChannelsFreeConfig[freeField];
-
     try{
         const ref = db.collection("premium_config").doc("system");
 
-        // Chỉ ghi đúng công tắc đang bấm. Công tắc còn lại không đổi.
+        // FREE PLATFORM chỉ thay đổi quyền vào nền tảng.
+        // TUYỆT ĐỐI KHÔNG sửa tvPremium/mobilePremium của premium_channels.
         await ref.set({
             [globalField]: nextGlobal,
             [globalField + "UpdatedAt"]: firebase.firestore.FieldValue.serverTimestamp(),
@@ -3119,64 +3150,25 @@ async function togglePremiumChannelsFree(platform){
             throw new Error("Firebase chưa xác nhận " + globalField + ' = "' + nextGlobal + '".');
         }
 
-        if(nextFree){
-            // FREE ON: Premium của nền tảng này hiển thị OFF cho tất cả kênh,
-            // nhưng trạng thái cũ được lưu riêng để khi FREE OFF sẽ khôi phục.
-            const updates = {};
-            premiumChannels.forEach(item => {
-                if(!item.enabled) return;
-                updates[item.id] = {
-                    [premiumField]: false,
-                    [backupField]: !!item[premiumField],
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    updatedBy: user.email
-                };
-                item[backupField] = !!item[premiumField];
-                item[premiumField] = false;
-            });
-            await commitPremiumChannelUpdates(updates);
-        }else{
-            // FREE OFF: khôi phục đúng trạng thái trước khi FREE được bật.
-            const updates = {};
-            premiumChannels.forEach(item => {
-                if(!item.enabled) return;
-                const restore = !!item[backupField];
-                updates[item.id] = {
-                    [premiumField]: restore,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    updatedBy: user.email
-                };
-                item[premiumField] = restore;
-            });
-            await commitPremiumChannelUpdates(updates);
-        }
-
         premiumChannelsFreeConfig[freeField] = actual === "OFF" ? "ON" : "OFF";
         updatePremiumGlobalUI();
         renderPremiumChannels();
 
         showStatus(
             nextFree
-                ? `🟢 Đã BẬT FREE ${platform === "tv" ? "TIVI" : "MOBILE"}. Premium ${platform === "tv" ? "Tivi" : "Mobile"} của các kênh đã OFF và trạng thái cũ được lưu.`
-                : `🔐 Đã TẮT FREE ${platform === "tv" ? "TIVI" : "MOBILE"}. Premium ${platform === "tv" ? "Tivi" : "Mobile"} đã khôi phục trạng thái trước đó.`,
+                ? `🟢 Đã BẬT FREE ${platform === "tv" ? "TIVI" : "MOBILE"}. Trạng thái Premium từng kênh được GIỮ NGUYÊN.`
+                : `🔐 Đã TẮT FREE ${platform === "tv" ? "TIVI" : "MOBILE"}. Trạng thái Premium từng kênh vẫn GIỮ NGUYÊN.`,
             "success"
         );
     }catch(error){
         console.error(error);
         premiumChannelsFreeConfig[freeField] = oldFree;
-        oldChannels.forEach(x => {
-            x.item.enabled = x.enabled;
-            x.item.tvPremium = x.tvPremium;
-            x.item.mobilePremium = x.mobilePremium;
-            x.item.savedTvPremium = x.savedTvPremium;
-            x.item.savedMobilePremium = x.savedMobilePremium;
-        });
-        await loadPremiumChannelGlobalConfig();
+        updatePremiumGlobalUI();
         renderPremiumChannels();
-        showStatus("❌ Không thể thay đổi Premium tổng: " + getFirebaseError(error), "error");
+        showStatus("❌ Không thể cập nhật FREE " + platform + ": " + getFirebaseError(error), "error");
     }finally{
-        premiumChannelsWriteBusy = false;
         input.disabled = false;
+        premiumChannelsWriteBusy = false;
     }
 }
 
@@ -3536,23 +3528,21 @@ async function saveM3UServerConfig(patch){
         const verifySnap = await serverRef.get();
         const verifyData = verifySnap.data() || {};
 
-        const fieldName = Object.prototype.hasOwnProperty.call(patch, "github")
-            ? "github"
-            : "codeberg";
-
-        const expected = patch[fieldName];
-        const actual = normalizeOnOff(verifyData[fieldName], "__INVALID__");
-
-        if(actual !== expected){
-            throw new Error(
-                "Firebase không xác nhận được " +
-                fieldName +
-                ' = "' +
-                expected +
-                '". Giá trị hiện tại: "' +
-                verifyData[fieldName] +
-                '"'
-            );
+        for(const fieldName of ["github","codeberg"]){
+            if(!Object.prototype.hasOwnProperty.call(patch, fieldName)) continue;
+            const expected = patch[fieldName];
+            const actual = normalizeOnOff(verifyData[fieldName], "__INVALID__");
+            if(actual !== expected){
+                throw new Error(
+                    "Firebase không xác nhận được " +
+                    fieldName +
+                    ' = "' +
+                    expected +
+                    '". Giá trị hiện tại: "' +
+                    verifyData[fieldName] +
+                    '"'
+                );
+            }
         }
 
         // Đồng bộ lại toàn bộ trạng thái từ Firebase sau khi ghi.
@@ -3563,8 +3553,11 @@ async function saveM3UServerConfig(patch){
         };
         updateM3UServerControlUI();
 
-        showStatus("✅ Firebase đã lưu " + fieldName.toUpperCase() +
-                   ' = "' + expected + '".',"success");
+        showStatus(
+            "✅ Firebase đã lưu máy chủ M3U: GitHub=" + m3uServerConfig.github +
+            ", Codeberg=" + m3uServerConfig.codeberg + ".",
+            "success"
+        );
         return true;
 
     }catch(error){
@@ -3596,15 +3589,21 @@ async function toggleM3UServer(server){
 
     button.disabled = true;
 
-    const patch =
-        server === "github"
-            ? {github: next}
-            : {codeberg: next};
+    // Bấm BẬT một máy chủ => máy chủ còn lại tự TẮT.
+    // Như vậy tại mọi thời điểm Admin chỉ có 1 danh sách M3U đang được chọn.
+    const patch = server === "github"
+        ? (next === "ON"
+            ? {github:"ON", codeberg:"OFF"}
+            : {github:"OFF"})
+        : (next === "ON"
+            ? {codeberg:"ON", github:"OFF"}
+            : {codeberg:"OFF"});
 
     try{
         const saved = await saveM3UServerConfig(patch);
         if(saved){
             await loadM3UServerConfig();
+            await loadPremiumChannels();
         }
     }finally{
         button.disabled = false;
