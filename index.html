@@ -574,9 +574,15 @@ button:disabled{opacity:.5;cursor:not-allowed}
 
 .admin-switch input{
     opacity:0;
-    width:0;
-    height:0;
+    width:100%;
+    height:100%;
     position:absolute;
+    inset:0;
+    margin:0;
+    padding:0;
+    cursor:pointer;
+    z-index:2;
+    -webkit-tap-highlight-color:transparent;
 }
 
 .admin-switch-slider{
@@ -3712,6 +3718,10 @@ async function toggleM3UServer(server){
     if(!button) return;
 
     const next = button.checked ? "ON" : "OFF";
+    const previousChecked = !button.checked;
+
+    // Cập nhật giao diện NGAY LẬP TỨC trên cả PC và mobile.
+    // Không khóa công tắc trong lúc Admin đang tải lại danh sách M3U.
     button.disabled = true;
 
     // QUAN TRỌNG: 2 máy chủ có thể BẬT ĐỒNG THỜI.
@@ -3722,23 +3732,43 @@ async function toggleM3UServer(server){
 
     try{
         const saved = await saveM3UServerConfig(patch);
-        if(saved){
-            // Bật server nào thì Admin chuyển sang xem danh sách RIÊNG của server đó.
-            // Server còn lại vẫn giữ nguyên ON/OFF.
-            if(next === "ON"){
-                activePremiumServer = server;
-            }else if(activePremiumServer === server){
-                const other = server === "github" ? "codeberg" : "github";
-                const otherOn = other === "github"
-                    ? m3uServerConfig.github === "ON"
-                    : m3uServerConfig.codeberg === "ON";
-                activePremiumServer = otherOn ? other : null;
-            }
-            await loadM3UServerConfig();
-            updatePremiumAdminServerSelector();
-            await loadPremiumChannels();
+
+        if(!saved){
+            // Firebase lưu thất bại -> trả công tắc về trạng thái cũ.
+            button.checked = previousChecked;
+            return;
         }
+
+        // Bật server nào thì Admin chuyển sang xem danh sách RIÊNG của server đó.
+        // Server còn lại vẫn giữ nguyên ON/OFF.
+        if(next === "ON"){
+            activePremiumServer = server;
+        }else if(activePremiumServer === server){
+            const other = server === "github" ? "codeberg" : "github";
+            const otherOn = other === "github"
+                ? m3uServerConfig.github === "ON"
+                : m3uServerConfig.codeberg === "ON";
+            activePremiumServer = otherOn ? other : null;
+        }
+
+        updateM3UServerControlUI();
+        updatePremiumAdminServerSelector();
+
+        // Không chờ đồng bộ M3U làm treo cảm giác bấm trên mobile.
+        // Cho phép công tắc hoạt động ngay; tải danh sách chạy nền.
+        loadPremiumChannels().catch(error => {
+            console.warn("Không thể tải lại danh sách sau khi đổi máy chủ:", error);
+        });
+
+    }catch(error){
+        console.error("toggleM3UServer error:", error);
+        button.checked = previousChecked;
+        showStatus(
+            "❌ Không thể cập nhật máy chủ M3U:\n" + getFirebaseError(error),
+            "error"
+        );
     }finally{
+        // Mở lại ngay sau khi Firebase đã lưu, không phụ thuộc loadPremiumChannels().
         button.disabled = false;
     }
 }
